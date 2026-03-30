@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('admin@gmail.com');
@@ -10,8 +11,15 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { login, loading, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   // Redirect if already authenticated
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.replace('/admin/dashboard');
+    }
+  }, [loading, isAuthenticated, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -21,7 +29,7 @@ export default function AdminLoginPage() {
   }
 
   if (isAuthenticated) {
-    return null;
+    return null; // Will redirect immediately via useEffect
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

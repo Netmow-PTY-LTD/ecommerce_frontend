@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, X, Search, Heart, GitCompare, Building2 } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, Heart, GitCompare, Building2, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCartStore, useWishlistStore, useCompareStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,12 @@ import { SearchModal } from '@/components/search-modal';
 import { useSettings } from '@/hooks/use-settings';
 import Image from 'next/image';
 import { useAdminContext } from '@/components/admin/admin-navbar-provider';
+import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
 export function Navbar() {
     const pathname = usePathname();
     const { isAdmin } = useAdminContext();
+    const { isAuthenticated, customer } = useCustomerAuth();
 
     // Don't render navbar on admin routes - check immediately
     const shouldHide = isAdmin || pathname?.startsWith('/admin');
@@ -229,6 +231,14 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
+                        <Link href={isAuthenticated ? "/account" : "/login"}>
+                            <Button variant="ghost" size="icon" className="relative">
+                                <User className="h-5 w-5" />
+                                {isAuthenticated && customer && (
+                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
+                                )}
+                            </Button>
+                        </Link>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -263,6 +273,14 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
+                        <Link href={isAuthenticated ? "/account" : "/login"}>
+                            <Button variant="ghost" size="icon" className="relative">
+                                <User className="h-5 w-5" />
+                                {isAuthenticated && customer && (
+                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
+                                )}
+                            </Button>
+                        </Link>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -292,6 +310,12 @@ export function Navbar() {
                             </Link>
                         ))}
                         <div className="pt-4 mt-4 border-t border-border space-y-2">
+                            <Link href={isAuthenticated ? "/account" : "/login"} onClick={() => setIsMenuOpen(false)}>
+                                <Button variant="outline" className="w-full justify-start gap-2">
+                                    <User className="h-4 w-4" />
+                                    {isAuthenticated ? `${customer?.name || 'My Account'}` : 'Sign In'}
+                                </Button>
+                            </Link>
                             <Link href="/wishlist" onClick={() => setIsMenuOpen(false)}>
                                 <Button variant="outline" className="w-full justify-start gap-2">
                                     <Heart className="h-4 w-4" /> Wishlist

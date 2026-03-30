@@ -519,7 +519,7 @@ export default function ProductDetailsPage() {
                 )}
 
                 {/* Attributes */}
-                {product.attributes && product.attributes.length > 0 && (
+                {product.attributes && Array.isArray(product.attributes) && product.attributes.length > 0 && (
                     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-4 border-b border-slate-200">
                             <h2 className="text-lg font-semibold text-slate-900">Product Attributes</h2>
@@ -530,7 +530,7 @@ export default function ProductDetailsPage() {
                                     <div key={index} className="border border-slate-200 rounded-lg p-4">
                                         <h4 className="font-semibold text-slate-900 mb-2">{attr.name}</h4>
                                         <div className="flex flex-wrap gap-2">
-                                            {attr.values.map((value, idx) => (
+                                            {attr.values && Array.isArray(attr.values) && attr.values.map((value, idx) => (
                                                 <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm">
                                                     {value}
                                                 </span>

@@ -47,13 +47,20 @@ export function ProductCard({
 
     // Compute initial selections from product attributes
     const initialSelections = useMemo(() => {
-        if (!product?.attributes || product.attributes.length === 0) {
+        if (!product?.attributes) {
+            return {};
+        }
+
+        // Ensure attributes is an array
+        const attributesArray = Array.isArray(product.attributes) ? product.attributes : [];
+
+        if (attributesArray.length === 0) {
             return {};
         }
 
         const selections: Record<string, string> = {};
-        product.attributes.forEach((attr: any) => {
-            if (attr.values && attr.values.length > 0) {
+        attributesArray.forEach((attr: any) => {
+            if (attr.values && Array.isArray(attr.values) && attr.values.length > 0) {
                 selections[attr.name] = attr.values[0];
             }
         });
@@ -63,7 +70,7 @@ export function ProductCard({
 
     // Auto-select first value for each attribute when product changes
     useEffect(() => {
-        const currentAttributesLength = product?.attributes?.length || 0;
+        const currentAttributesLength = Array.isArray(product?.attributes) ? product.attributes.length : 0;
 
         if (!product?.id) return;
 
@@ -76,7 +83,7 @@ export function ProductCard({
             setLastProductId(product.id);
             setLastAttributesLength(currentAttributesLength);
         }
-    }, [product?.id, product?.attributes]); // Watch product ID and attributes
+    }, [product?.id, product?.attributes, initialSelections]); // Watch product ID and attributes
 
     const isNewProduct = useCallback(() => {
         if (!product.created_at) return false;
@@ -137,13 +144,12 @@ export function ProductCard({
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        className={`h-3.5 w-3.5 ${
-                            star <= Math.floor(rating)
+                        className={`h-3.5 w-3.5 ${star <= Math.floor(rating)
                                 ? 'fill-amber-400 text-amber-400'
                                 : star <= rating
-                                ? 'fill-amber-400/30 text-amber-400'
-                                : 'fill-slate-200 text-slate-200 dark:fill-slate-700'
-                        }`}
+                                    ? 'fill-amber-400/30 text-amber-400'
+                                    : 'fill-slate-200 text-slate-200 dark:fill-slate-700'
+                            }`}
                     />
                 ))}
                 {reviewsCount > 0 && (
@@ -258,9 +264,8 @@ export function ProductCard({
                     <Button
                         size="icon"
                         variant={isInWishlist ? "default" : "secondary"}
-                        className={`rounded-full shadow-md h-9 w-9 ${
-                            isInWishlist ? 'bg-red-500 hover:bg-red-600' : ''
-                        }`}
+                        className={`rounded-full shadow-md h-9 w-9 ${isInWishlist ? 'bg-red-500 hover:bg-red-600' : ''
+                            }`}
                         onClick={handleWishlist}
                     >
                         <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-current' : ''}`} />
@@ -308,9 +313,8 @@ export function ProductCard({
                                 exit={{ scale: 0 }}
                                 onClick={handleAddToCart}
                                 disabled={isAdding || !product.stock_quantity || product.stock_quantity === 0}
-                                className={`bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center transition-all ${
-                                    isAdding ? 'opacity-70' : ''
-                                } ${!product.stock_quantity || product.stock_quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center transition-all ${isAdding ? 'opacity-70' : ''
+                                    } ${!product.stock_quantity || product.stock_quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {isAdding ? (
                                     <motion.div
@@ -378,7 +382,7 @@ export function ProductCard({
                 </div>
 
                 {/* Product Attributes */}
-                {product.attributes && product.attributes.length > 0 && (
+                {product.attributes && Array.isArray(product.attributes) && product.attributes.length > 0 && (
                     <div className="space-y-2 pt-1">
                         {product.attributes.map((attr, idx) => (
                             <div key={idx}>
@@ -386,7 +390,7 @@ export function ProductCard({
                                     {attr.name}
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {attr.values.map((value: string, vIdx: number) => {
+                                    {attr.values && Array.isArray(attr.values) && attr.values.map((value: string, vIdx: number) => {
                                         const isSelected = selectedAttributes[attr.name] === value;
                                         return (
                                             <button
@@ -399,11 +403,10 @@ export function ProductCard({
                                                         [attr.name]: value
                                                     }));
                                                 }}
-                                                className={`text-xs px-3 py-1 rounded-md border transition-all ${
-                                                    isSelected
+                                                className={`text-xs px-3 py-1 rounded-md border transition-all ${isSelected
                                                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                                                         : 'bg-background border-border hover:border-primary/50 hover:bg-secondary/50'
-                                                }`}
+                                                    }`}
                                             >
                                                 {value}
                                             </button>

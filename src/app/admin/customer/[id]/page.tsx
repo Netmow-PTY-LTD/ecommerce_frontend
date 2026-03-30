@@ -36,6 +36,14 @@ interface Order {
   created_at: string;
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -53,20 +61,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   }, [isAuthenticated, loading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCustomer();
-      fetchCustomerOrders();
-    }
-  }, [isAuthenticated, id]);
-
   const fetchCustomer = async () => {
     try {
       setLoadingCustomer(true);
       const response = await api.get(`/customers/${id}`);
       setCustomer(response.data.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load customer');
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      setError(error.response?.data?.message || 'Failed to load customer');
     } finally {
       setLoadingCustomer(false);
     }
@@ -75,7 +77,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const fetchCustomerOrders = async () => {
     try {
       setLoadingOrders(true);
-      const response = await api.get(`/orders?customer_id=${id}&limit=5`);
+      const response = await api.get(`/sales/orders?customer_id=${id}&limit=5`);
       setOrders(response.data.data || []);
     } catch (err) {
       console.error('Failed to load orders:', err);
@@ -83,6 +85,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       setLoadingOrders(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCustomer();
+      fetchCustomerOrders();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, id]);
 
   if (loading || loadingCustomer) {
     return (
@@ -248,7 +258,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 <p className="text-sm text-slate-500 mb-2">No orders found</p>
-                <p className="text-xs text-slate-400">This customer hasn't placed any orders yet</p>
+                <p className="text-xs text-slate-400">{`This customer hasn't placed any orders yet`}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -309,6 +319,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             )}
           </div>
         </div>
-      </AdminLayout>
+      </div>
+    </AdminLayout>
   );
 }
