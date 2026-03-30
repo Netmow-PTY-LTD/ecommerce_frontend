@@ -4,6 +4,7 @@ import { FeaturedProducts } from "@/components/featured-products";
 export default function Home() {
   return (
     <>
+    
       <Hero />
       <FeaturedProducts />
 
@@ -25,5 +26,8 @@ export default function Home() {
     </>
   );
 }
+
+
+
 
 
