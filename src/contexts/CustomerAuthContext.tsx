@@ -60,8 +60,8 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       localStorage.setItem('customer_token', token);
       localStorage.setItem('customer_data', JSON.stringify(customer));
 
-      // Redirect to account page or home
-      router.push('/account');
+      // Redirect to customer dashboard
+      router.push('/customer/dashboard');
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }

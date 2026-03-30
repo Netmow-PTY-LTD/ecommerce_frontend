@@ -49,7 +49,7 @@ export default function OrderStatusPage() {
   const fetchOrder = async (id: string) => {
     try {
       setLoading(true);
-      const response = await api.get(`/sales/orders/${id}`);
+      const response = await api.get(`/sales/customer/orders/${id}`);
       const data = response.data.data;
 
       // Calculate subtotal from items

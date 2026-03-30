@@ -290,7 +290,7 @@ export default function EditProductPage() {
       }
 
       // Set attributes if exist
-      if (productData.attributes && productData.attributes.length > 0) {
+      if (Array.isArray(productData.attributes) && productData.attributes.length > 0) {
         const loadedAttributes = productData.attributes.map((attr: any) => ({
           id: Date.now().toString() + Math.random(),
           name: attr.name,

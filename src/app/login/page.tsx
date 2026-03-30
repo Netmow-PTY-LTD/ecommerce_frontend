@@ -18,7 +18,7 @@ export default function CustomerLoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.replace('/account');
+      router.replace('/customer/dashboard');
     }
   }, [loading, isAuthenticated, router]);
 
