@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import AdminNavbarProvider from "@/components/admin/admin-navbar-provider";
 import MainWrapper from "@/components/admin/main-wrapper";
 
@@ -37,14 +38,16 @@ export default function RootLayout({
       >
         <SettingsProvider>
           <CurrencyProvider>
-            <AdminNavbarProvider>
-              <Navbar />
-              <MainWrapper>
-                {children}
-              </MainWrapper>
-              <Footer />
-            </AdminNavbarProvider>
-            <Toaster position="bottom-right" richColors />
+            <CustomerAuthProvider>
+              <AdminNavbarProvider>
+                <Navbar />
+                <MainWrapper>
+                  {children}
+                </MainWrapper>
+                <Footer />
+              </AdminNavbarProvider>
+              <Toaster position="bottom-right" richColors />
+            </CustomerAuthProvider>
           </CurrencyProvider>
         </SettingsProvider>
       </body>

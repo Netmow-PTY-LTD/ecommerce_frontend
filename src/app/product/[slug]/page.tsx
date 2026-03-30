@@ -25,21 +25,30 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
     // Compute initial selections from product attributes
     const initialSelections = useMemo(() => {
-        if (!product?.attributes || product.attributes.length === 0) {
+        if (!product?.attributes) {
             return {};
         }
+
+        // Ensure attributes is an array
+        const attributesArray = Array.isArray(product.attributes) ? product.attributes : [];
+
+        if (attributesArray.length === 0) {
+            return {};
+        }
+
         const selections: Record<string, string> = {};
-        product.attributes.forEach((attr: any) => {
-            if (attr.values && attr.values.length > 0) {
+        attributesArray.forEach((attr: any) => {
+            if (attr.values && Array.isArray(attr.values) && attr.values.length > 0) {
                 selections[attr.name] = attr.values[0];
             }
         });
+
         return selections;
     }, [product?.id, product?.attributes]);
 
     // Auto-select first value for each attribute when product changes
     useEffect(() => {
-        const currentAttributesLength = product?.attributes?.length || 0;
+        const currentAttributesLength = Array.isArray(product?.attributes) ? product.attributes.length : 0;
 
         if (!product?.id) return;
 
@@ -52,7 +61,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             setLastProductId(product.id);
             setLastAttributesLength(currentAttributesLength);
         }
-    }, [product?.id, product?.attributes]); // Watch product ID and attributes
+    }, [product?.id, product?.attributes, initialSelections]); // Watch product ID and attributes
 
     if (isLoading) {
         return (
@@ -170,7 +179,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     )}
 
                     {/* Product Attributes */}
-                    {product.attributes && product.attributes.length > 0 && (
+                    {product.attributes && Array.isArray(product.attributes) && product.attributes.length > 0 && (
                         <div className="pt-4 border-t border-border">
                             <h3 className="text-base font-semibold mb-3">Product Attributes</h3>
                             <div className="space-y-3">
@@ -180,7 +189,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                                             {attr.name}
                                         </p>
                                         <div className="flex flex-wrap gap-2">
-                                            {attr.values.map((value: string, vIdx: number) => {
+                                            {attr.values && Array.isArray(attr.values) && attr.values.map((value: string, vIdx: number) => {
                                                 const isSelected = selectedAttributes[attr.name] === value;
                                                 return (
                                                     <button
