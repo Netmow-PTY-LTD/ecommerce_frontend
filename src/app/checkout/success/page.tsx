@@ -134,7 +134,7 @@ function CheckoutSuccessPageContent() {
                 // Fetch full order details if we have an orderId
                 if (orderId) {
                     try {
-                        const orderResponse = await api.get(`/sales/orders/${orderId}`);
+                        const orderResponse = await api.get(`/sales/customer/orders/${orderId}`);
                         const data = orderResponse.data.data;
 
                         // Calculate subtotal from items

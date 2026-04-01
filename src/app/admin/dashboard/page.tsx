@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
+import Link from 'next/link';
 
 interface DashboardStats {
   totalProducts: number;
@@ -13,6 +14,12 @@ interface DashboardStats {
   totalCustomers: number;
   totalRevenue: number;
   totalImages: number;
+}
+
+interface Order {
+  payment_status: string;
+  total_amount?: number;
+  total?: number;
 }
 
 export default function AdminDashboardPage() {
@@ -64,8 +71,8 @@ export default function AdminDashboardPage() {
         const revenueRes = await api.get('/sales/orders?limit=1000');
         const orders = revenueRes.data?.data || [];
         totalRevenue = orders
-          .filter((order: any) => order.payment_status === 'paid')
-          .reduce((sum: number, order: any) => sum + (order.total_amount || order.total || 0), 0);
+          .filter((order: Order) => order.payment_status === 'paid')
+          .reduce((sum: number, order: Order) => sum + (order.total_amount || order.total || 0), 0);
       } catch (error) {
         console.error('Failed to fetch revenue data:', error);
       }
@@ -77,7 +84,7 @@ export default function AdminDashboardPage() {
         totalRevenue,
         totalImages: imagesRes.data?.pagination?.total || 0,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch stats:', error);
     } finally {
       setLoadingStats(false);
@@ -101,7 +108,7 @@ export default function AdminDashboardPage() {
       title="Dashboard"
       subtitle="Welcome back! Here's what's happening with your store today."
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Products */}
@@ -194,10 +201,10 @@ export default function AdminDashboardPage() {
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Links</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <a href="/admin/orders" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+              <Link href="/admin/orders" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                 <h3 className="text-sm font-medium text-gray-900">Manage Orders</h3>
                 <p className="text-sm text-gray-500 mt-1">View and manage orders</p>
-              </a>
+              </Link>
               <a href="/admin/products" className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                 <h3 className="text-sm font-medium text-gray-900">Manage Products</h3>
                 <p className="text-sm text-gray-500 mt-1">Add, edit, or remove products</p>

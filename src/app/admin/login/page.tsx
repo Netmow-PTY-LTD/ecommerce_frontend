@@ -39,8 +39,9 @@ export default function AdminLoginPage() {
 
     try {
       await login(email, password);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || 'Login failed. Please try again.');
     } finally {
       setSubmitting(false);
     }

@@ -1,11 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProductsNavbar from '@/components/admin/products-navbar';
 import AdminLayout from '@/components/admin/admin-layout';
+import { FormModal } from '@/components/admin/modal';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { Edit, Trash2, Plus } from 'lucide-react';
 
 interface Category {
   id: number;
@@ -27,6 +35,21 @@ export default function AdminCategoriesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationMeta, setPaginationMeta] = useState<{
+    total: number;
+    page: number;
+    limit: number;
+    totalPage: number;
+  }>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPage: 0,
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -38,15 +61,25 @@ export default function AdminCategoriesPage() {
     if (isAuthenticated) {
       fetchCategories();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get('/products/categories');
+      const response = await api.get(`/products/categories?page=${page}&limit=10`);
       setCategories(response.data.data || []);
+      setPaginationMeta(response.data.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPage: 0,
+      });
     } catch (error) {
       console.error('Failed to fetch categories:', error);
     }
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleEdit = (category: Category) => {
@@ -55,6 +88,7 @@ export default function AdminCategoriesPage() {
       name: category.name,
       description: category.description || '',
     });
+    setModalError('');
     setShowModal(true);
   };
 
@@ -66,8 +100,9 @@ export default function AdminCategoriesPage() {
       setSuccess('Category deleted successfully');
       fetchCategories();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete category');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setError(err.response?.data?.message || 'Failed to delete category');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -75,7 +110,7 @@ export default function AdminCategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setModalError('');
 
     try {
       if (editingCategory) {
@@ -91,8 +126,9 @@ export default function AdminCategoriesPage() {
       setFormData({ name: '', description: '' });
       fetchCategories();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to save category');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setModalError(err.response?.data?.message || 'Failed to save category');
     } finally {
       setSubmitting(false);
     }
@@ -102,13 +138,13 @@ export default function AdminCategoriesPage() {
     setShowModal(false);
     setEditingCategory(null);
     setFormData({ name: '', description: '' });
-    setError('');
+    setModalError('');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -122,137 +158,120 @@ export default function AdminCategoriesPage() {
       title="Categories Management"
       subtitle="Manage product categories"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
         <ProductsNavbar />
 
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
-          >
-            + Add Category
-          </button>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Categories ({categories.length})</h2>
+          <Button onClick={() => { setEditingCategory(null); setFormData({ name: '', description: '' }); setModalError(''); setShowModal(true); }} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Category
+          </Button>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Slug
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {category.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {category.slug}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{category.description || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleEdit(category)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(category.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+            data={categories}
+            columns={[
+              {
+                key: 'name',
+                title: 'Name',
+                sortable: true,
+                cellClassName: 'font-medium',
+              },
+              {
+                key: 'slug',
+                title: 'Slug',
+                sortable: true,
+                cellClassName: 'text-muted-foreground',
+              },
+              {
+                key: 'description',
+                title: 'Description',
+                render: (value) => (value ? String(value) : '-'),
+              },
+            ]}
+            actions={[
+              {
+                label: 'Edit',
+                icon: <Edit className="h-4 w-4" />,
+                onClick: (category) => handleEdit(category),
+                variant: 'ghost',
+              },
+              {
+                label: 'Delete',
+                icon: <Trash2 className="h-4 w-4" />,
+                onClick: (category) => handleDelete(category.id),
+                variant: 'ghost',
+              },
+            ]}
+            searchable={true}
+            searchPlaceholder="Search categories..."
+            emptyMessage="No categories found. Add your first category to get started."
+            pagination={true}
+            pageSize={10}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={(column, direction) => {
+              setSortBy(column);
+              setSortOrder(direction);
+            }}
+            serverPagination={true}
+            paginationMeta={paginationMeta}
+            onPageChange={handlePageChange}
+          />
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editingCategory ? 'Edit Category' : 'Add New Category'}
-              </h2>
-            </div>
+      <FormModal
+        open={showModal}
+        onOpenChange={(open) => { if (!open) handleCloseModal(); else setShowModal(open); }}
+        title={editingCategory ? 'Edit Category' : 'Add New Category'}
+        description={editingCategory ? 'Update the category details below.' : 'Add a new category to organize your products.'}
+        onSubmit={handleSubmit}
+        submitText={editingCategory ? 'Update Category' : 'Create Category'}
+        isSubmitting={submitting}
+      >
+        {modalError && (
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm mb-4">
+            {modalError}
+          </div>
+        )}
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Category Name *</Label>
+            <Input
+              id="name"
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Electronics"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Saving...' : editingCategory ? 'Update' : 'Create'} Category
-                </button>
-              </div>
-            </form>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              placeholder="Brief description of this category..."
+            />
           </div>
         </div>
-      )}
+      </FormModal>
     </AdminLayout>
   );
 }
