@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
                   <dl>
                     <dt className="text-sm font-medium text-indigo-100 truncate">Total Products</dt>
                     <dd className="flex items-baseline">
-                      <div className="text-3xl font-semibold text-white">{stats.totalProducts}</div>
+                      <div className="text-2xl 2xl:text-3xl font-semibold text-white">{stats.totalProducts}</div>
                     </dd>
                   </dl>
                 </div>
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
                   <dl>
                     <dt className="text-sm font-medium text-green-100 truncate">Total Orders</dt>
                     <dd className="flex items-baseline">
-                      <div className="text-3xl font-semibold text-white">{stats.totalOrders}</div>
+                      <div className="text-2xl 2xl:text-3xl font-semibold text-white">{stats.totalOrders}</div>
                     </dd>
                   </dl>
                 </div>
@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
                   <dl>
                     <dt className="text-sm font-medium text-yellow-100 truncate">Total Customers</dt>
                     <dd className="flex items-baseline">
-                      <div className="text-3xl font-semibold text-white">{stats.totalCustomers}</div>
+                      <div className="text-2xl 2xl:text-3xl font-semibold text-white">{stats.totalCustomers}</div>
                     </dd>
                   </dl>
                 </div>
@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
                   <dl>
                     <dt className="text-sm font-medium text-blue-100 truncate">Total Revenue</dt>
                     <dd className="flex items-baseline">
-                      <div className="text-3xl font-semibold text-white">{formatCurrency(stats.totalRevenue)}</div>
+                      <div className="text-2xl 2xl:text-3xl font-semibold text-white">{formatCurrency(stats.totalRevenue)}</div>
                     </dd>
                   </dl>
                 </div>

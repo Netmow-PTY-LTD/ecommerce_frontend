@@ -362,20 +362,20 @@ export default function AdminLayout({ children, title, subtitle }: AdminLayoutPr
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
           <header className="bg-background border-b border-border h-14 flex items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               {/* Mobile Menu Button */}
               <button
                 onClick={() => mobileMenuOpen ? closeMobileMenu() : setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors text-muted-foreground"
+                className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors text-muted-foreground flex-shrink-0"
               >
                 <Menu className="h-5 w-5" />
               </button>
 
               {/* Breadcrumb / Title */}
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
                 {subtitle && (
-                  <p className="text-sm text-muted-foreground">{subtitle}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate hidden md:block">{subtitle}</p>
                 )}
               </div>
             </div>
