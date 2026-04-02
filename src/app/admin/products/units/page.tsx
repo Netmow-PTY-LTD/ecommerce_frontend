@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -11,15 +11,85 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { DataTable } from '@/components/ui/data-table';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Unit {
   id: number;
   name: string;
   symbol: string;
   description?: string;
+  sort_order?: number;
+}
+
+function SortableUnitItem({
+  unit,
+  onEdit,
+  onDelete,
+}: {
+  unit: Unit;
+  onEdit: (u: Unit) => void;
+  onDelete: (id: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: unit.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${
+        isDragging ? 'shadow-lg' : 'hover:shadow-sm'
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing shrink-0"
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground">{unit.name}</span>
+          <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
+            {unit.symbol}
+          </span>
+        </div>
+        {unit.description && (
+          <p className="text-sm text-muted-foreground mt-0.5 truncate">{unit.description}</p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(unit)} className="h-8 w-8 p-0">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(unit.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminUnitsPage() {
@@ -37,8 +107,6 @@ export default function AdminUnitsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [modalError, setModalError] = useState('');
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
     total: number;
@@ -52,6 +120,10 @@ export default function AdminUnitsPage() {
     totalPage: 0,
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/admin/login');
@@ -64,9 +136,9 @@ export default function AdminUnitsPage() {
     }
   }, [isAuthenticated, currentPage]);
 
-  const fetchUnits = async (page: number = currentPage) => {
+  const fetchUnits = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get(`/products/units?page=${page}&limit=10`);
+      const response = await api.get(`/products/units?page=${page}&limit=100`);
       setUnits(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
         total: 0,
@@ -77,10 +149,29 @@ export default function AdminUnitsPage() {
     } catch (error) {
       console.error('Failed to fetch units:', error);
     }
-  };
+  }, [currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleDragEnd = async (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = units.findIndex((u) => u.id === active.id);
+    const newIndex = units.findIndex((u) => u.id === over.id);
+    const reordered = arrayMove(units, oldIndex, newIndex);
+    setUnits(reordered);
+
+    try {
+      const orders = reordered.map((u, i) => ({ id: u.id, sort_order: i }));
+      await api.put('/products/units/reorder', { orders });
+    } catch {
+      setUnits(units);
+      setError('Failed to save order');
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
   const handleEdit = (unit: Unit) => {
@@ -175,67 +266,55 @@ export default function AdminUnitsPage() {
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Units ({units.length})</h2>
+          <h2 className="text-2xl font-bold text-foreground">Units ({paginationMeta.total})</h2>
           <Button onClick={() => { setEditingUnit(null); setFormData({ name: '', symbol: '', description: '' }); setModalError(''); setShowModal(true); }} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Unit
           </Button>
         </div>
 
-          <DataTable
-            data={units}
-            columns={[
-              {
-                key: 'name',
-                title: 'Name',
-                sortable: true,
-                cellClassName: 'font-medium',
-              },
-              {
-                key: 'symbol',
-                title: 'Symbol',
-                sortable: true,
-                render: (value) => (
-                  <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
-                    {String(value)}
-                  </span>
-                ),
-              },
-              {
-                key: 'description',
-                title: 'Description',
-                render: (value) => (value ? String(value) : '-'),
-              },
-            ]}
-            actions={[
-              {
-                label: 'Edit',
-                icon: <Edit className="h-4 w-4" />,
-                onClick: (unit) => handleEdit(unit),
-                variant: 'ghost',
-              },
-              {
-                label: 'Delete',
-                icon: <Trash2 className="h-4 w-4" />,
-                onClick: (unit) => handleDelete(unit.id),
-                variant: 'ghost',
-              },
-            ]}
-            searchable={true}
-            searchPlaceholder="Search units..."
-            emptyMessage="No units found. Add your first unit to get started."
-            pagination={true}
-            pageSize={10}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={(column, direction) => {
-              setSortBy(column);
-              setSortOrder(direction);
-            }}
-            serverPagination={true}
-            paginationMeta={paginationMeta}
-            onPageChange={handlePageChange}
-          />
+        {units.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No units found. Add your first unit to get started.
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={units.map((u) => u.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {units.map((unit) => (
+                  <SortableUnitItem
+                    key={unit.id}
+                    unit={unit}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+
+        {paginationMeta.totalPage > 1 && (
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       <FormModal

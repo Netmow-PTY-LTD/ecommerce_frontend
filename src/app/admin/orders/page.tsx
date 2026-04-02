@@ -24,6 +24,7 @@ interface Order {
   subtotal: number;
   tax: number;
   shipping_cost: number;
+  discount_amount: number;
   total: number;
   payment_method: string;
   payment_status: 'pending' | 'paid' | 'failed';
@@ -104,6 +105,7 @@ export default function AdminOrdersPage() {
         subtotal: parseFloat(order.subtotal || order.total_amount * 0.9),
         tax: parseFloat(order.tax_amount || 0),
         shipping_cost: parseFloat(order.shipping_cost || 0),
+        discount_amount: parseFloat(order.discount_amount || 0),
         total: parseFloat(order.total_amount || 0),
         payment_method: order.payment_method || 'N/A',
         payment_status: order.payment_status || 'pending',
@@ -361,6 +363,7 @@ export default function AdminOrdersPage() {
                   <TableHead className="font-semibold text-slate-600">Customer</TableHead>
                   <TableHead className="font-semibold text-slate-600">Items</TableHead>
                   <TableHead className="font-semibold text-slate-600">Total</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Coupon</TableHead>
                   <TableHead className="font-semibold text-slate-600">Status</TableHead>
                   <TableHead className="font-semibold text-slate-600">Payment Type</TableHead>
                   <TableHead className="font-semibold text-slate-600">Payment Status</TableHead>
@@ -385,6 +388,15 @@ export default function AdminOrdersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="font-bold text-slate-900">{formatCurrency(order.total)}</TableCell>
+                    <TableCell>
+                      {order.discount_amount > 0 ? (
+                        <Badge className="bg-green-100 text-green-800" variant="secondary">
+                          -{formatCurrency(order.discount_amount)}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge className={`${getStatusColor(order.status)}`} variant="secondary">
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

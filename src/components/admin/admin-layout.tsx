@@ -24,7 +24,15 @@ import {
   CheckCircle2,
   XCircle,
   FolderTree,
-  Ruler
+  Ruler,
+  Star,
+  Tag,
+  Zap,
+  MessageCircle,
+  Mail,
+  BarChart3,
+  Globe,
+  DollarSign
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -73,6 +81,34 @@ const navigation: NavItem[] = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
+  { name: 'Reviews', href: '/admin/reviews', icon: Star },
+  {
+    name: 'Pricing',
+    icon: Tag,
+    subitems: [
+      { name: 'Coupons', href: '/admin/coupons', icon: Tag },
+      { name: 'Flash Sales', href: '/admin/flash-sales', icon: Zap },
+    ],
+  },
+  { name: 'Chat Support', href: '/admin/chat', icon: MessageCircle },
+  {
+    name: 'Email',
+    icon: Mail,
+    subitems: [
+      { name: 'Templates', href: '/admin/email/templates', icon: FileText },
+      { name: 'Automation', href: '/admin/email/automation', icon: Clock },
+      { name: 'Logs', href: '/admin/email/logs', icon: Mail },
+    ],
+  },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  {
+    name: 'Localization',
+    icon: Globe,
+    subitems: [
+      { name: 'Translations', href: '/admin/i18n/translations', icon: Globe },
+      { name: 'Currencies', href: '/admin/i18n/currencies', icon: DollarSign },
+    ],
+  },
   { name: 'Pages', href: '/admin/pages', icon: FileText },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];

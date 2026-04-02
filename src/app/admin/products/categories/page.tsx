@@ -6,38 +6,116 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProductsNavbar from '@/components/admin/products-navbar';
 import AdminLayout from '@/components/admin/admin-layout';
-import { FormModal } from '@/components/admin/modal';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { DataTable } from '@/components/ui/data-table';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Edit, Trash2, Plus, GripVertical, ImageIcon } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Category {
   id: number;
   name: string;
   slug: string;
   description?: string;
+  image_url?: string;
+  show_on_home?: boolean;
+  sort_order?: number;
+}
+
+function SortableCategoryItem({
+  category,
+  onEdit,
+  onDelete,
+}: {
+  category: Category;
+  onEdit: (c: Category) => void;
+  onDelete: (id: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: category.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${
+        isDragging ? 'shadow-lg' : 'hover:shadow-sm'
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing shrink-0"
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+
+      {category.image_url ? (
+        <img
+          src={category.image_url}
+          alt={category.name}
+          className="h-12 w-12 rounded-lg object-cover shrink-0 border"
+        />
+      ) : (
+        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0 border">
+          <ImageIcon className="h-5 w-5 text-muted-foreground" />
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground truncate">{category.name}</span>
+          {category.show_on_home && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 shrink-0">
+              Home
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-sm text-muted-foreground">
+          <span className="truncate">{category.slug}</span>
+          {category.description && (
+            <>
+              <span className="text-border">·</span>
+              <span className="truncate">{category.description}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(category)} className="h-8 w-8 p-0">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(category.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminCategoriesPage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-  });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [modalError, setModalError] = useState('');
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
     total: number;
@@ -50,6 +128,10 @@ export default function AdminCategoriesPage() {
     limit: 10,
     totalPage: 0,
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -65,7 +147,7 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get(`/products/categories?page=${page}&limit=10`);
+      const response = await api.get(`/products/categories?page=${page}&limit=100`);
       setCategories(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
         total: 0,
@@ -82,14 +164,27 @@ export default function AdminCategoriesPage() {
     setCurrentPage(page);
   };
 
+  const handleDragEnd = async (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = categories.findIndex((c) => c.id === active.id);
+    const newIndex = categories.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(categories, oldIndex, newIndex);
+    setCategories(reordered);
+
+    try {
+      const orders = reordered.map((c, i) => ({ id: c.id, sort_order: i }));
+      await api.put('/products/categories/reorder', { orders });
+    } catch {
+      setCategories(categories);
+      setError('Failed to save order');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   const handleEdit = (category: Category) => {
-    setEditingCategory(category);
-    setFormData({
-      name: category.name,
-      description: category.description || '',
-    });
-    setModalError('');
-    setShowModal(true);
+    router.push(`/admin/products/categories/${category.id}/edit`);
   };
 
   const handleDelete = async (id: number) => {
@@ -105,40 +200,6 @@ export default function AdminCategoriesPage() {
       setError(err.response?.data?.message || 'Failed to delete category');
       setTimeout(() => setError(''), 3000);
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setModalError('');
-
-    try {
-      if (editingCategory) {
-        await api.put(`/products/categories/${editingCategory.id}`, formData);
-        setSuccess('Category updated successfully');
-      } else {
-        await api.post('/products/categories', formData);
-        setSuccess('Category created successfully');
-      }
-
-      setShowModal(false);
-      setEditingCategory(null);
-      setFormData({ name: '', description: '' });
-      fetchCategories();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setModalError(err.response?.data?.message || 'Failed to save category');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingCategory(null);
-    setFormData({ name: '', description: '' });
-    setModalError('');
   };
 
   if (loading) {
@@ -173,105 +234,56 @@ export default function AdminCategoriesPage() {
         )}
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Categories ({categories.length})</h2>
-          <Button onClick={() => { setEditingCategory(null); setFormData({ name: '', description: '' }); setModalError(''); setShowModal(true); }} className="gap-2">
+          <h2 className="text-2xl font-bold text-foreground">Categories ({paginationMeta.total})</h2>
+          <Button onClick={() => router.push('/admin/products/categories/add')} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Category
           </Button>
         </div>
 
-        <DataTable
-            data={categories}
-            columns={[
-              {
-                key: 'name',
-                title: 'Name',
-                sortable: true,
-                cellClassName: 'font-medium',
-              },
-              {
-                key: 'slug',
-                title: 'Slug',
-                sortable: true,
-                cellClassName: 'text-muted-foreground',
-              },
-              {
-                key: 'description',
-                title: 'Description',
-                render: (value) => (value ? String(value) : '-'),
-              },
-            ]}
-            actions={[
-              {
-                label: 'Edit',
-                icon: <Edit className="h-4 w-4" />,
-                onClick: (category) => handleEdit(category),
-                variant: 'ghost',
-              },
-              {
-                label: 'Delete',
-                icon: <Trash2 className="h-4 w-4" />,
-                onClick: (category) => handleDelete(category.id),
-                variant: 'ghost',
-              },
-            ]}
-            searchable={true}
-            searchPlaceholder="Search categories..."
-            emptyMessage="No categories found. Add your first category to get started."
-            pagination={true}
-            pageSize={10}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={(column, direction) => {
-              setSortBy(column);
-              setSortOrder(direction);
-            }}
-            serverPagination={true}
-            paginationMeta={paginationMeta}
-            onPageChange={handlePageChange}
-          />
-      </div>
-
-      <FormModal
-        open={showModal}
-        onOpenChange={(open) => { if (!open) handleCloseModal(); else setShowModal(open); }}
-        title={editingCategory ? 'Edit Category' : 'Add New Category'}
-        description={editingCategory ? 'Update the category details below.' : 'Add a new category to organize your products.'}
-        onSubmit={handleSubmit}
-        submitText={editingCategory ? 'Update Category' : 'Create Category'}
-        isSubmitting={submitting}
-      >
-        {modalError && (
-          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm mb-4">
-            {modalError}
+        {categories.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No categories found. Add your first category to get started.
           </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={categories.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {categories.map((category) => (
+                  <SortableCategoryItem
+                    key={category.id}
+                    category={category}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Category Name *</Label>
-            <Input
-              id="name"
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., Electronics"
-            />
+        {paginationMeta.totalPage > 1 && (
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </Button>
+            ))}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              placeholder="Brief description of this category..."
-            />
-          </div>
-        </div>
-      </FormModal>
+        )}
+      </div>
     </AdminLayout>
   );
 }
