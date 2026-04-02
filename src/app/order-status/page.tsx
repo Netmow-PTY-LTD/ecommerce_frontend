@@ -22,6 +22,7 @@ interface Order {
   subtotal: number;
   tax: number;
   shipping_cost: number;
+  discount_amount: number;
   total: number;
   payment_method: string;
   payment_status: 'pending' | 'paid' | 'failed';
@@ -49,7 +50,7 @@ export default function OrderStatusPage() {
   const fetchOrder = async (id: string) => {
     try {
       setLoading(true);
-      const response = await api.get(`/sales/orders/${id}`);
+      const response = await api.get(`/sales/customer/orders/${id}`);
       const data = response.data.data;
 
       // Calculate subtotal from items
@@ -73,6 +74,7 @@ export default function OrderStatusPage() {
         subtotal: itemsSubtotal,
         tax: taxAmount,
         shipping_cost: shippingCost,
+        discount_amount: discountAmount,
         total: calculatedTotal,
         payment_method: data.payment_method || 'N/A',
         payment_status: data.payment_status || 'pending',
@@ -263,6 +265,12 @@ export default function OrderStatusPage() {
               <span className="text-sm text-slate-600">Shipping</span>
               <span className="text-base font-semibold text-slate-900">{formatCurrency(order.shipping_cost)}</span>
             </div>
+            {order.discount_amount > 0 && (
+              <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                <span className="text-sm text-green-600 font-medium">Discount (Coupon)</span>
+                <span className="text-base font-semibold text-green-600">-{formatCurrency(order.discount_amount)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center py-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg px-4 -mx-4">
               <span className="text-lg font-bold text-slate-900">Total</span>
               <span className="text-2xl font-bold text-indigo-600">{formatCurrency(order.total)}</span>

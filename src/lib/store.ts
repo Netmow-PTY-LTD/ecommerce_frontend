@@ -7,12 +7,24 @@ export interface CartItem extends Product {
     selectedAttributes?: Record<string, string>;
 }
 
+export interface AppliedCoupon {
+    id: number;
+    code: string;
+    type: 'percentage' | 'fixed' | 'free_shipping' | 'bogo';
+    value: number;
+}
+
 interface CartState {
     items: CartItem[];
+    coupon: AppliedCoupon | null;
+    discountAmount: number;
+    freeShipping: boolean;
     addItem: (product: Product, quantity?: number, selectedAttributes?: Record<string, string>) => void;
     removeItem: (productId: number, selectedAttributes?: Record<string, string>) => void;
     updateQuantity: (productId: number, quantity: number, selectedAttributes?: Record<string, string>) => void;
     clearCart: () => void;
+    applyCoupon: (coupon: AppliedCoupon, discountAmount: number, freeShipping: boolean) => void;
+    removeCoupon: () => void;
     total: () => number;
 }
 
@@ -20,6 +32,9 @@ export const useCartStore = create<CartState>()(
     persist(
         (set, get) => ({
             items: [],
+            coupon: null,
+            discountAmount: 0,
+            freeShipping: false,
             addItem: (product, quantity = 1, selectedAttributes = {}) => {
                 const items = get().items;
 
@@ -79,7 +94,9 @@ export const useCartStore = create<CartState>()(
                     });
                 }
             },
-            clearCart: () => set({ items: [] }),
+            clearCart: () => set({ items: [], coupon: null, discountAmount: 0, freeShipping: false }),
+            applyCoupon: (coupon, discountAmount, freeShipping) => set({ coupon, discountAmount, freeShipping }),
+            removeCoupon: () => set({ coupon: null, discountAmount: 0, freeShipping: false }),
             total: () => {
                 return get().items.reduce(
                     (total, item) => total + item.price * item.quantity,

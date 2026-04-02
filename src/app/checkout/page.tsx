@@ -4,12 +4,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign } from 'lucide-react';
+import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign, User, Lock, Mail, Tag, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
 // CheckoutForm component
 function CheckoutForm({
@@ -28,7 +29,14 @@ function CheckoutForm({
     paymentMethod,
     setPaymentMethod,
     formatCurrency,
-    currency
+    currency,
+    isAuthenticated,
+    customer,
+    appliedCoupon,
+    discountAmount,
+    freeShipping,
+    applyCoupon,
+    removeCoupon
 }: {
     formData: any;
     setFormData: (data: any) => void;
@@ -46,8 +54,48 @@ function CheckoutForm({
     setPaymentMethod: (method: 'cod' | 'online') => void;
     formatCurrency: (amount: number) => string;
     currency: string;
+    isAuthenticated: boolean;
+    customer: any;
+    appliedCoupon: any;
+    discountAmount: number;
+    freeShipping: boolean;
+    applyCoupon: (coupon: any, discountAmount: number, freeShipping: boolean) => void;
+    removeCoupon: () => void;
 }) {
     const router = useRouter();
+    const [couponCode, setCouponCode] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        setCouponError('');
+        try {
+            const api = require('@/lib/api').default;
+            const cartItemsPayload = items.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                unit_price: item.price
+            }));
+            const res = await api.post('/pricing/coupons/validate', {
+                code: couponCode.toUpperCase(),
+                cart_total: cartTotals.cartTotal,
+                cart_items: cartItemsPayload
+            });
+            const data = res.data?.data || res.data;
+            if (data?.valid) {
+                applyCoupon(data.coupon, data.discountAmount, data.freeShipping);
+                setCouponCode('');
+            } else {
+                setCouponError(res.data?.message || 'Invalid coupon');
+            }
+        } catch (err: any) {
+            setCouponError(err.response?.data?.message || 'Failed to validate coupon');
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -73,6 +121,15 @@ function CheckoutForm({
         if (!formData.state) newErrors.state = 'State is required';
         if (!formData.postalCode) newErrors.postalCode = 'Postal code is required';
 
+        // Password validation if user wants to create account
+        if (formData.password && formData.password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+
+        if (formData.password && formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -87,6 +144,29 @@ function CheckoutForm({
         setIsProcessing(true);
 
         try {
+            // Create account if password is provided
+            if (formData.password && formData.password.length >= 6) {
+                try {
+                    toast.info('Creating your account...');
+                    const registerData = {
+                        name: `${formData.firstName} ${formData.lastName}`,
+                        email: formData.email,
+                        password: formData.password,
+                        phone: formData.phone
+                    };
+
+                    const registerResponse = await api.post('/auth/register', registerData);
+
+                    if (registerResponse.data?.status === true || registerResponse.data?.data) {
+                        toast.success('Account created successfully!');
+                    }
+                } catch (error: any) {
+                    // If account creation fails, log but continue with order
+                    console.error('Account creation failed:', error);
+                    toast.warning('Could not create account, but your order will still be processed');
+                }
+            }
+
             // Show processing message
             if (paymentMethod === 'cod') {
                 toast.info('Creating your order...');
@@ -182,7 +262,8 @@ function CheckoutForm({
                     tax_amount: cartTotals.tax,
                     shipping_cost: cartTotals.shippingCost,
                     total_amount: finalTotal,
-                    discount_amount: 0,
+                    discount_amount: discountAmount,
+                    coupon_id: appliedCoupon?.id || null,
                     payment_method: 'cod',
                     payment_status: 'pending',
                     status: 'pending',
@@ -230,45 +311,80 @@ function CheckoutForm({
                 {/* Left Column - Form */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Contact Information */}
-                    <section>
-                        <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">1</span>
-                            Contact Information
-                        </h2>
-                        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.email ? 'border-red-500' : 'border-input'}`}
-                                        placeholder="you@example.com"
-                                    />
-                                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Phone</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-input'}`}
-                                        placeholder="+1 (555) 000-0000"
-                                    />
-                                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                    {!isAuthenticated ? (
+                        <section>
+                            <h2 className="text-xl font-semibold mb-4 flex items-center">
+                                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">1</span>
+                                Contact Information
+                            </h2>
+                            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.email ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="you@example.com"
+                                        />
+                                        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Phone</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    ) : (
+                        <section>
+                            <h2 className="text-xl font-semibold mb-4 flex items-center">
+                                <span className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm mr-3">✓</span>
+                                Contact Information (Logged in as {customer?.name})
+                            </h2>
+                            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-6 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-green-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Phone</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-green-900"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* Shipping Address */}
                     <section>
                         <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">2</span>
+                            <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">
+                                {isAuthenticated ? '2' : '2'}
+                            </span>
                             Shipping Address
                         </h2>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
@@ -356,10 +472,100 @@ function CheckoutForm({
                         </div>
                     </section>
 
+                    {/* Authentication Info */}
+                    {!isAuthenticated ? (
+                        <section>
+                            <h2 className="text-xl font-semibold mb-4 flex items-center">
+                                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">3</span>
+                                Authentication Info
+                            </h2>
+                            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+                                {/* Login Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <User className="h-4 w-4" />
+                                        <span>Already have an account?</span>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full justify-start"
+                                        onClick={() => router.push('/login?redirect=checkout')}
+                                    >
+                                        <Lock className="h-4 w-4 mr-2" />
+                                        Login to Existing Account
+                                    </Button>
+                                </div>
+
+                                {/* Guest Checkout */}
+                                <div className="border-t border-border pt-4">
+                                    <div className="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="guestCheckout"
+                                            name="guestCheckout"
+                                            checked={formData.guestCheckout}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 mt-1"
+                                        />
+                                        <div className="flex-1">
+                                            <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
+                                                Continue as Guest
+                                            </label>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                You can create an account later after placing your order
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Account Creation (Optional) */}
+                                {!formData.guestCheckout && (
+                                    <div className="border-t border-border pt-4 space-y-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <Mail className="h-4 w-4" />
+                                            <span>Create account with checkout email</span>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Password (optional)</label>
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                value={formData.password || ''}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                placeholder="Create a password for your account"
+                                            />
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Leave empty to continue as guest. Minimum 6 characters.
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Confirm Password</label>
+                                            <input
+                                                type="password"
+                                                name="confirmPassword"
+                                                value={formData.confirmPassword || ''}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                placeholder="Confirm your password"
+                                            />
+                                            {errors.confirmPassword && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    ) : null}
+
                     {/* Payment Method */}
                     <section>
                         <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">3</span>
+                            <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm mr-3">
+                                {isAuthenticated ? '3' : '4'}
+                            </span>
                             Payment Method
                         </h2>
                         <div className="space-y-3">
@@ -512,6 +718,16 @@ function CheckoutForm({
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="font-medium">{formatCurrency(cartTotals.cartTotal)}</span>
                             </div>
+                            {discountAmount > 0 && (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span className="flex items-center gap-1">
+                                        <Tag className="h-3.5 w-3.5" />
+                                        Discount
+                                        {appliedCoupon && <span className="text-xs">({appliedCoupon.code})</span>}
+                                    </span>
+                                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="font-medium">
@@ -526,6 +742,45 @@ function CheckoutForm({
                                 <span>Total</span>
                                 <span>{formatCurrency(finalTotal)}</span>
                             </div>
+                        </div>
+
+                        {/* Coupon Input */}
+                        <div className="mt-4 pt-4 border-t border-border">
+                            {appliedCoupon ? (
+                                <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2.5">
+                                    <Tag className="text-green-600 dark:text-green-400 h-4 w-4" />
+                                    <span className="text-sm text-green-700 dark:text-green-400 font-medium">{appliedCoupon.code}</span>
+                                    <span className="text-sm text-green-600 dark:text-green-500">applied</span>
+                                    <button type="button" onClick={removeCoupon} className="ml-auto p-0.5 hover:bg-green-100 dark:hover:bg-green-900/40 rounded">
+                                        <X className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Have a coupon?</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter code"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                                            className="flex-1 px-3 py-2 border border-input rounded-lg bg-background text-sm uppercase"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleApplyCoupon}
+                                            disabled={!couponCode.trim() || couponLoading}
+                                            className="h-9 px-4 shrink-0"
+                                        >
+                                            {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
+                                        </Button>
+                                    </div>
+                                    {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+                                </div>
+                            )}
                         </div>
 
                         {/* Submit Button */}
@@ -583,10 +838,10 @@ function CheckoutForm({
 
 // Main Checkout Page Component
 function CheckoutPageContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
-    const { items, total, clearCart } = useCartStore();
+    const { items, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
     const { formatCurrency, currency } = useCurrency();
+    const { isAuthenticated, customer } = useCustomerAuth();
     const [mounted, setMounted] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
@@ -605,6 +860,11 @@ function CheckoutPageContent() {
         state: '',
         postalCode: '',
         country: 'United States',
+
+        // Authentication
+        guestCheckout: false,
+        password: '',
+        confirmPassword: '',
 
         // Options
         saveInfo: false,
@@ -641,7 +901,33 @@ function CheckoutPageContent() {
         }
     }, [items, total, searchParams]);
 
-    const finalTotal = cartTotals.cartTotal + cartTotals.shippingCost + cartTotals.tax;
+    // Pre-fill form with customer data when logged in
+    useEffect(() => {
+        if (isAuthenticated && customer) {
+            // Split name into first and last name
+            const nameParts = customer.name?.split(' ') || ['', ''];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            setFormData(prev => ({
+                ...prev,
+                // Contact info
+                email: customer.email || '',
+                phone: customer.phone || '',
+
+                // Shipping info
+                firstName: firstName || prev.firstName,
+                lastName: lastName || prev.lastName,
+                address: customer.address || prev.address,
+                city: customer.city || prev.city,
+                state: customer.state || prev.state,
+                postalCode: customer.postal_code || prev.postalCode,
+                country: customer.country || 'United States'
+            }));
+        }
+    }, [isAuthenticated, customer]);
+
+    const finalTotal = Math.max(0, cartTotals.cartTotal - discountAmount + cartTotals.shippingCost + cartTotals.tax);
 
     if (!mounted) {
         return (
@@ -697,6 +983,13 @@ function CheckoutPageContent() {
                     setPaymentMethod={setPaymentMethod}
                     formatCurrency={formatCurrency}
                     currency={currency}
+                    isAuthenticated={isAuthenticated}
+                    customer={customer}
+                    appliedCoupon={coupon}
+                    discountAmount={discountAmount}
+                    freeShipping={freeShipping}
+                    applyCoupon={applyCoupon}
+                    removeCoupon={removeCoupon}
                 />
             </div>
         </div>

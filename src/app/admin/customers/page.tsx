@@ -131,9 +131,9 @@ export default function CustomersPage() {
       title="Customers"
       subtitle="Manage customer information and accounts"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 hover:shadow-2xl transition-all duration-300">
               <div className="flex items-center justify-between">
@@ -253,11 +253,10 @@ export default function CustomersPage() {
                         <div className="text-xs text-slate-500">{customer.state || ''} {customer.country || ''}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          customer.customer_type === 'company'
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.customer_type === 'company'
                             ? 'bg-purple-100 text-purple-700'
                             : 'bg-orange-100 text-orange-700'
-                        }`}>
+                          }`}>
                           {customer.customer_type === 'company' ? 'Business' : 'Individual'}
                         </span>
                       </td>
@@ -268,11 +267,10 @@ export default function CustomersPage() {
                         {formatCurrency(customer.outstanding_balance || 0)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          customer.is_active
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.is_active
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
-                        }`}>
+                          }`}>
                           {customer.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>

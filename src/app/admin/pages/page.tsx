@@ -138,7 +138,7 @@ export default function AdminPagesPage() {
 
   return (
     <AdminLayout title="Pages" subtitle="Manage your website pages">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="space-y-6 py-4">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <form onSubmit={handleSearch} className="flex-1 max-w-md">

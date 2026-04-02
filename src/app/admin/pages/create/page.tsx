@@ -126,9 +126,9 @@ export default function CreatePagePage() {
 
   return (
     <AdminLayout title="Create Page" subtitle="Create a new page for your website">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-4">
         {/* Back Button */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Link href="/admin/pages">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />

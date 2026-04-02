@@ -10,6 +10,7 @@ import AdminLayout from '@/components/admin/admin-layout';
 interface Category {
   id: number;
   name: string;
+  show_on_home?: boolean;
 }
 
 interface Unit {
@@ -114,6 +115,9 @@ export default function EditProductPage() {
     thumb_url: '',
     gallery_items: [] as string[],
     is_active: true,
+    meta_title: '',
+    meta_description: '',
+    meta_image: '',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -129,6 +133,8 @@ export default function EditProductPage() {
   const [selectedThumbnail, setSelectedThumbnail] = useState<GalleryImage | null>(null);
   const [selectedMainImage, setSelectedMainImage] = useState<GalleryImage | null>(null);
   const [selectedGalleryImages, setSelectedGalleryImages] = useState<GalleryImage[]>([]);
+  const [showMetaImageModal, setShowMetaImageModal] = useState(false);
+  const [selectedMetaImage, setSelectedMetaImage] = useState<GalleryImage | null>(null);
 
   // Attributes state
   const [attributes, setAttributes] = useState<Attribute[]>([]);
@@ -243,6 +249,9 @@ export default function EditProductPage() {
         thumb_url: productData.thumb_url || '',
         gallery_items: productData.gallery_items || [],
         is_active: productData.is_active !== undefined ? productData.is_active : true,
+        meta_title: productData.meta_title || '',
+        meta_description: productData.meta_description || '',
+        meta_image: productData.meta_image || '',
       });
 
       // Set selected main image if exists
@@ -290,7 +299,7 @@ export default function EditProductPage() {
       }
 
       // Set attributes if exist
-      if (productData.attributes && productData.attributes.length > 0) {
+      if (Array.isArray(productData.attributes) && productData.attributes.length > 0) {
         const loadedAttributes = productData.attributes.map((attr: any) => ({
           id: Date.now().toString() + Math.random(),
           name: attr.name,
@@ -499,6 +508,9 @@ export default function EditProductPage() {
       payload.image_url = formData.image_url || null;
       payload.thumb_url = formData.thumb_url || null;
       payload.gallery_items = formData.gallery_items || [];
+      payload.meta_title = formData.meta_title || null;
+      payload.meta_description = formData.meta_description || null;
+      payload.meta_image = formData.meta_image || null;
 
       // Add attributes to payload
       const validAttributes = attributes
@@ -1250,6 +1262,85 @@ export default function EditProductPage() {
             </div>
           </div>
 
+          {/* SEO / Meta */}
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                SEO / Meta
+              </h2>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Meta Title</label>
+                <input
+                  type="text"
+                  value={formData.meta_title}
+                  onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  placeholder="SEO title for search engines"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Meta Description</label>
+                <textarea
+                  value={formData.meta_description}
+                  onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  placeholder="Brief description for search engine results..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-slate-700">Meta Image</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMetaImageModal(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-medium hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Select from Gallery
+                  </button>
+                </div>
+
+                {formData.meta_image ? (
+                  <div className="relative inline-block group">
+                    <img
+                      src={formData.meta_image}
+                      alt="Meta image"
+                      className="h-40 w-40 object-cover rounded-xl border-2 border-emerald-400 shadow-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, meta_image: '' })}
+                      className="absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50">
+                    <svg className="w-12 h-12 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm text-slate-500 font-medium">No meta image selected</p>
+                    <p className="text-xs text-slate-400">Click "Select from Gallery" to choose an image</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Form Actions */}
           <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl shadow-xl border border-slate-200">
             <a
@@ -1708,6 +1799,103 @@ export default function EditProductPage() {
                     Confirm Selection
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Meta Image Selection Modal */}
+        {showMetaImageModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Select Meta Image</h3>
+                  <p className="text-sm text-slate-500">Choose an image from your gallery</p>
+                </div>
+                <button
+                  onClick={() => setShowMetaImageModal(false)}
+                  className="p-2 hover:bg-slate-100 rounded-xl transition-all"
+                >
+                  <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 border-b border-slate-200 space-y-4">
+                <input
+                  type="text"
+                  placeholder="Search images..."
+                  value={gallerySearchTerm}
+                  onChange={(e) => setGallerySearchTerm(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                />
+                <select
+                  value={selectedGalleryCategory}
+                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium"
+                >
+                  <option value="">All Categories</option>
+                  <option value="products">Products</option>
+                  <option value="general">General</option>
+                  <option value="banner">Banner</option>
+                </select>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {filteredGalleryImages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-slate-500">No images found</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {filteredGalleryImages.map((image) => (
+                      <div
+                        key={image.id}
+                        onClick={() => {
+                          setSelectedMetaImage(image);
+                          setFormData({ ...formData, meta_image: image.url });
+                          setShowMetaImageModal(false);
+                        }}
+                        className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
+                          selectedMetaImage?.id === image.id || formData.meta_image === image.url
+                            ? 'border-emerald-500 ring-2 ring-emerald-200'
+                            : 'border-slate-200 hover:border-emerald-300 hover:shadow-lg'
+                        }`}
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.originalName || image.filename}
+                          className="w-full h-32 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-xs font-medium text-white truncate">
+                            {image.originalName || image.filename}
+                          </p>
+                          {image.size && (
+                            <p className="text-xs text-slate-300">
+                              {(image.size / 1024).toFixed(1)} KB
+                            </p>
+                          )}
+                        </div>
+                        {(selectedMetaImage?.id === image.id || formData.meta_image === image.url) && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

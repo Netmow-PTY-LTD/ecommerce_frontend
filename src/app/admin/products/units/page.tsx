@@ -1,17 +1,95 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProductsNavbar from '@/components/admin/products-navbar';
 import AdminLayout from '@/components/admin/admin-layout';
+import { FormModal } from '@/components/admin/modal';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash2, Plus, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Unit {
   id: number;
   name: string;
   symbol: string;
   description?: string;
+  sort_order?: number;
+}
+
+function SortableUnitItem({
+  unit,
+  onEdit,
+  onDelete,
+}: {
+  unit: Unit;
+  onEdit: (u: Unit) => void;
+  onDelete: (id: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: unit.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${
+        isDragging ? 'shadow-lg' : 'hover:shadow-sm'
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing shrink-0"
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground">{unit.name}</span>
+          <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
+            {unit.symbol}
+          </span>
+        </div>
+        {unit.description && (
+          <p className="text-sm text-muted-foreground mt-0.5 truncate">{unit.description}</p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(unit)} className="h-8 w-8 p-0">
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(unit.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminUnitsPage() {
@@ -28,6 +106,23 @@ export default function AdminUnitsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationMeta, setPaginationMeta] = useState<{
+    total: number;
+    page: number;
+    limit: number;
+    totalPage: number;
+  }>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPage: 0,
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -39,14 +134,43 @@ export default function AdminUnitsPage() {
     if (isAuthenticated) {
       fetchUnits();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage]);
 
-  const fetchUnits = async () => {
+  const fetchUnits = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get('/products/units');
+      const response = await api.get(`/products/units?page=${page}&limit=100`);
       setUnits(response.data.data || []);
+      setPaginationMeta(response.data.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPage: 0,
+      });
     } catch (error) {
       console.error('Failed to fetch units:', error);
+    }
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleDragEnd = async (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = units.findIndex((u) => u.id === active.id);
+    const newIndex = units.findIndex((u) => u.id === over.id);
+    const reordered = arrayMove(units, oldIndex, newIndex);
+    setUnits(reordered);
+
+    try {
+      const orders = reordered.map((u, i) => ({ id: u.id, sort_order: i }));
+      await api.put('/products/units/reorder', { orders });
+    } catch {
+      setUnits(units);
+      setError('Failed to save order');
+      setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -57,6 +181,7 @@ export default function AdminUnitsPage() {
       symbol: unit.symbol,
       description: unit.description || '',
     });
+    setModalError('');
     setShowModal(true);
   };
 
@@ -68,8 +193,9 @@ export default function AdminUnitsPage() {
       setSuccess('Unit deleted successfully');
       fetchUnits();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete unit');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setError(err.response?.data?.message || 'Failed to delete unit');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -77,7 +203,7 @@ export default function AdminUnitsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setModalError('');
 
     try {
       if (editingUnit) {
@@ -93,8 +219,9 @@ export default function AdminUnitsPage() {
       setFormData({ name: '', symbol: '', description: '' });
       fetchUnits();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to save unit');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setModalError(err.response?.data?.message || 'Failed to save unit');
     } finally {
       setSubmitting(false);
     }
@@ -104,13 +231,13 @@ export default function AdminUnitsPage() {
     setShowModal(false);
     setEditingUnit(null);
     setFormData({ name: '', symbol: '', description: '' });
-    setError('');
+    setModalError('');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -124,150 +251,124 @@ export default function AdminUnitsPage() {
       title="Units Management"
       subtitle="Manage product units of measurement"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
         <ProductsNavbar />
 
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
-          >
-            + Add Unit
-          </button>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Units ({paginationMeta.total})</h2>
+          <Button onClick={() => { setEditingUnit(null); setFormData({ name: '', symbol: '', description: '' }); setModalError(''); setShowModal(true); }} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Unit
+          </Button>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Symbol
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {units.map((unit) => (
-                <tr key={unit.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {unit.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium">
-                      {unit.symbol}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{unit.description || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleEdit(unit)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(unit.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {units.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No units found. Add your first unit to get started.
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={units.map((u) => u.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {units.map((unit) => (
+                  <SortableUnitItem
+                    key={unit.id}
+                    unit={unit}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+
+        {paginationMeta.totalPage > 1 && (
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editingUnit ? 'Edit Unit' : 'Add New Unit'}
-              </h2>
-            </div>
+      <FormModal
+        open={showModal}
+        onOpenChange={(open) => { if (!open) handleCloseModal(); else setShowModal(open); }}
+        title={editingUnit ? 'Edit Unit' : 'Add New Unit'}
+        description={editingUnit ? 'Update the unit details below.' : 'Add a new unit of measurement for your products.'}
+        onSubmit={handleSubmit}
+        submitText={editingUnit ? 'Update Unit' : 'Create Unit'}
+        isSubmitting={submitting}
+      >
+        {modalError && (
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm mb-4">
+            {modalError}
+          </div>
+        )}
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Unit Name *</Label>
+            <Input
+              id="name"
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Piece, Kilogram, Liter"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Unit Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="e.g., Piece, Kilogram, Liter"
-                />
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="symbol">Symbol *</Label>
+            <Input
+              id="symbol"
+              type="text"
+              required
+              value={formData.symbol}
+              onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+              placeholder="e.g., pcs, kg, L"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Symbol *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.symbol}
-                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="e.g., pcs, kg, L"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Saving...' : editingUnit ? 'Update' : 'Create'} Unit
-                </button>
-              </div>
-            </form>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              placeholder="Brief description of this unit..."
+            />
           </div>
         </div>
-      )}
+      </FormModal>
     </AdminLayout>
   );
 }

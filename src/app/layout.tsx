@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import AdminNavbarProvider from "@/components/admin/admin-navbar-provider";
 import MainWrapper from "@/components/admin/main-wrapper";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,21 +34,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={cn("scroll-smooth", "font-sans", inter.variable)}>
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-background text-foreground`}
       >
         <SettingsProvider>
           <CurrencyProvider>
-            <AdminNavbarProvider>
-              <Navbar />
-              <MainWrapper>
-                {children}
-              </MainWrapper>
-              <Footer />
-            </AdminNavbarProvider>
-            <Toaster position="bottom-right" richColors />
+            <CustomerAuthProvider>
+              <AdminNavbarProvider>
+                <Navbar />
+                <MainWrapper>
+                  {children}
+                </MainWrapper>
+                <Footer />
+              </AdminNavbarProvider>
+              <Toaster position="bottom-right" richColors />
+            </CustomerAuthProvider>
           </CurrencyProvider>
         </SettingsProvider>
       </body>

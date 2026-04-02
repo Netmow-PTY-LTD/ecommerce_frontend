@@ -47,6 +47,13 @@ import {
     Italic,
     Underline,
     Palette,
+    ChevronDown,
+    ChevronUp,
+    HelpCircle,
+    Zap,
+    Video,
+    Share2,
+    PlusCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,6 +90,12 @@ const BLOCK_TYPES = {
     SPACER: 'spacer',
     COLUMNS: 'columns',
     LIST: 'list',
+    ICON_BOX: 'icon_box',
+    ACCORDION: 'accordion',
+    VIDEO: 'video',
+    SOCIAL: 'social',
+    FAQ_SECTION: 'faq_section',
+    FEATURE_SECTION: 'feature_section',
 };
 
 // Column layout presets: each number is the flex ratio for that column
@@ -144,6 +157,16 @@ const defaultBlockStyles = {
     h2MarginBottom: 16,
 };
 
+// ─────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────
+const IconComponent = ({ icon: iconName, className = "w-6 h-6" }) => {
+    const Lucide = require('lucide-react');
+    const Icon = Lucide[iconName] || Lucide['HelpCircle'];
+    if (!Icon) return <div className={className} />;
+    return <Icon className={className} />;
+};
+
 function newBlock(type, extra = {}) {
     const id = Math.random().toString(36).slice(2, 10);
     const base = { id, type, styles: { ...defaultBlockStyles } };
@@ -162,6 +185,14 @@ function newBlock(type, extra = {}) {
             return { ...base, height: 40 };
         case BLOCK_TYPES.LIST:
             return { ...base, content: '<ul style="margin: 0; padding-left: 20px;"><li>Item 1</li><li>Item 2</li></ul>' };
+        case BLOCK_TYPES.ICON_BOX:
+            return { ...base, icon: 'Layout', title: 'Feature Title', description: 'Description text...', url: '#', styles: { ...defaultBlockStyles, textAlign: 'center' } };
+        case BLOCK_TYPES.ACCORDION:
+            return { ...base, items: [{ title: 'Question 1', content: 'Answer text...' }], styles: { ...defaultBlockStyles } };
+        case BLOCK_TYPES.VIDEO:
+            return { ...base, url: '', styles: { ...defaultBlockStyles } };
+        case BLOCK_TYPES.SOCIAL:
+            return { ...base, items: [{ icon: 'Facebook', url: '#' }], styles: { ...defaultBlockStyles, textAlign: 'center' } };
         case BLOCK_TYPES.COLUMNS: {
             const layoutKey = extra.layoutKey || '1-1';
             const ratios = COLUMN_LAYOUTS[layoutKey]?.ratios || [1, 1];
@@ -169,7 +200,6 @@ function newBlock(type, extra = {}) {
                 ...base,
                 layoutKey,
                 styles: { ...defaultBlockStyles, paddingLeft: 8, paddingRight: 8, paddingTop: 8, paddingBottom: 8, backgroundColor: '#FFFFFF' },
-                // Each column holds an array of child blocks
                 columns: ratios.map((ratio) => ({
                     id: Math.random().toString(36).slice(2, 10),
                     ratio,
@@ -177,6 +207,33 @@ function newBlock(type, extra = {}) {
                 })),
             };
         }
+        case BLOCK_TYPES.FAQ_SECTION:
+            return {
+                ...base,
+                heading: 'Your Questions',
+                headingHighlight: 'Answered',
+                highlightColor: '#ffb300',
+                imageUrl: 'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&q=80&w=600',
+                items: [
+                    { question: 'What services do you offer?', answer: 'We offer a wide range of logistics and supply chain solutions.' },
+                    { question: 'How can I track my order?', answer: 'You can track your order using the tracking number provided in your email.' }
+                ],
+                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc' }
+            };
+        case BLOCK_TYPES.FEATURE_SECTION:
+            return {
+                ...base,
+                title: 'Global Express Logistics',
+                subtitle: 'Our Services',
+                description: 'We provide specialized logistics solutions tailored to your business needs.',
+                gradientStart: '#0a1d56',
+                gradientEnd: '#d2152a',
+                items: [
+                    { icon: 'Truck', title: 'Road Freight', subtitle: 'Fast Delivery' },
+                    { icon: 'Ship', title: 'Ocean Freight', subtitle: 'Global Shipping' }
+                ],
+                styles: { ...defaultBlockStyles, paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0 }
+            };
         default:
             return base;
     }
@@ -446,97 +503,7 @@ function BlockRenderer({ block, onUpdateContent }) {
                             `
                         }} />
                     )}
-                    <div className="relative group/text-content">
-                        {/* Inline Formatting Toolbar */}
-                        <div className="absolute -top-12 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-xl p-1.5 hidden group-focus-within/text-content:flex items-center gap-1 animate-in fade-in slide-in-from-bottom-2">
-                            {[
-                                { label: 'Bold', icon: Bold, cmd: 'bold' },
-                                { label: 'Italic', icon: Italic, cmd: 'italic' },
-                                { label: 'Underline', icon: Underline, cmd: 'underline' },
-                            ].map(({ label, icon: Icon, cmd }) => (
-                                <button
-                                    key={cmd}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        document.execCommand(cmd, false, null);
-                                    }}
-                                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-[#00c3c0] transition-colors"
-                                    title={label}
-                                >
-                                    <Icon className="w-3.5 h-3.5" />
-                                </button>
-                            ))}
-                            <div className="relative flex items-center group/color">
-                                <button className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-[#00c3c0] transition-colors" title="Text Color" onClick={(e) => { e.preventDefault(); e.currentTarget.nextElementSibling.classList.toggle('hidden'); }}>
-                                    <Palette className="w-3.5 h-3.5" />
-                                </button>
-                                <div className="absolute top-10 left-0 bg-white border border-slate-200 shadow-xl rounded-xl p-2 hidden z-[100] grid grid-cols-5 gap-1.5 min-w-[max-content]"
-                                    onMouseLeave={(e) => { e.currentTarget.classList.add('hidden'); }}
-                                >
-                                    {PALETTE_COLORS.map(c => (
-                                        <button
-                                            key={c}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                document.execCommand('foreColor', false, c);
-                                                e.currentTarget.parentElement.classList.add('hidden');
-                                            }}
-                                            style={{ backgroundColor: c }}
-                                            className="w-6 h-6 rounded-md border border-slate-100 hover:scale-110 transition-transform shadow-sm flex-shrink-0"
-                                        />
-                                    ))}
-                                    <div className="relative w-6 h-6 rounded-md border border-slate-100 hover:scale-110 transition-transform shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center flex-shrink-0">
-                                        <Plus className="w-3 h-3 text-slate-400" />
-                                        <input
-                                            type="color"
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                            onChange={(e) => {
-                                                const color = e.target.value;
-                                                document.execCommand('foreColor', false, color);
-                                                e.target.parentElement.parentElement.classList.add('hidden');
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-px h-4 bg-slate-100 mx-1" />
-                            {[
-                                { label: 'Uppercase', transform: 'uppercase' },
-                                { label: 'Lowercase', transform: 'lowercase' },
-                                { label: 'Capitalize', transform: 'capitalize' },
-                            ].map(({ label, transform }) => (
-                                <button
-                                    key={transform}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        const selection = window.getSelection();
-                                        if (selection.rangeCount > 0) {
-                                            const range = selection.getRangeAt(0);
-                                            const span = document.createElement('span');
-                                            span.style.textTransform = transform;
-                                            span.style.display = 'inline-block';
-                                            range.surroundContents(span);
-                                        }
-                                    }}
-                                    className="px-2 py-1 text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 rounded-lg text-slate-400 hover:text-[#ff8602] transition-colors"
-                                    title={label}
-                                >
-                                    {label[0]}
-                                </button>
-                            ))}
-                            <div className="w-px h-4 bg-slate-100 mx-1" />
-                            <button
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    document.execCommand('removeFormat', false, null);
-                                }}
-                                className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-red-500 transition-colors"
-                                title="Clear Formatting"
-                            >
-                                <RotateCw className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-
+                    <div className="relative group/text-content text-renderer-container">
                         <div
                             id={`block-${block.id}`}
                             ref={contentRef}
@@ -547,66 +514,6 @@ function BlockRenderer({ block, onUpdateContent }) {
                                 const newHTML = e.currentTarget.innerHTML;
                                 if (newHTML !== block.content) {
                                     onUpdateContent(block.id, newHTML);
-                                }
-                            }}
-                            onCopy={(e) => {
-                                if (block.type === BLOCK_TYPES.LIST) {
-                                    const selection = window.getSelection();
-                                    if (selection.rangeCount > 0) {
-                                        const range = selection.getRangeAt(0);
-                                        const container = document.createElement('div');
-                                        container.appendChild(range.cloneContents());
-
-                                        // Identify all top-level UL/OL and flatten them to keep only LI
-                                        const lists = container.querySelectorAll('ul, ol');
-                                        lists.forEach(list => {
-                                            // Only flatten if it's a direct child of our selection container
-                                            // This preserves nested lists inside LIs
-                                            if (list.parentNode === container) {
-                                                const fragment = document.createDocumentFragment();
-                                                while (list.firstChild) {
-                                                    fragment.appendChild(list.firstChild);
-                                                }
-                                                list.parentNode.replaceChild(fragment, list);
-                                            }
-                                        });
-
-                                        e.clipboardData.setData('text/html', container.innerHTML);
-                                        e.clipboardData.setData('text/plain', container.innerText);
-                                        e.preventDefault();
-                                    }
-                                }
-                            }}
-                            onPaste={(e) => {
-                                e.preventDefault();
-                                const html = e.clipboardData.getData('text/html');
-                                const text = e.clipboardData.getData('text/plain');
-                                if (html) {
-                                    const parser = new DOMParser();
-                                    const doc = parser.parseFromString(html, 'text/html');
-
-                                    // Sanitize: strip all style, class, id from all elements
-                                    const allElements = doc.querySelectorAll('*');
-                                    allElements.forEach(el => {
-                                        el.removeAttribute('style');
-                                        el.removeAttribute('class');
-                                        el.removeAttribute('id');
-                                    });
-
-                                    // Tags to strip (remove tag but keep content to avoid default boldness/headings)
-                                    const tagsToStrip = ['B', 'STRONG', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
-                                    tagsToStrip.forEach(tagName => {
-                                        const tags = doc.querySelectorAll(tagName);
-                                        tags.forEach(t => {
-                                            const span = doc.createElement('span');
-                                            span.innerHTML = t.innerHTML;
-                                            t.parentNode.replaceChild(span, t);
-                                        });
-                                    });
-
-                                    document.execCommand('insertHTML', false, doc.body.innerHTML);
-                                } else {
-                                    document.execCommand('insertText', false, text);
                                 }
                             }}
                             className="prose prose-slate max-w-none outline-none focus:ring-2 focus:ring-[#00c3c0]/10 rounded px-1 transition-all"
@@ -622,50 +529,39 @@ function BlockRenderer({ block, onUpdateContent }) {
             );
         case BLOCK_TYPES.BUTTON:
             return (
-                <div style={{
-                    paddingTop: s.paddingTop, paddingBottom: s.paddingBottom,
-                    paddingLeft: s.paddingLeft, paddingRight: s.paddingRight,
-                    borderTopWidth: `${s.borderTopWidth || 0}px`,
-                    borderBottomWidth: `${s.borderBottomWidth || 0}px`,
-                    borderLeftWidth: `${s.borderLeftWidth || 0}px`,
-                    borderRightWidth: `${s.borderRightWidth || 0}px`,
-                    borderColor: s.borderColor || '#e2e8f0',
-                    borderStyle: s.borderStyle || 'solid',
-                    display: 'flex',
-                    justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
-                }} className="email-block-renderer">
-                    <a
-                        href={block.url}
-                        target={block.target || '_self'}
-                        onClick={(e) => e.preventDefault()}
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => {
-                            const newText = e.currentTarget.innerText;
-                            if (newText !== block.text) {
-                                onUpdateContent(block.id, newText, 'text');
-                            }
-                        }}
-                        onPaste={(e) => {
-                            e.preventDefault();
-                            const text = e.clipboardData.getData('text/plain');
-                            document.execCommand('insertText', false, text);
-                        }}
-                        className="outline-none focus:ring-2 focus:ring-white/50 px-1 rounded transition-all"
-                        style={{
-                            backgroundColor: s.backgroundColor,
-                            color: s.color,
-                            borderRadius: s.borderRadius,
-                            fontSize: s.fontSize,
-                            padding: `${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px`,
-                            display: 'inline-block',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {block.text}
-                    </a>
+                <div style={containerStyle} className="email-block-renderer">
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
+                    }}>
+                        <a
+                            href={block.url}
+                            target={block.target || '_self'}
+                            onClick={(e) => e.preventDefault()}
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                                const newText = e.currentTarget.innerText;
+                                if (newText !== block.text) {
+                                    onUpdateContent(block.id, newText, 'text');
+                                }
+                            }}
+                            className="outline-none focus:ring-2 focus:ring-white/50 px-1 rounded transition-all"
+                            style={{
+                                backgroundColor: s.backgroundColor,
+                                color: s.color,
+                                borderRadius: s.borderRadius,
+                                fontSize: s.fontSize,
+                                padding: `${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px`,
+                                display: 'inline-block',
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {block.text}
+                        </a>
+                    </div>
                 </div>
             );
         case BLOCK_TYPES.DIVIDER:
@@ -676,6 +572,128 @@ function BlockRenderer({ block, onUpdateContent }) {
             );
         case BLOCK_TYPES.SPACER:
             return <div style={{ height: block.height || 40, backgroundColor: 'transparent' }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono email-block-renderer">spacer · {block.height || 40}px</div>;
+
+        case BLOCK_TYPES.ICON_BOX:
+            return (
+                <div style={containerStyle} className="page-block-renderer">
+                    <div className="flex flex-col items-center text-center">
+                        <IconComponent icon={block.icon || 'Layout'} className="w-10 h-10 mb-2" />
+                        <h3 className="font-bold">{block.title}</h3>
+                        <p className="text-sm opacity-80">{block.description}</p>
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.ACCORDION:
+            return (
+                <div style={containerStyle} className="page-block-renderer">
+                    {(block.items || []).map((item, i) => (
+                        <div key={i} className="mb-2 border rounded-lg overflow-hidden">
+                            <div className="p-3 bg-slate-50 font-bold flex justify-between items-center">
+                                {item.title}
+                                <Plus className="w-4 h-4" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+        case BLOCK_TYPES.VIDEO:
+            return (
+                <div style={containerStyle} className="page-block-renderer">
+                    <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center text-white">
+                        Video Placeholder: {block.url || 'No URL'}
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.SOCIAL:
+            return (
+                <div style={containerStyle} className="page-block-renderer">
+                    <div className="flex gap-4 justify-center">
+                        {(block.items || []).map((item, i) => (
+                            <div key={i} className="p-2 bg-slate-100 rounded-full">
+                                <IconComponent icon={item.icon || 'Link'} className="w-5 h-5" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.FAQ_SECTION: {
+            return (
+                <div style={containerStyle} className="email-block-renderer">
+                    <div className='spacer'>
+                        <h2 className="title text-center">
+                            {block.heading}{' '}
+                            <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
+                        </h2>
+                        <div className={`flex gap-10 items-center flex-row text-left mt-8`}>
+                            <div className="shrink-0 flex justify-center w-full md:w-auto">
+                                <div className="w-64 h-64 rounded-full overflow-hidden bg-violet-50 flex items-center justify-center border border-violet-100 shadow-inner">
+                                    <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                                </div>
+                            </div>
+                            <div className="flex-1 w-full space-y-3">
+                                {(block.items || []).map((item, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                                    >
+                                        <div className="p-4 flex justify-between items-center bg-white group-hover:bg-slate-50/50 transition-colors">
+                                            <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
+                                        </div>
+                                        <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed">
+                                            {item.answer}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        case BLOCK_TYPES.FEATURE_SECTION: {
+            return (
+                <div style={containerStyle} className="email-block-renderer">
+                    <div className="flex flex-col md:flex-row min-h-[450px] overflow-hidden rounded-3xl shadow-2xl">
+                        <div
+                            className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
+                            style={{
+                                background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)`
+                            }}
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none" />
+                            <div className='spacer'>
+                                <h3 className="subtitle">{block.subtitle}</h3>
+                                <h2 className="title">{block.title}</h2>
+                                <p className="paragraph">{block.description}</p>
+                            </div>
+                        </div>
+
+                        <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center -mt-8 md:mt-0 md:-ml-12 z-10">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                                {(block.items || []).map((item, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group"
+                                    >
+                                        <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
+                                            <IconComponent icon={item.icon || 'Zap'} className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h4 className="font-black text-slate-800 text-sm mb-0.5">{item.title}</h4>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">{item.subtitle}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
         default:
             return null;
     }
@@ -688,7 +706,14 @@ function blockToHTML(block) {
     const s = block.styles || {};
     const marginCSS = `margin:${s.marginTop || 0}px ${s.marginRight || 0}px ${s.marginBottom || 0}px ${s.marginLeft || 0}px;`;
     const borderCSS = `border-top-width:${s.borderTopWidth || 0}px;border-bottom-width:${s.borderBottomWidth || 0}px;border-left-width:${s.borderLeftWidth || 0}px;border-right-width:${s.borderRightWidth || 0}px;border-color:${s.borderColor || '#e2e8f0'};border-style:${s.borderStyle || 'solid'};`;
-    const wrap = (inner) => `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;background-color:${s.backgroundColor};border-radius:${s.borderRadius}px;box-sizing:border-box;${marginCSS}${borderCSS}">${inner}</div>`;
+    const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};`;
+    const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
+
+    const wrap = (inner) => `
+        <div class="block-wrapper" style="padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}">
+            ${inner}
+        </div>
+    `;
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
@@ -722,23 +747,96 @@ function blockToHTML(block) {
             return wrap(content);
         }
         case BLOCK_TYPES.IMAGE:
-            return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;" />`);
+            return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;border-radius:${s.borderRadius || 0}px;" />`);
         case BLOCK_TYPES.BUTTON:
-            return `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;text-align:${s.textAlign};box-sizing:border-box;${marginCSS}${borderCSS}"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`;
+            return wrap(`<div style="text-align:${s.textAlign};"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`);
         case BLOCK_TYPES.DIVIDER:
             return wrap(`<hr style="border:none;border-top:1px solid ${s.color || '#e2e8f0'};" />`);
         case BLOCK_TYPES.SPACER:
             return `<div style="height:${block.height || 40}px;"></div>`;
         case BLOCK_TYPES.COLUMNS: {
-            const totalRatio = block.columns.reduce((a, c) => a + c.ratio, 0);
+            const totalRatio = block.columns.reduce((a, c) => a + (c.ratio || 1), 0);
             const colHTMLs = block.columns.map((col) => {
                 const pct = Math.round((col.ratio / totalRatio) * 100);
                 const childHTML = col.blocks.map(blockToHTML).join('');
                 return `<td class="col-block" valign="top" style="width:${pct}%;padding:4px;">${childHTML}</td>`;
             }).join('');
-            return `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;background-color:${s.backgroundColor};box-sizing:border-box;${marginCSS}${borderCSS}">
-<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>
-</div>`;
+            return wrap(`<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>`);
+        }
+        case BLOCK_TYPES.ICON_BOX:
+            return wrap(`
+                <div style="text-align: ${s.textAlign || 'center'};">
+                    <div style="margin-bottom: 10px;">Icon: ${block.icon}</div>
+                    <h3 style="margin: 0 0 5px; font-size: 18px;">${block.title}</h3>
+                    <p style="margin: 0; font-size: 14px; opacity: 0.8;">${block.description}</p>
+                </div>
+            `);
+        case BLOCK_TYPES.ACCORDION:
+            const accItems = (block.items || []).map((item) => `
+                <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 10px; background: #f8fafc; font-weight: bold;">${item.title}</div>
+                    <div style="padding: 10px; font-size: 14px;">${item.content}</div>
+                </div>
+            `).join('');
+            return wrap(`<div>${accItems}</div>`);
+        case BLOCK_TYPES.VIDEO:
+            return wrap(`<div style="background: #000; color: #fff; padding: 40px; text-align: center; border-radius: 8px;">Video: ${block.url || 'No URL'}</div>`);
+        case BLOCK_TYPES.SOCIAL:
+            const socialItems = (block.items || []).map((item) => `
+                <a href="${item.url}" style="display: inline-block; margin: 0 5px; text-decoration: none;">Icon: ${item.icon}</a>
+            `).join('');
+            return wrap(`<div style="text-align: ${s.textAlign || 'center'};">${socialItems}</div>`);
+        case BLOCK_TYPES.FAQ_SECTION: {
+            const itemsHTML = (block.items || []).map((item) => `
+                <div class="faq-item" style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+                    <div class="faq-question" style="padding: 16px; font-weight: 600; color: #334155; cursor: pointer;">
+                        ${item.question}
+                    </div>
+                    <div class="faq-answer" style="padding: 0 16px 16px; color: #64748b; font-size: 14px;">
+                        ${item.answer}
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="faq-section spacer" style="padding: 40px 0;">
+                    <h2 class="title text-center" style="text-align: center; margin-bottom: 30px;">
+                        ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
+                    </h2>
+                    <div class="faq-container" style="display: flex; gap: 40px; align-items: center;">
+                        <div class="faq-image" style="flex: 0 0 auto;">
+                            <img src="${block.imageUrl}" alt="FAQ" style="width: 250px; height: 250px; border-radius: 50%; object-fit: cover;" />
+                        </div>
+                        <div class="faq-items" style="flex: 1;">
+                            ${itemsHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        case BLOCK_TYPES.FEATURE_SECTION: {
+            const featuresHTML = (block.items || []).map((item) => `
+                <div class="feature-card" style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #f8fafc; margin-bottom: 16px;">
+                    <div class="feature-icon" style="width: 40px; height: 40px; margin-bottom: 12px;">
+                        Icon: ${item.icon}
+                    </div>
+                    <h4 style="margin: 0 0 4px; font-weight: 900; color: #1e293b;">${item.title}</h4>
+                    <span style="font-size: 10px; text-transform: uppercase; color: #94a3b8;">${item.subtitle}</span>
+                </div>
+            `).join('');
+
+            return `
+                <div class="feature-section" style="display: flex; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);">
+                    <div class="feature-info" style="width: 50%; padding: 60px; background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%); color: #fff;">
+                        <span style="font-size: 14px; text-transform: uppercase; opacity: 0.8;">${block.subtitle}</span>
+                        <h2 style="font-size: 36px; font-weight: 700; margin: 8px 0 16px;">${block.title}</h2>
+                        <p style="opacity: 0.9; line-height: 1.6;">${block.description}</p>
+                    </div>
+                    <div class="feature-grid" style="width: 50%; padding: 40px; background: #f8fafc; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        ${featuresHTML}
+                    </div>
+                </div>
+            `;
         }
         default:
             return '';
@@ -750,19 +848,18 @@ function generateHTML(blocks) {
     const responsiveCSS = `<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media only screen and (max-width:600px){.col-row{width:100%!important;}.col-block{display:block!important;width:100%!important;box-sizing:border-box;}}
+        .spacer { padding: 40px 0; }
+        .text-center { text-align: center; }
     </style>`;
 
-    // Embed the visual design as a hidden comment for metadata persistence
     const designComment = `\n<!-- VISUAL_DESIGN_BLOCKS:${JSON.stringify(blocks).replace(/--/g, '\\u002d\\u002d')} -->`;
 
-    // User requested to remove DOCTYPE, html, head, and body tags.
-    // We return a fragment containing the style tag and a wrapper div that mimics the body styles.
     return `${responsiveCSS}
 <div style="background:#fff;font-family:Arial,sans-serif;margin:0;padding:0;">
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td align="center">
-                <div style="max-width:600px;margin:0 auto;background:#fff;">
+                <div style="max-width:800px;margin:0 auto;background:#fff;">
                     ${blocksHtml}
                 </div>
             </td>

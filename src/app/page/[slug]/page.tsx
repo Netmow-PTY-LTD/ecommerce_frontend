@@ -42,7 +42,14 @@ export default function PublicPagePage() {
 
       // Remove global CSS reset that breaks the page
       let content = response.data.data.content;
-      content = content.replace(/<style>[\s\S]*?<\/style>/g, ''); // Remove ALL style tags
+      
+      // Backwards compatibility for previously saved pages with raw global CSS
+      content = content.replace(/\*\s*\{\s*margin:\s*0;\s*padding:\s*0;\s*box-sizing:\s*border-box;\s*\}/g, '.page-content * { margin: 0; padding: 0; box-sizing: border-box; }');
+      content = content.replace(/details summary::-webkit-details-marker/g, '.page-content details summary::-webkit-details-marker');
+      content = content.replace(/details summary\s*\{/g, '.page-content details summary {');
+      content = content.replace(/details\[open\]\s*\.acc-icon/g, '.page-content details[open] .acc-icon');
+      content = content.replace(/(?<!\.page-content\s)\.acc-icon\s*\{/g, '.page-content .acc-icon {');
+      
       content = content.replace(/<!-- PAGE_BLOCKS:.*?-->/g, ''); // Remove HTML comment
 
       console.log('✨ Cleaned Content Length:', content.length);
@@ -92,6 +99,7 @@ export default function PublicPagePage() {
   // Error or no page found - show Coming Soon
   if (error || !page) {
     const formattedSlug = slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
 
     return (
       <div className="min-h-[60vh] flex items-center justify-center bg-gray-50">
@@ -147,7 +155,7 @@ export default function PublicPagePage() {
       </div>
 
       {/* Debug Info - Show at top for visibility */}
-      {debug && (
+      {/* {debug && (
         <div className="bg-blue-50 border-b-4 border-blue-500 py-4">
           <div className="container mx-auto px-4">
             <h3 className="font-bold text-blue-900 mb-2">🐛 Debug Info:</h3>
@@ -159,12 +167,12 @@ export default function PublicPagePage() {
             </details>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Content - Wrap PageBuilder content with proper spacing */}
       <div className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="">
+          <div className="overflow-hidden">
             <div
               dangerouslySetInnerHTML={{ __html: page.content }}
             />

@@ -46,6 +46,14 @@ import {
     Italic,
     Underline,
     Palette,
+    ChevronDown,
+    ChevronUp,
+    HelpCircle,
+    Zap,
+    Video,
+    Share2,
+    PlusCircle,
+    Link,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +74,12 @@ const BLOCK_TYPES = {
     SPACER: 'spacer',
     COLUMNS: 'columns',
     LIST: 'list',
+    ICON_BOX: 'icon_box',
+    ACCORDION: 'accordion',
+    VIDEO: 'video',
+    SOCIAL: 'social',
+    FAQ_SECTION: 'faq_section',
+    FEATURE_SECTION: 'feature_section',
 };
 
 // Column layout presets: each number is the flex ratio for that column
@@ -125,11 +139,28 @@ const defaultBlockStyles = {
     h2FontStyle: 'normal',
     h2TextDecoration: 'none',
     h2MarginBottom: 16,
+    backgroundImage: '',
 };
 
-function newBlock(type, extra = {}) {
+// ─────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────
+const IconComponent = ({ icon: iconName, className = "w-6 h-6" }: { icon: string, className?: string }) => {
+    const Icon = (require('lucide-react')[iconName] as any) || (require('lucide-react')['HelpCircle'] as any);
+    if (!Icon) return <div className={className} />;
+    return <Icon className={className} />;
+};
+
+function newBlock(type: string, extra: Record<string, any> = {}) {
     const id = Math.random().toString(36).slice(2, 10);
-    const base = { id, type, styles: { ...defaultBlockStyles } };
+    const base = {
+        id,
+        type,
+        customId: '',
+        customClass: '',
+        parentClass: '',
+        styles: { ...defaultBlockStyles }
+    };
     switch (type) {
         case BLOCK_TYPES.TEXT:
             return { ...base, content: '<p>Click here to edit this text block.</p>' };
@@ -145,6 +176,14 @@ function newBlock(type, extra = {}) {
             return { ...base, height: 40 };
         case BLOCK_TYPES.LIST:
             return { ...base, content: '<ul style="margin: 0; padding-left: 20px;"><li>Item 1</li><li>Item 2</li></ul>' };
+        case BLOCK_TYPES.ICON_BOX:
+            return { ...base, icon: 'Layout', title: 'Feature Title', description: 'Description text...', url: '#', styles: { ...defaultBlockStyles, textAlign: 'center' } };
+        case BLOCK_TYPES.ACCORDION:
+            return { ...base, items: [{ title: 'Question 1', content: 'Answer text...' }], styles: { ...defaultBlockStyles } };
+        case BLOCK_TYPES.VIDEO:
+            return { ...base, url: '', styles: { ...defaultBlockStyles } };
+        case BLOCK_TYPES.SOCIAL:
+            return { ...base, items: [{ icon: 'Facebook', url: '#' }], styles: { ...defaultBlockStyles, textAlign: 'center' } };
         case BLOCK_TYPES.COLUMNS: {
             const layoutKey = extra.layoutKey || '1-1';
             const ratios = COLUMN_LAYOUTS[layoutKey]?.ratios || [1, 1];
@@ -159,6 +198,33 @@ function newBlock(type, extra = {}) {
                 })),
             };
         }
+        case BLOCK_TYPES.FAQ_SECTION:
+            return {
+                ...base,
+                heading: 'Your Questions',
+                headingHighlight: 'Answered',
+                highlightColor: '#ffb300',
+                imageUrl: 'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&q=80&w=600',
+                items: [
+                    { question: 'What services do you offer?', answer: 'We offer a wide range of logistics and supply chain solutions.' },
+                    { question: 'How can I track my order?', answer: 'You can track your order using the tracking number provided in your email.' }
+                ],
+                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc' }
+            };
+        case BLOCK_TYPES.FEATURE_SECTION:
+            return {
+                ...base,
+                title: 'Global Express Logistics',
+                subtitle: 'Our Services',
+                description: 'We provide specialized logistics solutions tailored to your business needs.',
+                gradientStart: '#0a1d56',
+                gradientEnd: '#d2152a',
+                items: [
+                    { icon: 'Truck', title: 'Road Freight', subtitle: 'Fast Delivery' },
+                    { icon: 'Ship', title: 'Ocean Freight', subtitle: 'Global Shipping' }
+                ],
+                styles: { ...defaultBlockStyles, paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0 }
+            };
         default:
             return base;
     }
@@ -167,7 +233,22 @@ function newBlock(type, extra = {}) {
 // ─────────────────────────────────────────
 //  Column Cell – drop zone for child blocks
 // ─────────────────────────────────────────
-function ColumnCell({ column, colIndex, parentBlockId, selectedId, onSelect, onDeleteChild, onUpdateChild, onAddBlockToColumn, updateBlockContent, isMobile }) {
+interface ColumnCellProps {
+    column: any;
+    colIndex: number;
+    parentBlockId: string;
+    selectedId: string | null;
+    onSelect: (id: string) => void;
+    onDeleteChild: (parentId: string, colIndex: number, childId: string) => void;
+    onAddBlockToColumn: (parentId: string, colIndex: number, type: string) => void;
+    updateBlockContent: (id: string, content: any, field: string) => void;
+    isMobile: boolean;
+}
+
+function ColumnCell({
+    column, colIndex, parentBlockId, selectedId, onSelect,
+    onDeleteChild, onAddBlockToColumn, updateBlockContent, isMobile
+}: ColumnCellProps) {
     return (
         <div
             style={{ flex: isMobile ? '1 1 100%' : column.ratio }}
@@ -179,7 +260,7 @@ function ColumnCell({ column, colIndex, parentBlockId, selectedId, onSelect, onD
                 </div>
             )}
 
-            {column.blocks.map((childBlock) => (
+            {column.blocks.map((childBlock: any) => (
                 <div
                     key={childBlock.id}
                     onClick={(e) => { e.stopPropagation(); onSelect(childBlock.id); }}
@@ -216,7 +297,7 @@ const QUICK_ADD_TYPES = [
     { type: BLOCK_TYPES.SPACER, label: 'Spacer' },
 ];
 
-function QuickAddMenu({ onAdd }) {
+function QuickAddMenu({ onAdd }: { onAdd: (type: string) => void }) {
     const [open, setOpen] = useState(false);
     return (
         <div className="relative">
@@ -250,14 +331,26 @@ function QuickAddMenu({ onAdd }) {
 // ─────────────────────────────────────────
 //  Sortable Block (top-level)
 // ─────────────────────────────────────────
-function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDeleteChild, onUpdateChild, onAddBlockToColumn, updateBlockContent, viewMode }) {
+interface SortableBlockProps {
+    block: any;
+    isSelected: boolean;
+    onSelect: (id: string) => void;
+    onDelete: (id: string) => void;
+    selectedId: string | null;
+    onDeleteChild: (parentId: string, colIndex: number, childId: string) => void;
+    onAddBlockToColumn: (parentId: string, colIndex: number, type: string) => void;
+    updateBlockContent: (id: string, content: any, field: string) => void;
+    viewMode?: string;
+}
+
+function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDeleteChild, onAddBlockToColumn, updateBlockContent, viewMode }: SortableBlockProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
     const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 };
 
     if (block.type === BLOCK_TYPES.COLUMNS) {
         return (
             <div ref={setNodeRef} style={style} onClick={(e) => { e.stopPropagation(); onSelect(block.id); }}
-                className={`group relative rounded-xl transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'}`}>
+                className={`group relative rounded-xl transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'} ${block.parentClass || ''}`}>
                 <div {...attributes} {...listeners}
                     className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1.5 text-slate-300 hover:text-slate-500 transition-opacity">
                     <GripVertical className="w-4 h-4" />
@@ -296,7 +389,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                     }}
                     className={`mt-2 gap-2 ${viewMode === 'mobile' ? 'flex flex-col' : 'flex'}`}
                 >
-                    {block.columns.map((col, colIdx) => (
+                    {block.columns.map((col: any, colIdx: number) => (
                         <ColumnCell
                             key={col.id}
                             column={col}
@@ -305,7 +398,6 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                             selectedId={selectedId}
                             onSelect={onSelect}
                             onDeleteChild={onDeleteChild}
-                            onUpdateChild={onUpdateChild}
                             onAddBlockToColumn={onAddBlockToColumn}
                             updateBlockContent={updateBlockContent}
                             isMobile={viewMode === 'mobile'}
@@ -318,7 +410,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 
     return (
         <div ref={setNodeRef} style={style} onClick={(e) => { e.stopPropagation(); onSelect(block.id); }}
-            className={`group relative rounded-lg transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'}`}>
+            className={`group relative rounded-lg transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'} ${block.parentClass || ''}`}>
             <div {...attributes} {...listeners}
                 className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1.5 text-slate-300 hover:text-slate-500 transition-opacity">
                 <GripVertical className="w-4 h-4" />
@@ -337,7 +429,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 // ─────────────────────────────────────────
 //  Block Renderer (Canvas preview)
 // ─────────────────────────────────────────
-function BlockRenderer({ block, onUpdateContent }) {
+function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpdateContent: any, viewMode?: string }) {
     const s = block.styles || {};
     const containerStyle = {
         paddingTop: s.paddingTop, paddingBottom: s.paddingBottom,
@@ -352,6 +444,9 @@ function BlockRenderer({ block, onUpdateContent }) {
         borderRightWidth: `${s.borderRightWidth || 0}px`,
         borderColor: s.borderColor || '#e2e8f0',
         borderStyle: s.borderStyle || 'solid',
+        backgroundImage: s.backgroundImage ? `url(${s.backgroundImage})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
     };
     const textStyle = {
         color: s.color,
@@ -359,12 +454,12 @@ function BlockRenderer({ block, onUpdateContent }) {
         lineHeight: s.lineHeight || 1.5,
         letterSpacing: `${s.letterSpacing || 0}px`,
         textTransform: s.textTransform || 'none',
-        textAlign: s.textAlign,
+        textAlign: s.textAlign as any,
         fontWeight: s.fontWeight || 'normal',
         fontStyle: s.fontStyle || 'normal',
         textDecoration: s.textDecoration || 'none',
     };
-    const contentRef = useRef(null);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (contentRef.current && contentRef.current.innerHTML !== block.content) {
@@ -377,7 +472,7 @@ function BlockRenderer({ block, onUpdateContent }) {
         case BLOCK_TYPES.HEADING:
         case BLOCK_TYPES.LIST:
             return (
-                <div style={containerStyle} className="page-block-renderer">
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
                     {block.type === BLOCK_TYPES.LIST && (
                         <style dangerouslySetInnerHTML={{
                             __html: `
@@ -430,7 +525,7 @@ function BlockRenderer({ block, onUpdateContent }) {
                                     key={cmd}
                                     onMouseDown={(e) => {
                                         e.preventDefault();
-                                        document.execCommand(cmd, false, null);
+                                        document.execCommand(cmd, false);
                                     }}
                                     className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-[#00c3c0] transition-colors"
                                     title={label}
@@ -442,7 +537,7 @@ function BlockRenderer({ block, onUpdateContent }) {
                             <button
                                 onMouseDown={(e) => {
                                     e.preventDefault();
-                                    document.execCommand('removeFormat', false, null);
+                                    document.execCommand('removeFormat', false);
                                 }}
                                 className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-red-500 transition-colors"
                                 title="Clear Formatting"
@@ -475,24 +570,17 @@ function BlockRenderer({ block, onUpdateContent }) {
             );
         case BLOCK_TYPES.IMAGE:
             return (
-                <div style={containerStyle} className="page-block-renderer">
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
                     <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />
                 </div>
             );
         case BLOCK_TYPES.BUTTON:
             return (
-                <div style={{
-                    paddingTop: s.paddingTop, paddingBottom: s.paddingBottom,
-                    paddingLeft: s.paddingLeft, paddingRight: s.paddingRight,
-                    borderTopWidth: `${s.borderTopWidth || 0}px`,
-                    borderBottomWidth: `${s.borderBottomWidth || 0}px`,
-                    borderLeftWidth: `${s.borderLeftWidth || 0}px`,
-                    borderRightWidth: `${s.borderRightWidth || 0}px`,
-                    borderColor: s.borderColor || '#e2e8f0',
-                    borderStyle: s.borderStyle || 'solid',
+                <div id={block.customId || `blk-${block.id}`} style={{
+                    ...containerStyle,
                     display: 'flex',
                     justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
-                }} className="page-block-renderer">
+                }} className={`${block.customClass || ''}`}>
                     <a
                         href={block.url}
                         target={block.target || '_self'}
@@ -500,7 +588,7 @@ function BlockRenderer({ block, onUpdateContent }) {
                         contentEditable
                         suppressContentEditableWarning
                         onBlur={(e) => {
-                            const newText = e.currentTarget.innerText;
+                            const newText = (e.currentTarget as HTMLElement).innerText;
                             if (newText !== block.text) {
                                 onUpdateContent(block.id, newText, 'text');
                             }
@@ -529,12 +617,132 @@ function BlockRenderer({ block, onUpdateContent }) {
             );
         case BLOCK_TYPES.DIVIDER:
             return (
-                <div style={containerStyle} className="page-block-renderer">
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
                     <hr style={{ borderColor: s.color || '#e2e8f0' }} />
                 </div>
             );
         case BLOCK_TYPES.SPACER:
             return <div style={{ height: block.height || 40, backgroundColor: 'transparent' }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono page-block-renderer">spacer · {block.height || 40}px</div>;
+
+        case BLOCK_TYPES.ICON_BOX:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    <div className="flex flex-col items-center">
+                        <IconComponent icon={block.icon || 'Layout'} className="w-10 h-10 mb-2" />
+                        <h3 className="font-bold">{block.title}</h3>
+                        <p className="text-sm opacity-80">{block.description}</p>
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.ACCORDION:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    {(block.items || []).map((item: any, i: number) => (
+                        <div key={i} className="mb-2 border rounded-lg overflow-hidden">
+                            <div className="p-3 bg-slate-50 font-bold flex justify-between items-center">
+                                {item.title}
+                                <ChevronDown className="w-4 h-4" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+
+        case BLOCK_TYPES.VIDEO:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center text-white">
+                        Video Placeholder: {block.url || 'No URL'}
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.SOCIAL:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    <div className="flex gap-4 justify-center">
+                        {(block.items || []).map((item: any, i: number) => (
+                            <div key={i} className="p-2 bg-slate-100 rounded-full">
+                                <IconComponent icon={item.icon || 'Link'} className="w-5 h-5" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.FAQ_SECTION:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    <div className="spacer">
+                        <h2 className="title text-center">
+                            {block.heading}{' '}
+                            <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
+                        </h2>
+                        <div className="flex gap-10 items-center flex-row text-left mt-8">
+                            <div className="shrink-0 flex justify-center w-full md:w-auto">
+                                <div className="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                                    <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                                </div>
+                            </div>
+                            <div className="flex-1 w-full space-y-3">
+                                {(block.items || []).map((item: any, idx: number) => (
+                                    <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                                        <div className="p-4 flex justify-between items-center bg-white group-hover:bg-slate-50/50 transition-colors">
+                                            <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
+                                            <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
+                                        </div>
+                                        <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed">
+                                            {item.answer}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+        case BLOCK_TYPES.FEATURE_SECTION:
+            return (
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+                    <div className="flex flex-col md:flex-row min-h-[450px] overflow-hidden rounded-3xl shadow-2xl">
+                        <div
+                            className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
+                            style={{
+                                background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)`
+                            }}
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none" />
+                            <div className="spacer">
+                                <h3 className="subtitle">{block.subtitle}</h3>
+                                <h2 className="title">{block.title}</h2>
+                                <p className="paragraph">{block.description}</p>
+                            </div>
+                        </div>
+
+                        <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center -mt-8 md:mt-0 md:-ml-12 z-10">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                                {(block.items || []).map((item: any, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        className="bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group"
+                                    >
+                                        <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
+                                            <IconComponent icon={item.icon || 'Zap'} className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h4 className="font-black text-slate-800 text-sm mb-0.5">{item.title}</h4>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">{item.subtitle}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
         default:
             return null;
     }
@@ -543,11 +751,14 @@ function BlockRenderer({ block, onUpdateContent }) {
 // ─────────────────────────────────────────
 //  HTML Export utility
 // ─────────────────────────────────────────
-function blockToHTML(block) {
+function blockToHTML(block: any): string {
     const s = block.styles || {};
     const marginCSS = `margin:${s.marginTop || 0}px ${s.marginRight || 0}px ${s.marginBottom || 0}px ${s.marginLeft || 0}px;`;
     const borderCSS = `border-top-width:${s.borderTopWidth || 0}px;border-bottom-width:${s.borderBottomWidth || 0}px;border-left-width:${s.borderLeftWidth || 0}px;border-right-width:${s.borderRightWidth || 0}px;border-color:${s.borderColor || '#e2e8f0'};border-style:${s.borderStyle || 'solid'};`;
-    const wrap = (inner) => `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;background-color:${s.backgroundColor};border-radius:${s.borderRadius}px;box-sizing:border-box;${marginCSS}${borderCSS}">${inner}</div>`;
+    const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};${s.backgroundImage ? `background-image:url(${s.backgroundImage});background-size:cover;background-position:center;` : ''}`;
+    const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
+
+    const wrap = (content: string) => `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}" style="padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}">${content}</div>`;
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
@@ -581,30 +792,105 @@ function blockToHTML(block) {
             return wrap(content);
         }
         case BLOCK_TYPES.IMAGE:
-            return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;" />`);
+            return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;border-radius:${s.borderRadius || 0}px;" />`);
         case BLOCK_TYPES.BUTTON:
-            return `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;text-align:${s.textAlign};box-sizing:border-box;${marginCSS}${borderCSS}"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`;
+            return wrap(`<div style="text-align:${s.textAlign};"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`);
         case BLOCK_TYPES.DIVIDER:
             return wrap(`<hr style="border:none;border-top:1px solid ${s.color || '#e2e8f0'};" />`);
         case BLOCK_TYPES.SPACER:
             return `<div style="height:${block.height || 40}px;"></div>`;
         case BLOCK_TYPES.COLUMNS: {
-            const totalRatio = block.columns.reduce((a, c) => a + c.ratio, 0);
-            const colHTMLs = block.columns.map((col) => {
+            const totalRatio = block.columns.reduce((a: number, c: any) => a + c.ratio, 0);
+            const colHTMLs = block.columns.map((col: any) => {
                 const pct = Math.round((col.ratio / totalRatio) * 100);
                 const childHTML = col.blocks.map(blockToHTML).join('');
                 return `<td class="col-block" valign="top" style="width:${pct}%;padding:4px;">${childHTML}</td>`;
             }).join('');
-            return `<div style="padding:${s.paddingTop}px ${s.paddingRight}px ${s.paddingBottom}px ${s.paddingLeft}px;background-color:${s.backgroundColor};box-sizing:border-box;${marginCSS}${borderCSS}">
-<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>
-</div>`;
+            return wrap(`<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>`);
+        }
+        case BLOCK_TYPES.ICON_BOX:
+            return wrap(`
+                <div style="text-align: ${s.textAlign || 'center'};">
+                    <div style="margin-bottom: 10px;">Icon: ${block.icon}</div>
+                    <h3 style="margin: 0 0 5px; font-size: 18px;">${block.title}</h3>
+                    <p style="margin: 0; font-size: 14px; opacity: 0.8;">${block.description}</p>
+                </div>
+            `);
+        case BLOCK_TYPES.ACCORDION:
+            const accItems = (block.items || []).map((item: any) => `
+                <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 10px; background: #f8fafc; font-weight: bold;">${item.title}</div>
+                    <div style="padding: 10px; font-size: 14px;">${item.content}</div>
+                </div>
+            `).join('');
+            return wrap(`<div>${accItems}</div>`);
+        case BLOCK_TYPES.VIDEO:
+            return wrap(`<div style="background: #000; color: #fff; padding: 40px; text-align: center; border-radius: 8px;">Video: ${block.url || 'No URL'}</div>`);
+        case BLOCK_TYPES.SOCIAL:
+            const socialItems = (block.items || []).map((item: any) => `
+                <a href="${item.url}" style="display: inline-block; margin: 0 5px; text-decoration: none;">Icon: ${item.icon}</a>
+            `).join('');
+            return wrap(`<div style="text-align: ${s.textAlign || 'center'};">${socialItems}</div>`);
+        case BLOCK_TYPES.FAQ_SECTION: {
+            const itemsHTML = (block.items || []).map((item: any) => `
+                <div class="faq-item" style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+                    <div class="faq-question" style="padding: 16px; font-weight: 600; color: #334155; cursor: pointer;">
+                        ${item.question}
+                    </div>
+                    <div class="faq-answer" style="padding: 0 16px 16px; color: #64748b; font-size: 14px;">
+                        ${item.answer}
+                    </div>
+                </div>
+            `).join('');
+
+            const content = `
+                <div class="faq-section spacer" style="padding: 40px 0;">
+                    <h2 class="title text-center" style="text-align: center; margin-bottom: 30px;">
+                        ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
+                    </h2>
+                    <div class="faq-container" style="display: flex; gap: 40px; align-items: center;">
+                        <div class="faq-image" style="flex: 0 0 auto;">
+                            <img src="${block.imageUrl}" alt="FAQ" style="width: 250px; height: 250px; border-radius: 50%; object-fit: cover;" />
+                        </div>
+                        <div class="faq-items" style="flex: 1;">
+                            ${itemsHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            return wrap(content);
+        }
+        case BLOCK_TYPES.FEATURE_SECTION: {
+            const featuresHTML = (block.items || []).map((item: any) => `
+                <div class="feature-card" style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #f8fafc; margin-bottom: 16px;">
+                    <div class="feature-icon" style="width: 40px; height: 40px; margin-bottom: 12px;">
+                        Icon: ${item.icon}
+                    </div>
+                    <h4 style="margin: 0 0 4px; font-weight: 900; color: #1e293b;">${item.title}</h4>
+                    <span style="font-size: 10px; text-transform: uppercase; color: #94a3b8;">${item.subtitle}</span>
+                </div>
+            `).join('');
+
+            const content = `
+                <div class="feature-section" style="display: flex; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);">
+                    <div class="feature-info" style="width: 50%; padding: 60px; background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%); color: #fff;">
+                        <span style="font-size: 14px; text-transform: uppercase; opacity: 0.8;">${block.subtitle}</span>
+                        <h2 style="font-size: 36px; font-weight: 700; margin: 8px 0 16px;">${block.title}</h2>
+                        <p style="opacity: 0.9; line-height: 1.6;">${block.description}</p>
+                    </div>
+                    <div class="feature-grid" style="width: 50%; padding: 40px; background: #f8fafc; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        ${featuresHTML}
+                    </div>
+                </div>
+            `;
+            return wrap(content);
         }
         default:
             return '';
     }
 }
 
-function generateHTML(blocks) {
+function generateHTML(blocks: any[]) {
     const blocksHtml = blocks.map(blockToHTML).join('\n');
     const responsiveCSS = `<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -620,9 +906,84 @@ function generateHTML(blocks) {
 }
 
 // ─────────────────────────────────────────
+//  Helper for editing lists of items (FAQ, Features, etc.)
+// ─────────────────────────────────────────
+function ItemsListEditor({ items, onUpdate, fields }: { items: any[], onUpdate: (items: any[]) => void, fields: { key: string, label: string, type: string }[] }) {
+    const addItem = () => {
+        const newItem: Record<string, string> = {};
+        fields.forEach(f => newItem[f.key] = '');
+        onUpdate([...items, newItem]);
+    };
+
+    const removeItem = (index: number) => {
+        onUpdate(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index: number, key: string, value: string) => {
+        onUpdate(items.map((item, i) => i === index ? { ...item, [key]: value } : item));
+    };
+
+    const moveItem = (index: number, direction: 'up' | 'down') => {
+        const newItems = [...items];
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (nextIndex < 0 || nextIndex >= items.length) return;
+        [newItems[index], newItems[nextIndex]] = [newItems[nextIndex], newItems[index]];
+        onUpdate(newItems);
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-3">
+                {items.map((item, idx) => (
+                    <div key={idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl relative group">
+                        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => moveItem(idx, 'up')} className="p-1 hover:bg-white rounded border border-slate-200 text-slate-400 hover:text-slate-600"><ChevronUp className="w-3 h-3" /></button>
+                            <button onClick={() => moveItem(idx, 'down')} className="p-1 hover:bg-white rounded border border-slate-200 text-slate-400 hover:text-slate-600"><ChevronDown className="w-3 h-3" /></button>
+                            <button onClick={() => removeItem(idx)} className="p-1 hover:bg-red-50 rounded border border-red-100 text-red-400 hover:text-red-600 ml-1"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                        <div className="space-y-3">
+                            {fields.map(f => (
+                                <div key={f.key} className="space-y-1.5">
+                                    <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{f.label}</Label>
+                                    {f.type === 'textarea' ? (
+                                        <textarea
+                                            className="w-full h-20 p-3 text-xs bg-white border border-slate-200 rounded-xl resize-none outline-none focus:ring-2 focus:ring-[#00c3c0]/20"
+                                            value={item[f.key] || ''}
+                                            onChange={(e) => updateItem(idx, f.key, e.target.value)}
+                                        />
+                                    ) : (
+                                        <Input
+                                            className="h-9 text-xs rounded-xl bg-white border-slate-200"
+                                            value={item[f.key] || ''}
+                                            onChange={(e) => updateItem(idx, f.key, e.target.value)}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <Button onClick={addItem} variant="outline" className="w-full border-dashed border-2 py-6 rounded-2xl text-slate-400 hover:text-[#00c3c0] hover:border-[#00c3c0]/50 hover:bg-[#00c3c0]/5 transition-all group">
+                <PlusCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Add New Item</span>
+            </Button>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────
 //  Property Panel
 // ─────────────────────────────────────────
-function PropertyPanel({ block, onUpdate, blocks, setBlocks }) {
+interface PropertyPanelProps {
+    block: any;
+    onUpdate: (id: string, updates: any) => void;
+    blocks: any[];
+    setBlocks: React.Dispatch<React.SetStateAction<any[]>>;
+}
+
+function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProps) {
+    const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
     const [isUploading, setIsUploading] = useState(false);
 
     if (!block) {
@@ -643,14 +1004,14 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }) {
     }
 
     const s = block.styles || {};
-    const set = (key, val) => {
+    const set = (key: string, val: any) => {
         onUpdate(block.id, { styles: { ...(block.styles || {}), [key]: val } });
     };
-    const setContent = (updates) => {
+    const setContent = (updates: Record<string, any>) => {
         onUpdate(block.id, updates);
     };
 
-    const handleImageUpload = async (e) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setIsUploading(true);
@@ -671,235 +1032,393 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }) {
 
     return (
         <div className="flex flex-col h-full min-h-0 bg-white">
-            <div className="p-4 border-b flex items-center gap-2 shrink-0">
-                <MousePointer2 className="w-4 h-4 text-[#ff8602]" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Properties</p>
+            <div className="p-4 border-b flex items-center gap-3 shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-[#ff8602]/10 flex items-center justify-center">
+                    <MousePointer2 className="w-4 h-4 text-[#ff8602]" />
+                </div>
+                <div>
+                    <Badge className="bg-slate-100 text-slate-500 border-none uppercase text-[8px] tracking-tight px-1.5 py-0.5 mb-0.5">
+                        {block.type}
+                    </Badge>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-700 leading-none">Property Editor</p>
+                </div>
+            </div>
+
+            {/* Tab Switcher */}
+            <div className="flex p-2 bg-slate-50 border-b gap-1">
+                <button
+                    onClick={() => setActiveTab('content')}
+                    className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === 'content' ? 'bg-white shadow-md text-[#ff8602]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'}`}
+                >
+                    <LayoutTemplate className="w-3 h-3" />
+                    Content
+                </button>
+                <button
+                    onClick={() => setActiveTab('style')}
+                    className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${activeTab === 'style' ? 'bg-white shadow-md text-[#ff8602]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'}`}
+                >
+                    <Palette className="w-3 h-3" />
+                    Style
+                </button>
             </div>
 
             <ScrollArea className="flex-1 min-h-0">
                 <div className="p-5 space-y-6 text-sm">
-                    <Badge className="bg-[#ff8602]/10 text-[#ff8602] border-[#ff8602]/20 uppercase text-[9px] tracking-widest px-3 py-1">
-                        {block.type}
-                    </Badge>
+                    {activeTab === 'content' ? (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-1 duration-300">
+                            {block.type === BLOCK_TYPES.COLUMNS && (
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Column Layout</Label>
+                                    <div className="grid grid-cols-1 gap-1.5">
+                                        {Object.entries(COLUMN_LAYOUTS).map(([key, { label }]) => (
+                                            <button
+                                                key={key}
+                                                onClick={() => {
+                                                    const ratios = COLUMN_LAYOUTS[key].ratios;
+                                                    onUpdate(block.id, {
+                                                        layoutKey: key,
+                                                        columns: ratios.map((ratio, i) => ({
+                                                            id: block.columns[i]?.id || Math.random().toString(36).slice(2, 10),
+                                                            ratio,
+                                                            blocks: block.columns[i]?.blocks || [],
+                                                        })),
+                                                    });
+                                                }}
+                                                className={`text-left text-[10px] font-bold px-3 py-2.5 rounded-xl border transition-all ${block.layoutKey === key ? 'bg-[#6366F1]/10 border-[#6366F1]/30 text-[#6366F1]' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
-                    {block.type === BLOCK_TYPES.COLUMNS && (
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Column Layout</Label>
-                            <div className="grid grid-cols-1 gap-1.5">
-                                {Object.entries(COLUMN_LAYOUTS).map(([key, { label }]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => {
-                                            const ratios = COLUMN_LAYOUTS[key].ratios;
-                                            onUpdate(block.id, {
-                                                layoutKey: key,
-                                                columns: ratios.map((ratio, i) => ({
-                                                    id: block.columns[i]?.id || Math.random().toString(36).slice(2, 10),
-                                                    ratio,
-                                                    blocks: block.columns[i]?.blocks || [],
-                                                })),
-                                            });
-                                        }}
-                                        className={`text-left text-[10px] font-bold px-3 py-2 rounded-xl border transition-all ${block.layoutKey === key ? 'bg-[#6366F1]/10 border-[#6366F1]/30 text-[#6366F1]' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
+                            {(block.type === BLOCK_TYPES.TEXT || block.type === BLOCK_TYPES.HEADING || block.type === BLOCK_TYPES.LIST) && (
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML Content</Label>
+                                    <textarea
+                                        className="w-full min-h-[150px] p-4 text-xs font-mono bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#00c3c0]/20 focus:border-[#00c3c0] resize-none outline-none leading-relaxed"
+                                        value={block.content}
+                                        onChange={(e) => setContent({ content: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.IMAGE && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Image Source</Label>
+                                        <div className="flex gap-2">
+                                            <Input className="h-10 text-xs rounded-xl" placeholder="https://..." value={block.src} onChange={(e) => setContent({ src: e.target.value })} />
+                                            <label className="shrink-0 h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
+                                                <RotateCw className={`w-4 h-4 text-slate-500 ${isUploading ? 'animate-spin' : ''}`} />
+                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alt Text</Label>
+                                        <Input className="h-10 text-xs rounded-xl" value={block.alt} onChange={(e) => setContent({ alt: e.target.value })} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.BUTTON && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Label Text</Label>
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.text} onChange={(e) => setContent({ text: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Action URL</Label>
+                                        <div className="relative">
+                                            <Input className="h-10 text-xs rounded-xl pl-9" value={block.url} onChange={(e) => setContent({ url: e.target.value })} />
+                                            <Link className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.SPACER && (
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vertical Space (px)</Label>
+                                    <div className="flex items-center gap-4">
+                                        <input type="range" min={0} max={200} value={block.height || 40} onChange={(e) => setContent({ height: Number(e.target.value) })} className="flex-1 accent-[#00c3c0]" />
+                                        <Input type="number" className="h-9 w-16 text-xs rounded-xl text-right font-bold" value={block.height || 40} onChange={(e) => setContent({ height: Number(e.target.value) })} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.ICON_BOX && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name</Label>
+                                        <Input className="h-10 text-xs rounded-xl" placeholder="Lucide icon name" value={block.icon} onChange={(e) => setContent({ icon: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</Label>
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.title} onChange={(e) => setContent({ title: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+                                        <textarea className="w-full h-24 p-4 text-xs bg-slate-50 border border-slate-200 rounded-2xl resize-none outline-none focus:ring-2 focus:ring-[#ff8602]/20" value={block.description} onChange={(e) => setContent({ description: e.target.value })} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.ACCORDION && (
+                                <div className="space-y-4">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Questions & Answers</Label>
+                                    <ItemsListEditor
+                                        items={block.items || []}
+                                        onUpdate={(newItems) => setContent({ items: newItems })}
+                                        fields={[
+                                            { key: 'title', label: 'Item Title', type: 'text' },
+                                            { key: 'content', label: 'Detailed Answer', type: 'textarea' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.SOCIAL && (
+                                <div className="space-y-4">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Social Connections</Label>
+                                    <ItemsListEditor
+                                        items={block.items || []}
+                                        onUpdate={(newItems) => setContent({ items: newItems })}
+                                        fields={[
+                                            { key: 'icon', label: 'Platform (Lucide Icon)', type: 'text' },
+                                            { key: 'url', label: 'Profile Link', type: 'text' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.FAQ_SECTION && (
+                                <div className="space-y-6">
+                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Headings</Label>
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Heading" value={block.heading} onChange={(e) => setContent({ heading: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e) => setContent({ headingHighlight: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Accent Color</Label>
+                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e) => setContent({ highlightColor: e.target.value })} />
+                                        </div>
+                                    </div>
+                                    <ItemsListEditor
+                                        items={block.items || []}
+                                        onUpdate={(newItems) => setContent({ items: newItems })}
+                                        fields={[
+                                            { key: 'question', label: 'Question', type: 'text' },
+                                            { key: 'answer', label: 'Answer', type: 'textarea' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.FEATURE_SECTION && (
+                                <div className="space-y-6">
+                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Header Content</Label>
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.title} onChange={(e) => setContent({ title: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Subtitle" value={block.subtitle} onChange={(e) => setContent({ subtitle: e.target.value })} />
+                                        </div>
+                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e) => setContent({ description: e.target.value })} />
+                                    </div>
+                                    <ItemsListEditor
+                                        items={block.items || []}
+                                        onUpdate={(newItems) => setContent({ items: newItems })}
+                                        fields={[
+                                            { key: 'icon', label: 'Icon', type: 'text' },
+                                            { key: 'title', label: 'Label', type: 'text' },
+                                            { key: 'subtitle', label: 'Subtext', type: 'text' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-left-1 duration-300">
+                            {/* Layout Spacing */}
+                            <div className="space-y-6">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Container Spacing</p>
+                                <div className="space-y-5">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Padding</Label>
+                                            <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Inward</Badge>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[{ l: 'Top', k: 'paddingTop' }, { l: 'Bottom', k: 'paddingBottom' }, { l: 'Left', k: 'paddingLeft' }, { l: 'Right', k: 'paddingRight' }].map(p => (
+                                                <div key={p.k} className="space-y-1.5">
+                                                    <span className="text-[9px] text-slate-400">{p.l}</span>
+                                                    <Input type="number" value={s[p.k] ?? 16} onChange={e => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-50 h-px w-full" />
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Margin</Label>
+                                            <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Outward</Badge>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[{ l: 'Top', k: 'marginTop' }, { l: 'Bottom', k: 'marginBottom' }, { l: 'Left', k: 'marginLeft' }, { l: 'Right', k: 'marginRight' }].map(p => (
+                                                <div key={p.k} className="space-y-1.5">
+                                                    <span className="text-[9px] text-slate-400">{p.l}</span>
+                                                    <Input type="number" value={s[p.k] ?? 0} onChange={e => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <Separator />
+
+                            {/* Typography */}
+                            {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && (
+                                <div className="space-y-4">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Typography</p>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
+                                            <input type="range" min={10} max={64} value={s.fontSize || 16} onChange={(e) => set('fontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.fontSize || 16} onChange={(e) => set('fontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                        </div>
+                                        <div className="flex gap-1.5">
+                                            {[
+                                                { align: 'left', icon: AlignLeft },
+                                                { align: 'center', icon: AlignCenter },
+                                                { align: 'right', icon: AlignRight },
+                                            ].map(({ align, icon: Icon }) => (
+                                                <button key={align} onClick={() => set('textAlign', align)}
+                                                    className={`flex-1 h-10 flex items-center justify-center rounded-xl border transition-all ${s.textAlign === align ? 'bg-[#ff8602]/10 border-[#ff8602]/30 text-[#ff8602]' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}>
+                                                    <Icon className="w-4 h-4" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Visual Decor */}
+                            <div className="space-y-6">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Visual Design</p>
+                                <div className="space-y-4">
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Color</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {PALETTE_COLORS.map(c => (
+                                                <button key={c} onClick={() => set('backgroundColor', c)}
+                                                    style={{ backgroundColor: c }}
+                                                    className={`w-7 h-7 rounded-lg border-2 transition-all ${s.backgroundColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-white hover:scale-110 shadow-sm'}`} />
+                                            ))}
+                                            <input type="color" value={s.backgroundColor || '#FFFFFF'} onChange={(e) => set('backgroundColor', e.target.value)}
+                                                className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Custom color" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
+                                        <div className="flex items-center gap-3">
+                                            <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.borderRadius ?? 0} onChange={(e) => set('borderRadius', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Border Settings</Label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[{ l: 'Width (px)', k: 'borderTopWidth' }, { l: 'Style', k: 'borderStyle' }].map(p => (
+                                                <div key={p.k} className="space-y-1.5">
+                                                    <span className="text-[9px] text-slate-400">{p.l}</span>
+                                                    {p.k === 'borderTopWidth' ? (
+                                                        <Input type="number" value={s[p.k] || 0} onChange={e => {
+                                                            const val = Number(e.target.value);
+                                                            onUpdate(block.id, {
+                                                                styles: {
+                                                                    ...s,
+                                                                    borderTopWidth: val, borderBottomWidth: val, borderLeftWidth: val, borderRightWidth: val
+                                                                }
+                                                            });
+                                                        }} className="h-8 text-xs font-mono" />
+                                                    ) : (
+                                                        <select value={s.borderStyle || 'solid'} onChange={e => set('borderStyle', e.target.value)} className="w-full h-8 px-2 text-[10px] font-bold border border-slate-200 rounded-lg bg-white outline-none">
+                                                            <option value="solid">Solid</option>
+                                                            <option value="dashed">Dashed</option>
+                                                            <option value="dotted">Dotted</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-[9px] text-slate-400 w-12">Color</span>
+                                            <Input type="color" value={s.borderColor || '#e2e8f0'} onChange={e => set('borderColor', e.target.value)} className="h-8 flex-1 p-1 cursor-pointer rounded-lg border-slate-200" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Advanced Section */}
+                            <div className="space-y-6 pt-4 border-t border-slate-100">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Advanced Settings</p>
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML ID</Label>
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. contact-section" value={block.customId} onChange={(e) => setContent({ customId: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CSS Classes</Label>
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. custom-card shadow-lg" value={block.customClass} onChange={(e) => setContent({ customClass: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Class</Label>
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass} onChange={(e) => setContent({ parentClass: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                className="h-10 text-xs rounded-xl flex-1"
+                                                placeholder="https://..."
+                                                value={s.backgroundImage || ''}
+                                                onChange={(e) => set('backgroundImage', e.target.value)}
+                                            />
+                                            <label className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
+                                                <RotateCw className={`w-4 h-4 text-slate-400 ${isUploading ? 'animate-spin' : ''}`} />
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="image/*"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        setIsUploading(true);
+                                                        const formData = new FormData();
+                                                        formData.append('image', file);
+                                                        try {
+                                                            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                                                            const data = await res.json();
+                                                            if (data?.url) set('backgroundImage', data.url);
+                                                            else alert('Failed upload');
+                                                        } catch (err) {
+                                                            console.error(err);
+                                                        } finally {
+                                                            setIsUploading(false);
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
-
-                    {(block.type === BLOCK_TYPES.TEXT || block.type === BLOCK_TYPES.HEADING || block.type === BLOCK_TYPES.LIST) && (
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML Content</Label>
-                            <textarea
-                                className="w-full min-h-[120px] p-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#00c3c0]/20 focus:border-[#00c3c0] resize-none outline-none"
-                                value={block.content}
-                                onChange={(e) => setContent({ content: e.target.value })}
-                            />
-                        </div>
-                    )}
-
-                    {block.type === BLOCK_TYPES.IMAGE && (
-                        <>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Image Source</Label>
-                                <Input className="h-9 text-xs rounded-xl" placeholder="Paste image URL here" value={block.src} onChange={(e) => setContent({ src: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alt Text</Label>
-                                <Input className="h-9 text-xs rounded-xl" value={block.alt} onChange={(e) => setContent({ alt: e.target.value })} />
-                            </div>
-                        </>
-                    )}
-
-                    {block.type === BLOCK_TYPES.BUTTON && (
-                        <>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Label</Label>
-                                <Input className="h-9 text-xs rounded-xl font-bold" value={block.text} onChange={(e) => setContent({ text: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">URL</Label>
-                                <Input className="h-9 text-xs rounded-xl" value={block.url} onChange={(e) => setContent({ url: e.target.value })} />
-                            </div>
-                        </>
-                    )}
-
-                    {block.type === BLOCK_TYPES.SPACER && (
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Height (px)</Label>
-                            <Input type="number" className="h-9 text-xs rounded-xl" value={block.height || 40} onChange={(e) => setContent({ height: Number(e.target.value) })} />
-                        </div>
-                    )}
-
-                    <Separator />
-
-                    {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && block.type !== BLOCK_TYPES.HEADING && (
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Typography</Label>
-                            <div className="flex items-center gap-3">
-                                <span className="text-[10px] text-slate-400 w-20 shrink-0">Font Size</span>
-                                <input type="range" min={10} max={64} value={s.fontSize || 16} onChange={(e) => set('fontSize', Number(e.target.value))} className="flex-1 accent-[#00c3c0]" />
-                                <Input
-                                    type="number"
-                                    min={10}
-                                    max={64}
-                                    value={s.fontSize || 16}
-                                    onChange={(e) => set('fontSize', Number(e.target.value))}
-                                    className="h-8 w-14 text-right text-xs font-mono font-bold border-slate-200 rounded-lg p-1.5 focus:ring-[#00c3c0]/50"
-                                />
-                            </div>
-                            <div className="flex gap-1.5">
-                                {[
-                                    { align: 'left', icon: AlignLeft },
-                                    { align: 'center', icon: AlignCenter },
-                                    { align: 'right', icon: AlignRight },
-                                ].map(({ align, icon: Icon }) => (
-                                    <button key={align} onClick={() => set('textAlign', align)}
-                                        className={`flex-1 h-9 flex items-center justify-center rounded-xl border transition-all ${s.textAlign === align ? 'bg-[#00c3c0]/10 border-[#00c3c0]/30 text-[#00c3c0]' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}>
-                                        <Icon className="w-4 h-4" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Color</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {PALETTE_COLORS.map(c => (
-                                <button key={c} onClick={() => set('backgroundColor', c)}
-                                    style={{ backgroundColor: c }}
-                                    className={`w-7 h-7 rounded-lg border-2 transition-all ${s.backgroundColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-white hover:scale-110 shadow-sm hover:shadow-md'}`} />
-                            ))}
-                            <input type="color" value={s.backgroundColor || '#FFFFFF'} onChange={(e) => set('backgroundColor', e.target.value)}
-                                className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Custom color" />
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Padding</Label>
-                        {[
-                            { label: 'Top', key: 'paddingTop' },
-                            { label: 'Bottom', key: 'paddingBottom' },
-                            { label: 'Left', key: 'paddingLeft' },
-                            { label: 'Right', key: 'paddingRight' },
-                        ].map(({ label, key }) => (
-                            <div key={key} className="flex items-center gap-3">
-                                <span className="text-[10px] text-slate-400 w-14 shrink-0">{label}</span>
-                                <input type="range" min={0} max={100} value={s[key] ?? 16} onChange={(e) => set(key, Number(e.target.value))} className="flex-1 accent-[#00c3c0]" />
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    value={s[key] ?? 16}
-                                    onChange={(e) => set(key, Number(e.target.value))}
-                                    className="h-8 w-14 text-right text-xs font-mono font-bold border-slate-200 rounded-lg p-1.5 focus:ring-[#00c3c0]/50"
-                                />
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Margin</Label>
-                        {[
-                            { label: 'Top', key: 'marginTop' },
-                            { label: 'Bottom', key: 'marginBottom' },
-                            { label: 'Left', key: 'marginLeft' },
-                            { label: 'Right', key: 'marginRight' },
-                        ].map(({ label, key }) => (
-                            <div key={key} className="flex items-center gap-3">
-                                <span className="text-[10px] text-slate-400 w-14 shrink-0">{label}</span>
-                                <input type="range" min={0} max={100} value={s[key] ?? 0} onChange={(e) => set(key, Number(e.target.value))} className="flex-1 accent-[#00c3c0]" />
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    value={s[key] ?? 0}
-                                    onChange={(e) => set(key, Number(e.target.value))}
-                                    className="h-8 w-14 text-right text-xs font-mono font-bold border-slate-200 rounded-lg p-1.5 focus:ring-[#00c3c0]/50"
-                                />
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
-                        <div className="flex items-center gap-3">
-                            <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#00c3c0]" />
-                            <Input
-                                type="number"
-                                min={0}
-                                max={48}
-                                value={s.borderRadius ?? 0}
-                                onChange={(e) => set('borderRadius', Number(e.target.value))}
-                                className="h-8 w-14 text-right text-xs font-mono font-bold border-slate-200 rounded-lg p-1.5 focus:ring-[#00c3c0]/50"
-                            />
-                        </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Borders</Label>
-                        {[
-                            { label: 'Top', key: 'borderTopWidth' },
-                            { label: 'Bottom', key: 'borderBottomWidth' },
-                            { label: 'Left', key: 'borderLeftWidth' },
-                            { label: 'Right', key: 'borderRightWidth' },
-                        ].map(({ label, key }) => (
-                            <div key={key} className="flex items-center gap-3">
-                                <span className="text-[10px] text-slate-400 w-14 shrink-0">{label}</span>
-                                <input type="range" min={0} max={20} value={s[key] ?? 0} onChange={(e) => set(key, Number(e.target.value))} className="flex-1 accent-[#00c3c0]" />
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    max={20}
-                                    value={s[key] ?? 0}
-                                    onChange={(e) => set(key, Number(e.target.value))}
-                                    className="h-8 w-14 text-right text-xs font-mono font-bold border-slate-200 rounded-lg p-1.5 focus:ring-[#00c3c0]/50"
-                                />
-                            </div>
-                        ))}
-                        <div className="flex flex-col gap-2 mt-2">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Color & Style</span>
-                            <div className="flex gap-2 items-center">
-                                <input type="color" value={s.borderColor || '#e2e8f0'} onChange={(e) => set('borderColor', e.target.value)}
-                                    className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Border color" />
-                                <select
-                                    value={s.borderStyle || 'solid'}
-                                    onChange={(e) => set('borderStyle', e.target.value)}
-                                    className="h-8 text-xs font-bold border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#00c3c0]/20 focus:border-[#00c3c0] outline-none px-2 flex-1 bg-white"
-                                >
-                                    <option value="solid">Solid</option>
-                                    <option value="dashed">Dashed</option>
-                                    <option value="dotted">Dotted</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </ScrollArea>
         </div>
@@ -1060,6 +1579,15 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
         { type: BLOCK_TYPES.LIST, icon: List, label: 'List' },
     ];
 
+    const WIDGET_PALETTE = [
+        { type: BLOCK_TYPES.ICON_BOX, icon: Zap, label: 'Icon Box' },
+        { type: BLOCK_TYPES.ACCORDION, icon: HelpCircle, label: 'Accordion' },
+        { type: BLOCK_TYPES.VIDEO, icon: Video, label: 'Video' },
+        { type: BLOCK_TYPES.SOCIAL, icon: Share2, label: 'Social' },
+        { type: BLOCK_TYPES.FAQ_SECTION, icon: HelpCircle, label: 'FAQ Sec' },
+        { type: BLOCK_TYPES.FEATURE_SECTION, icon: Zap, label: 'Feature Sec' },
+    ];
+
     const COLUMN_PALETTE = [
         { layoutKey: '1-1', icon: Columns2, label: '2 Cols' },
         { layoutKey: '1-1-1', icon: Columns, label: '3 Cols' },
@@ -1112,6 +1640,25 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
                                     <button key={type} onClick={() => addBlock(type)}
                                         className="flex flex-col items-center gap-1.5 p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-[#00c3c0]/30 hover:shadow-lg transition-all group text-center">
                                         <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 group-hover:text-[#00c3c0] group-hover:border-[#00c3c0]/30 transition-colors shadow-sm">
+                                            <Icon className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-700">{label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-3 py-3">
+                            <div className="h-px bg-slate-100" />
+                        </div>
+
+                        <div className="px-3 pb-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Advanced Widgets</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {WIDGET_PALETTE.map(({ type, icon: Icon, label }) => (
+                                    <button key={type} onClick={() => addBlock(type)}
+                                        className="flex flex-col items-center gap-1.5 p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-[#ff8602]/30 hover:shadow-lg transition-all group text-center text-slate-600">
+                                        <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 group-hover:text-[#ff8602] group-hover:border-[#ff8602]/30 transition-colors shadow-sm">
                                             <Icon className="w-4 h-4" />
                                         </div>
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-700">{label}</span>

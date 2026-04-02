@@ -1,11 +1,12 @@
 import { Hero } from "@/components/hero";
-import { FeaturedProducts } from "@/components/featured-products";
+import { HomeCategories } from "@/components/home-categories";
 
 export default function Home() {
   return (
     <>
+
       <Hero />
-      <FeaturedProducts />
+      <HomeCategories />
 
       {/* Promotional Section - Just for visual appeal */}
       <section className="py-24 bg-zinc-900 text-white overflow-hidden relative">
@@ -25,3 +26,8 @@ export default function Home() {
     </>
   );
 }
+
+
+
+
+
