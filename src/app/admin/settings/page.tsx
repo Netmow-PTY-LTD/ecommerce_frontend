@@ -177,7 +177,7 @@ export default function SettingsPage() {
             title="Settings"
             subtitle="Manage your store configuration"
         >
-            <div className="container mx-auto px-4 py-8 max-w-5xl">
+            <div className="mx-auto px-4 py-8 max-w-5xl">
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Company Information */}
                     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">

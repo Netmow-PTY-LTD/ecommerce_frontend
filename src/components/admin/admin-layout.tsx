@@ -51,6 +51,7 @@ interface AdminLayoutProps {
   children: ReactNode;
   title: string;
   subtitle?: string;
+  defaultSidebarCollapsed?: boolean;
 }
 
 interface NavItem {
@@ -113,11 +114,16 @@ const navigation: NavItem[] = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export default function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
+export default function AdminLayout({ 
+  children, 
+  title, 
+  subtitle, 
+  defaultSidebarCollapsed = false 
+}: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultSidebarCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClosingMobileMenu, setIsClosingMobileMenu] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Orders']));

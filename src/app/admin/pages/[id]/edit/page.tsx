@@ -161,10 +161,14 @@ export default function EditPagePage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <AdminLayout title={`Edit: ${page.title}`} subtitle="Update page content and settings">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout 
+      title={`Edit: ${page.title}`} 
+      subtitle="Update page content and settings"
+      defaultSidebarCollapsed={true}
+    >
+      <div className="w-full py-4">
         {/* Back Button */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Link href="/admin/pages">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />

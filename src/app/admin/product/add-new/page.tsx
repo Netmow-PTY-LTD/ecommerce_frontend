@@ -391,7 +391,7 @@ export default function AddNewProductPage() {
       title="Add New Product"
       subtitle="Create a new product listing"
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full max-w-5xl mx-auto py-4">
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">

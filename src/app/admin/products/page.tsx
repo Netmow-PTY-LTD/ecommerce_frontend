@@ -76,8 +76,8 @@ function SortableProductRow({
   const stockBadge = product.stock_quantity <= product.min_stock_level
     ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
     : product.stock_quantity <= product.max_stock_level * 0.5
-    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
 
   return (
     <tr
@@ -121,11 +121,10 @@ function SortableProductRow({
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          product.is_active
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-        }`}>
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.is_active
+          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+          }`}>
           {product.is_active ? 'Active' : 'Inactive'}
         </span>
       </td>
@@ -276,7 +275,7 @@ export default function AdminProductsPage() {
       title="Products Management"
       subtitle="Manage your product catalog"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
         <ProductsNavbar />
 
         {success && (

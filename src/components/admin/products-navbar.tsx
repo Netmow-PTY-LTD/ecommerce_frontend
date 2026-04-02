@@ -14,7 +14,7 @@ export default function ProductsNavbar() {
 
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 mb-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4">
         <nav className="flex space-x-8 py-4">
           {navItems.map((item) => (
             <Link

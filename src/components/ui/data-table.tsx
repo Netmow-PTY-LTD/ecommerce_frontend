@@ -84,7 +84,7 @@ export function DataTable<T extends object>({
 
   // For client-side filtering and pagination
   const filteredData = React.useMemo(() => {
-    if (serverPagination || !searchTerm) return data;
+    if (!searchTerm) return data;
 
     return data.filter((row) => {
       return columns.some((column) => {
@@ -93,10 +93,10 @@ export function DataTable<T extends object>({
         return String(value).toLowerCase().includes(searchTerm.toLowerCase());
       });
     });
-  }, [data, searchTerm, columns, serverPagination]);
+  }, [data, searchTerm, columns]);
 
   const sortedData = React.useMemo(() => {
-    if (serverPagination || !sortBy || !onSort) return filteredData;
+    if (!sortBy || !onSort) return filteredData;
 
     return [...filteredData].sort((a, b) => {
       const aValue = (a as Record<string, unknown>)[sortBy] as string | number;
@@ -107,20 +107,20 @@ export function DataTable<T extends object>({
       const comparison = aValue < bValue ? -1 : 1;
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [filteredData, sortBy, sortOrder, onSort, serverPagination]);
+  }, [filteredData, sortBy, sortOrder, onSort]);
 
   const paginatedData = React.useMemo(() => {
-    if (serverPagination) return data;
+    if (serverPagination) return filteredData;
 
     if (!pagination) return sortedData;
 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, currentPage, pageSize, pagination, serverPagination, data]);
+  }, [filteredData, sortedData, currentPage, pageSize, pagination, serverPagination, data]);
 
   // Calculate pagination info
-  const displayData = serverPagination ? data : paginatedData;
+  const displayData = serverPagination ? filteredData : paginatedData;
   const totalItems = serverPagination ? paginationMeta?.total ?? sortedData.length : sortedData.length;
   const currentPageNum = serverPagination ? paginationMeta?.page ?? currentPage : currentPage;
   const totalPages = serverPagination ? paginationMeta?.totalPage ?? Math.ceil(sortedData.length / pageSize) : Math.ceil(sortedData.length / pageSize);

@@ -63,6 +63,7 @@ export default function AdminOrdersPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -79,7 +80,7 @@ export default function AdminOrdersPage() {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus]);
+  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
 
   const fetchOrders = async () => {
     try {
@@ -88,7 +89,7 @@ export default function AdminOrdersPage() {
         limit: '10',
       });
       if (selectedStatus) params.append('status', selectedStatus);
-      if (searchTerm) params.append('search', searchTerm);
+      if (appliedSearch) params.append('search', appliedSearch);
 
       const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
@@ -137,7 +138,13 @@ export default function AdminOrdersPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchOrders();
+    setAppliedSearch(searchTerm); // triggers useEffect
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+    setCurrentPage(1);
   };
 
   const getStatusColor = (status: Order['status']) => {
@@ -210,7 +217,7 @@ export default function AdminOrdersPage() {
       title="Orders Management"
       subtitle="Manage and track all customer orders"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
@@ -230,7 +237,7 @@ export default function AdminOrdersPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8">
           <Card className="shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -349,6 +356,16 @@ export default function AdminOrdersPage() {
               >
                 Search
               </Button>
+              {appliedSearch && (
+                <Button
+                  type="button"
+                  onClick={handleClearSearch}
+                  variant="outline"
+                  className="h-12 px-6"
+                >
+                  Clear
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -372,7 +389,7 @@ export default function AdminOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
+                {orders.length > 0 ? orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-semibold text-indigo-600">{order.order_number}</TableCell>
                     <TableCell>
@@ -422,7 +439,19 @@ export default function AdminOrdersPage() {
                       </a>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={9} className="py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center gap-2">
+                        <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                        </svg>
+                        <p className="text-lg font-medium">No orders found</p>
+                        <p className="text-sm">Try adjusting your search or filters</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
