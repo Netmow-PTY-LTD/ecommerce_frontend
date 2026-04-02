@@ -63,6 +63,7 @@ export default function PaidOrdersPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
@@ -82,7 +83,7 @@ export default function PaidOrdersPage() {
     if (isAuthenticated) {
       fetchPaidOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus, selectedPaymentMethod, sortBy, sortOrder]);
+  }, [isAuthenticated, currentPage, selectedStatus, selectedPaymentMethod, sortBy, sortOrder, appliedSearch]);
 
   const fetchPaidOrders = async () => {
     try {
@@ -93,7 +94,7 @@ export default function PaidOrdersPage() {
       });
       if (selectedStatus) params.append('status', selectedStatus);
       if (selectedPaymentMethod) params.append('payment_method', selectedPaymentMethod);
-      if (searchTerm) params.append('search', searchTerm);
+      if (appliedSearch) params.append('search', appliedSearch);
       params.append('sort', sortBy);
       params.append('order', sortOrder);
 
@@ -144,7 +145,13 @@ export default function PaidOrdersPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchPaidOrders();
+    setAppliedSearch(searchTerm);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+    setCurrentPage(1);
   };
 
   const handleSort = (field: 'date' | 'amount') => {
@@ -269,7 +276,7 @@ export default function PaidOrdersPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <Card className="shadow-lg border-l-4 border-l-green-500">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -381,6 +388,16 @@ export default function PaidOrdersPage() {
                   <Filter className="h-4 w-4 mr-2" />
                   Filter
                 </Button>
+                {appliedSearch && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClearSearch}
+                    className="h-10"
+                  >
+                    Clear
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"

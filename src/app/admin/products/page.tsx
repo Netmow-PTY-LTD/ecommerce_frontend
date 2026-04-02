@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import ProductsNavbar from '@/components/admin/products-navbar';
+import Link from 'next/link';
+import { Package, Search, Edit2, Trash2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/admin-layout';
 
 interface Product {
@@ -46,12 +48,13 @@ interface Pagination {
 }
 
 export default function AdminProductsPage() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: '1',
@@ -60,6 +63,7 @@ export default function AdminProductsPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -67,20 +71,26 @@ export default function AdminProductsPage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/admin/login');
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, authLoading, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+      fetchUnits();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
-      fetchCategories();
-      fetchUnits();
     }
-  }, [isAuthenticated, currentPage, selectedCategory]);
+  }, [isAuthenticated, currentPage, selectedCategory, appliedSearch]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -88,7 +98,7 @@ export default function AdminProductsPage() {
       });
 
       if (selectedCategory) params.append('category_id', selectedCategory);
-      if (searchTerm) params.append('search', searchTerm);
+      if (appliedSearch) params.append('search', appliedSearch);
 
       const response = await api.get(`/products?${params}`);
       setProducts(response.data.data);
@@ -96,6 +106,8 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       console.error('Failed to fetch products:', error);
       setError('Failed to load products');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,7 +132,13 @@ export default function AdminProductsPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchProducts();
+    setAppliedSearch(searchTerm);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+    setCurrentPage(1);
   };
 
   const handleDelete = async (id: number) => {
@@ -137,7 +155,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -154,10 +172,9 @@ export default function AdminProductsPage() {
       title="Products Management"
       subtitle="Manage your product catalog"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
         <ProductsNavbar />
 
-        {/* Success/Error Messages */}
         {success && (
           <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
             {success}
@@ -169,7 +186,6 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        {/* Search and Filter */}
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-center">
             <div className="flex-1 min-w-64">
@@ -204,6 +220,15 @@ export default function AdminProductsPage() {
             >
               Search
             </button>
+            {appliedSearch && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition duration-200"
+              >
+                Clear
+              </button>
+            )}
             <a
               href="/admin/product/add-new"
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 inline-block text-center"
@@ -213,107 +238,100 @@ export default function AdminProductsPage() {
           </form>
         </div>
 
-        {/* Products Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {product.thumb_url && (
-                          <img
-                            src={product.thumb_url}
-                            alt={product.name}
-                            className="h-10 w-10 rounded object-cover mr-4"
-                          />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500">SKU: {product.sku}</div>
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            {product.thumb_url ? (
+                              <img className="h-10 w-10 rounded-full object-cover" src={product.thumb_url} alt="" />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <Package className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                          </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {product.sku}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {product.category?.name || 'Uncategorized'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {formatCurrency(product.price)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className={`text-sm font-medium ${
+                            product.stock_quantity <= (product.min_stock_level || 5) 
+                              ? 'text-red-600' 
+                              : 'text-gray-900'
+                          }`}>
+                            {product.stock_quantity}
+                          </span>
+                          <span className="ml-1 text-xs text-gray-500">{product.unit?.symbol || 'pcs'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {product.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-3">
+                          <Link href={`/admin/product/${product.id}/edit`} className="text-indigo-600 hover:text-indigo-900">
+                            <Edit2 className="h-5 w-5" />
+                          </Link>
+                          <button 
+                            onClick={() => handleDelete(product.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <Search className="h-10 w-10 text-gray-300 mb-2" />
+                        <p className="text-lg font-medium">No products found</p>
+                        <p className="text-sm">Try adjusting your search or filters</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.category?.name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(product.price)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.stock_quantity <= product.min_stock_level
-                            ? 'bg-red-100 text-red-800'
-                            : product.stock_quantity <= product.max_stock_level * 0.5
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {product.stock_quantity} {product.unit?.symbol}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {product.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <a
-                        href={`/admin/product/details/${product.id}`}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        View
-                      </a>
-                      <span className="text-gray-300">|</span>
-                      <a
-                        href={`/admin/product/${product.id}/edit`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </a>
-                      <span className="text-gray-300">|</span>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">

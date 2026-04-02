@@ -170,10 +170,75 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
+}
+
+/* Templating */
+
+.subtitle {
+  @apply text-sm font-bold uppercase tracking-wider;
+}
+
+.title {
+  @apply text-3xl md:text-4xl font-black leading-tight tracking-tight;
+}
+
+.paragraph {
+  @apply text-sm md:text-base opacity-90 leading-relaxed max-w-lg;
+}
+
+.spacer {
+  @apply flex flex-col gap-6;
+}
+
+/* ─────────────────────────────────────────
+   Structural Widgets (Page Builder)
+   ───────────────────────────────────────── */
+
+/* 
+   Standard Layout Hierarchy:
+   .section-wrapper (Relative, Overflow: Hidden)
+     > .bg-layer (Absolute, Inset: 0, Z-index: 0, Pointer-Events: None)
+       > .bg-img (Absolute, Inset: 0)
+     > .container (Relative, Z-index: 10, Standard padding/max-width)
+*/
+
+.section-wrapper {
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bg-layer {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.bg-img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.container {
+  position: relative !important;
+  z-index: 10 !important;
 }

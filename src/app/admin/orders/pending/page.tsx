@@ -272,7 +272,7 @@ export default function PendingOrdersPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <Card className="shadow-lg border-l-4 border-l-yellow-500">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
