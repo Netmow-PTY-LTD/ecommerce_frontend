@@ -39,6 +39,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     email: '',
     phone: '',
     company: '',
+    password: '',
     address: '',
     city: '',
     state: '',
@@ -73,6 +74,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         email: customerData.email || '',
         phone: customerData.phone || '',
         company: customerData.company || '',
+        password: '',
         address: customerData.address || '',
         city: customerData.city || '',
         state: customerData.state || '',
@@ -112,6 +114,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
       if (formData.postal_code) payload.postal_code = formData.postal_code;
       if (formData.tax_id) payload.tax_id = formData.tax_id;
       if (formData.credit_limit) payload.credit_limit = parseFloat(formData.credit_limit);
+      if (formData.password) payload.password = formData.password;
 
       await api.put(`/customers/${id}`, payload);
       setSuccess('Customer updated successfully!');
@@ -217,6 +220,17 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                     className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     placeholder="Company name"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Leave blank to keep current password"
+                  />
+                  <p className="mt-1 text-xs text-slate-400">Min 6 characters. Leave empty to keep existing password.</p>
                 </div>
               </div>
             </div>

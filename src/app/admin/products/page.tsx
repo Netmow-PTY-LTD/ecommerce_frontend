@@ -1,14 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import ProductsNavbar from '@/components/admin/products-navbar';
-import Link from 'next/link';
-import { Package, Search, Edit2, Trash2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/admin-layout';
+import { Button } from '@/components/ui/button';
+import { GripVertical, Trash2 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Product {
   id: number;
@@ -25,6 +39,7 @@ interface Product {
   barcode: string;
   thumb_url: string;
   is_active: boolean;
+  sort_order?: number;
   category?: { id: number; name: string };
   unit?: { id: number; name: string; symbol: string };
 }
@@ -34,12 +49,6 @@ interface Category {
   name: string;
 }
 
-interface Unit {
-  id: number;
-  name: string;
-  symbol: string;
-}
-
 interface Pagination {
   total: number;
   page: string;
@@ -47,14 +56,110 @@ interface Pagination {
   totalPage: number;
 }
 
+function SortableProductRow({
+  product,
+  formatCurrency,
+  onDelete,
+}: {
+  product: Product;
+  formatCurrency: (n: number) => string;
+  onDelete: (id: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  const stockBadge = product.stock_quantity <= product.min_stock_level
+    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    : product.stock_quantity <= product.max_stock_level * 0.5
+      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`hover:bg-muted/50 ${isDragging ? 'shadow-lg bg-muted' : ''}`}
+    >
+      <td className="px-3 py-3 w-10">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+          {product.thumb_url && (
+            <img
+              src={product.thumb_url}
+              alt={product.name}
+              className="h-10 w-10 rounded object-cover mr-4"
+            />
+          )}
+          <div>
+            <div className="text-sm font-medium text-foreground">{product.name}</div>
+            <div className="text-sm text-muted-foreground">SKU: {product.sku}</div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+        {product.category?.name || '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+        {formatCurrency(product.price)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${stockBadge}`}>
+          {product.stock_quantity} {product.unit?.symbol}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.is_active
+          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+          }`}>
+          {product.is_active ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+        <a
+          href={`/admin/product/details/${product.id}`}
+          className="text-green-600 hover:text-green-900"
+        >
+          View
+        </a>
+        <span className="text-gray-300">|</span>
+        <a
+          href={`/admin/product/${product.id}/edit`}
+          className="text-indigo-600 hover:text-indigo-900"
+        >
+          Edit
+        </a>
+        <span className="text-gray-300">|</span>
+        <button
+          onClick={() => onDelete(product.id)}
+          className="text-red-600 hover:text-red-900"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 export default function AdminProductsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: '1',
@@ -63,42 +168,38 @@ export default function AdminProductsPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/admin/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCategories();
-      fetchUnits();
+    if (!loading && !isAuthenticated) {
+      router.push('/admin/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loading, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchProducts();
+      fetchCategories();
     }
-  }, [isAuthenticated, currentPage, selectedCategory, appliedSearch]);
+  }, [isAuthenticated, currentPage, selectedCategory]);
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '10',
+        limit: '100',
       });
 
       if (selectedCategory) params.append('category_id', selectedCategory);
-      if (appliedSearch) params.append('search', appliedSearch);
+      if (searchTerm) params.append('search', searchTerm);
 
       const response = await api.get(`/products?${params}`);
       setProducts(response.data.data);
@@ -106,10 +207,8 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       console.error('Failed to fetch products:', error);
       setError('Failed to load products');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [currentPage, selectedCategory, searchTerm]);
 
   const fetchCategories = async () => {
     try {
@@ -120,25 +219,29 @@ export default function AdminProductsPage() {
     }
   };
 
-  const fetchUnits = async () => {
-    try {
-      const response = await api.get('/products/units');
-      setUnits(response.data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch units:', error);
-    }
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    setAppliedSearch(searchTerm);
+    fetchProducts();
   };
 
-  const handleClearSearch = () => {
-    setSearchTerm('');
-    setAppliedSearch('');
-    setCurrentPage(1);
+  const handleDragEnd = async (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = products.findIndex((p) => p.id === active.id);
+    const newIndex = products.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(products, oldIndex, newIndex);
+    setProducts(reordered);
+
+    try {
+      const orders = reordered.map((p, i) => ({ id: p.id, sort_order: i }));
+      await api.put('/products/reorder', { orders });
+    } catch {
+      setProducts(products);
+      setError('Failed to save order');
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -155,7 +258,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -186,7 +289,8 @@ export default function AdminProductsPage() {
           </div>
         )}
 
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        {/* Search and Filter */}
+        <div className="bg-white dark:bg-card shadow rounded-lg p-6 mb-6">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-center">
             <div className="flex-1 min-w-64">
               <input
@@ -194,7 +298,7 @@ export default function AdminProductsPage() {
                 placeholder="Search by name, SKU, or barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
               />
             </div>
             <div>
@@ -204,7 +308,7 @@ export default function AdminProductsPage() {
                   setSelectedCategory(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -220,15 +324,6 @@ export default function AdminProductsPage() {
             >
               Search
             </button>
-            {appliedSearch && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition duration-200"
-              >
-                Clear
-              </button>
-            )}
             <a
               href="/admin/product/add-new"
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 inline-block text-center"
@@ -238,126 +333,92 @@ export default function AdminProductsPage() {
           </form>
         </div>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.length > 0 ? (
-                  products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            {product.thumb_url ? (
-                              <img className="h-10 w-10 rounded-full object-cover" src={product.thumb_url} alt="" />
-                            ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <Package className="h-5 w-5 text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {product.sku}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {product.category?.name || 'Uncategorized'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(product.price)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className={`text-sm font-medium ${
-                            product.stock_quantity <= (product.min_stock_level || 5) 
-                              ? 'text-red-600' 
-                              : 'text-gray-900'
-                          }`}>
-                            {product.stock_quantity}
-                          </span>
-                          <span className="ml-1 text-xs text-gray-500">{product.unit?.symbol || 'pcs'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {product.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-3">
-                          <Link href={`/admin/product/${product.id}/edit`} className="text-indigo-600 hover:text-indigo-900">
-                            <Edit2 className="h-5 w-5" />
-                          </Link>
-                          <button 
-                            onClick={() => handleDelete(product.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </div>
+        {/* Products Table with Drag & Drop */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="bg-white dark:bg-card shadow rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-border">
+                <thead className="bg-gray-50 dark:bg-muted">
+                  <tr>
+                    <th className="px-3 py-3 w-10"></th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stock
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-border">
+                  {products.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                        No products found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <Search className="h-10 w-10 text-gray-300 mb-2" />
-                        <p className="text-lg font-medium">No products found</p>
-                        <p className="text-sm">Try adjusting your search or filters</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    <SortableContext
+                      items={products.map((p) => p.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {products.map((product) => (
+                        <SortableProductRow
+                          key={product.id}
+                          product={product}
+                          formatCurrency={formatCurrency}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </SortableContext>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> to{' '}
-                <span className="font-medium">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
-                <span className="font-medium">{pagination.total}</span> results
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                  disabled={currentPage >= pagination.totalPage}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
+            {/* Pagination */}
+            <div className="bg-white dark:bg-card px-4 py-3 border-t border-gray-200 dark:border-border sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
+                  <span className="font-medium">{pagination.total}</span> results
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    disabled={currentPage >= pagination.totalPage}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </DndContext>
       </div>
     </AdminLayout>
   );

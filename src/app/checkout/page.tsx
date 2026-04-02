@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign, User, Lock, Mail } from 'lucide-react';
+import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign, User, Lock, Mail, Tag, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -31,7 +31,12 @@ function CheckoutForm({
     formatCurrency,
     currency,
     isAuthenticated,
-    customer
+    customer,
+    appliedCoupon,
+    discountAmount,
+    freeShipping,
+    applyCoupon,
+    removeCoupon
 }: {
     formData: any;
     setFormData: (data: any) => void;
@@ -51,8 +56,46 @@ function CheckoutForm({
     currency: string;
     isAuthenticated: boolean;
     customer: any;
+    appliedCoupon: any;
+    discountAmount: number;
+    freeShipping: boolean;
+    applyCoupon: (coupon: any, discountAmount: number, freeShipping: boolean) => void;
+    removeCoupon: () => void;
 }) {
     const router = useRouter();
+    const [couponCode, setCouponCode] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        setCouponError('');
+        try {
+            const api = require('@/lib/api').default;
+            const cartItemsPayload = items.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                unit_price: item.price
+            }));
+            const res = await api.post('/pricing/coupons/validate', {
+                code: couponCode.toUpperCase(),
+                cart_total: cartTotals.cartTotal,
+                cart_items: cartItemsPayload
+            });
+            const data = res.data?.data || res.data;
+            if (data?.valid) {
+                applyCoupon(data.coupon, data.discountAmount, data.freeShipping);
+                setCouponCode('');
+            } else {
+                setCouponError(res.data?.message || 'Invalid coupon');
+            }
+        } catch (err: any) {
+            setCouponError(err.response?.data?.message || 'Failed to validate coupon');
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -219,7 +262,8 @@ function CheckoutForm({
                     tax_amount: cartTotals.tax,
                     shipping_cost: cartTotals.shippingCost,
                     total_amount: finalTotal,
-                    discount_amount: 0,
+                    discount_amount: discountAmount,
+                    coupon_id: appliedCoupon?.id || null,
                     payment_method: 'cod',
                     payment_status: 'pending',
                     status: 'pending',
@@ -674,6 +718,16 @@ function CheckoutForm({
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="font-medium">{formatCurrency(cartTotals.cartTotal)}</span>
                             </div>
+                            {discountAmount > 0 && (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span className="flex items-center gap-1">
+                                        <Tag className="h-3.5 w-3.5" />
+                                        Discount
+                                        {appliedCoupon && <span className="text-xs">({appliedCoupon.code})</span>}
+                                    </span>
+                                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="font-medium">
@@ -688,6 +742,45 @@ function CheckoutForm({
                                 <span>Total</span>
                                 <span>{formatCurrency(finalTotal)}</span>
                             </div>
+                        </div>
+
+                        {/* Coupon Input */}
+                        <div className="mt-4 pt-4 border-t border-border">
+                            {appliedCoupon ? (
+                                <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2.5">
+                                    <Tag className="text-green-600 dark:text-green-400 h-4 w-4" />
+                                    <span className="text-sm text-green-700 dark:text-green-400 font-medium">{appliedCoupon.code}</span>
+                                    <span className="text-sm text-green-600 dark:text-green-500">applied</span>
+                                    <button type="button" onClick={removeCoupon} className="ml-auto p-0.5 hover:bg-green-100 dark:hover:bg-green-900/40 rounded">
+                                        <X className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Have a coupon?</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Enter code"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                                            className="flex-1 px-3 py-2 border border-input rounded-lg bg-background text-sm uppercase"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleApplyCoupon}
+                                            disabled={!couponCode.trim() || couponLoading}
+                                            className="h-9 px-4 shrink-0"
+                                        >
+                                            {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
+                                        </Button>
+                                    </div>
+                                    {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+                                </div>
+                            )}
                         </div>
 
                         {/* Submit Button */}
@@ -746,7 +839,7 @@ function CheckoutForm({
 // Main Checkout Page Component
 function CheckoutPageContent() {
     const searchParams = useSearchParams();
-    const { items, total, clearCart } = useCartStore();
+    const { items, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
     const { formatCurrency, currency } = useCurrency();
     const { isAuthenticated, customer } = useCustomerAuth();
     const [mounted, setMounted] = useState(false);
@@ -834,7 +927,7 @@ function CheckoutPageContent() {
         }
     }, [isAuthenticated, customer]);
 
-    const finalTotal = cartTotals.cartTotal + cartTotals.shippingCost + cartTotals.tax;
+    const finalTotal = Math.max(0, cartTotals.cartTotal - discountAmount + cartTotals.shippingCost + cartTotals.tax);
 
     if (!mounted) {
         return (
@@ -892,6 +985,11 @@ function CheckoutPageContent() {
                     currency={currency}
                     isAuthenticated={isAuthenticated}
                     customer={customer}
+                    appliedCoupon={coupon}
+                    discountAmount={discountAmount}
+                    freeShipping={freeShipping}
+                    applyCoupon={applyCoupon}
+                    removeCoupon={removeCoupon}
                 />
             </div>
         </div>

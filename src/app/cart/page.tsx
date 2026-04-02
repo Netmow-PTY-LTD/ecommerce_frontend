@@ -3,25 +3,55 @@ import { useState, useEffect } from 'react';
 
 import { useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Trash2, Plus, Minus, ArrowRight, Package, Tag, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
+import { validateCoupon } from '@/hooks/use-pricing';
 
 export default function CartPage() {
-    const { items, removeItem, updateQuantity, total, clearCart } = useCartStore();
+    const { items, removeItem, updateQuantity, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
     const { formatCurrency } = useCurrency();
+    const { customer } = useCustomerAuth();
     const [mounted, setMounted] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+    // Coupon input state
+    const [couponCode, setCouponCode] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     const cartTotal = total();
-    const shipping = cartTotal > 100 ? 0 : 15.00; // Free shipping over $100
-    const finalTotal = cartTotal + shipping;
+    const shipping = freeShipping || cartTotal > 100 ? 0 : 15.00;
+    const finalTotal = Math.max(0, cartTotal - discountAmount + shipping);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        setCouponError('');
+        try {
+            const res = await validateCoupon(couponCode.toUpperCase(), cartTotal, customer?.id,
+        items.map(i => ({ product_id: i.id, quantity: i.quantity, unit_price: i.price }))
+      );
+            if (res.data?.valid) {
+                applyCoupon(res.data.coupon, res.data.discountAmount, res.data.freeShipping);
+                setCouponCode('');
+            } else {
+                setCouponError(res.message || 'Invalid coupon');
+            }
+        } catch (err: any) {
+            setCouponError(err.response?.data?.message || 'Failed to validate coupon');
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     if (!mounted || items.length === 0) {
         return (
@@ -44,7 +74,6 @@ export default function CartPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <AnimatePresence initial={false}>
                         {items.map((item, index) => {
-                            // Create unique key combining product ID and selected attributes
                             const uniqueKey = `${item.id}-${JSON.stringify(item.selectedAttributes)}`;
 
                             return (
@@ -56,80 +85,79 @@ export default function CartPage() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="flex gap-4 p-4 border border-border rounded-xl bg-card"
                                 >
-                                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
-                                    {imageErrors.has(item.id) || (!item.image_url && !item.thumb_url) ? (
-                                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                                            <Package className="h-8 w-8 text-muted-foreground" />
-                                        </div>
-                                    ) : (
-                                        <Image
-                                            src={item.image_url || item.thumb_url || ''}
-                                            alt={item.name}
-                                            fill
-                                            className="object-cover"
-                                            onError={() => {
-                                                setImageErrors(prev => new Set(prev).add(item.id));
-                                            }}
-                                            unoptimized
-                                        />
-                                    )}
-                                </div>
-
-                                <div className="flex flex-1 flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between">
-                                            <h3 className="text-base font-semibold">
-                                                <Link href={`/product/${item.slug || item.id}`} className="hover:underline">{item.name}</Link>
-                                            </h3>
-                                            <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
-                                        </div>
-                                        <p className="mt-1 text-sm text-muted-foreground">{item.sku}</p>
-
-                                        {/* Selected Attributes */}
-                                        {item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0 && (
-                                            <div className="mt-2 flex flex-wrap gap-2">
-                                                {Object.entries(item.selectedAttributes).map(([name, value], idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="text-xs bg-secondary/50 px-2 py-1 rounded-md border border-border"
-                                                    >
-                                                        <span className="font-medium text-muted-foreground">{name}:</span>{' '}
-                                                        <span className="font-semibold">{value}</span>
-                                                    </div>
-                                                ))}
+                                    <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
+                                        {imageErrors.has(item.id) || (!item.image_url && !item.thumb_url) ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                <Package className="h-8 w-8 text-muted-foreground" />
                                             </div>
+                                        ) : (
+                                            <Image
+                                                src={item.image_url || item.thumb_url || ''}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover"
+                                                onError={() => {
+                                                    setImageErrors(prev => new Set(prev).add(item.id));
+                                                }}
+                                                unoptimized
+                                            />
                                         )}
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-4">
-                                        <div className="flex items-center border border-input rounded-md">
-                                            <button
-                                                className="px-2 py-1 hover:bg-secondary transition-colors"
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedAttributes)}
-                                            >
-                                                <Minus className="h-3 w-3" />
-                                            </button>
-                                            <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                                            <button
-                                                className="px-2 py-1 hover:bg-secondary transition-colors"
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedAttributes)}
-                                            >
-                                                <Plus className="h-3 w-3" />
-                                            </button>
+                                    <div className="flex flex-1 flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between">
+                                                <h3 className="text-base font-semibold">
+                                                    <Link href={`/product/${item.slug || item.id}`} className="hover:underline">{item.name}</Link>
+                                                </h3>
+                                                <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
+                                            </div>
+                                            <p className="mt-1 text-sm text-muted-foreground">{item.sku}</p>
+
+                                            {item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    {Object.entries(item.selectedAttributes).map(([name, value], idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="text-xs bg-secondary/50 px-2 py-1 rounded-md border border-border"
+                                                        >
+                                                            <span className="font-medium text-muted-foreground">{name}:</span>{' '}
+                                                            <span className="font-semibold">{value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => removeItem(item.id, item.selectedAttributes)}
-                                        >
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Remove
-                                        </Button>
+                                        <div className="flex items-center justify-between mt-4">
+                                            <div className="flex items-center border border-input rounded-md">
+                                                <button
+                                                    className="px-2 py-1 hover:bg-secondary transition-colors"
+                                                    onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedAttributes)}
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </button>
+                                                <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                                <button
+                                                    className="px-2 py-1 hover:bg-secondary transition-colors"
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedAttributes)}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </button>
+                                            </div>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                onClick={() => removeItem(item.id, item.selectedAttributes)}
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Remove
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
+                                </motion.div>
                             );
                         })}
                     </AnimatePresence>
@@ -149,14 +177,26 @@ export default function CartPage() {
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="font-medium">{formatCurrency(cartTotal)}</span>
                             </div>
+
+                            {discountAmount > 0 && (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span className="flex items-center gap-1">
+                                        <Tag className="h-3.5 w-3.5" />
+                                        Discount
+                                        {coupon && <span className="text-xs">({coupon.code})</span>}
+                                    </span>
+                                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="font-medium">
                                     {shipping === 0 ? 'Free' : formatCurrency(shipping)}
                                 </span>
                             </div>
-                            {shipping > 0 && (
-                                <p className="text-xs text-muted-foreground mt-1">
+                            {shipping > 0 && !freeShipping && (
+                                <p className="text-xs text-muted-foreground">
                                     Add {formatCurrency(100 - cartTotal)} more for free shipping.
                                 </p>
                             )}
@@ -165,6 +205,43 @@ export default function CartPage() {
                                 <span>Total</span>
                                 <span>{formatCurrency(finalTotal)}</span>
                             </div>
+                        </div>
+
+                        {/* Coupon Input */}
+                        <div className="mt-4 pt-4 border-t border-border">
+                            {coupon ? (
+                                <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2.5">
+                                    <Tag className="text-green-600 dark:text-green-400 h-4 w-4" />
+                                    <span className="text-sm text-green-700 dark:text-green-400 font-medium">{coupon.code}</span>
+                                    <span className="text-sm text-green-600 dark:text-green-500">applied</span>
+                                    <button onClick={removeCoupon} className="ml-auto p-0.5 hover:bg-green-100 dark:hover:bg-green-900/40 rounded">
+                                        <X className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Have a coupon?</label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Enter code"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                                            className="uppercase text-sm h-9"
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleApplyCoupon}
+                                            disabled={!couponCode.trim() || couponLoading}
+                                            className="h-9 px-4 shrink-0"
+                                        >
+                                            {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
+                                        </Button>
+                                    </div>
+                                    {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+                                </div>
+                            )}
                         </div>
 
                         <Link href="/checkout">
