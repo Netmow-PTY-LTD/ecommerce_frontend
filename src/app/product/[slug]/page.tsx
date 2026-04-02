@@ -6,7 +6,7 @@ import { useProduct } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/lib/store';
-import { ShoppingCart, Heart, Minus, Plus, Loader2, ArrowLeft, Truck, ShieldCheck, Star, MessageSquare, Package } from 'lucide-react';
+import { ShoppingCart, Heart, Minus, Plus, Loader2, ArrowLeft, Truck, ShieldCheck, Star, MessageSquare, Package, Gift } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -53,6 +53,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const productId = product?.id;
     const { summary, isLoading: summaryLoading } = useReviewSummary(productId || 0);
     const { reviews, pagination: reviewPagination, isLoading: reviewsLoading, mutate: mutateReviews } = useProductReviews(productId || 0, reviewPage, reviewSort);
+
+    // Check if product has BOGO deal
+    const [isBogoDeal, setIsBogoDeal] = useState(false);
+    const [bogoCouponCode, setBogoCouponCode] = useState('');
+    useEffect(() => {
+        if (!productId) return;
+        api.get('/pricing/public/bogo-deals').then(res => {
+            const deals = res.data?.data || [];
+            for (const deal of deals) {
+                if ((deal.product_ids || []).includes(productId)) {
+                    setIsBogoDeal(true);
+                    setBogoCouponCode(deal.coupon_code);
+                    break;
+                }
+            }
+        }).catch(() => {});
+    }, [productId]);
 
     // Compute initial selections from product attributes
     const initialSelections = useMemo(() => {
@@ -253,7 +270,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <div className="lg:col-span-3">
                     <div className="bg-card border border-border rounded-xl p-6 shadow-sm sticky top-24 space-y-6">
                         <div className="space-y-1">
-                            <div className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</div>
+                            <div className="flex items-center gap-3">
+                                <div className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</div>
+                                {isBogoDeal && (
+                                    <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
+                                        <Gift className="h-3.5 w-3.5" />
+                                        Buy 1 Get 1 Free
+                                    </span>
+                                )}
+                            </div>
+                            {isBogoDeal && bogoCouponCode && (
+                                <p className="text-xs text-orange-600 font-medium">
+                                    Use code <span className="font-mono bg-orange-100 px-1.5 py-0.5 rounded">{bogoCouponCode}</span> at checkout
+                                </p>
+                            )}
                             {(product.stock_quantity ?? 0) > 0 ? (
                                 <div className="text-sm text-green-600 font-medium flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-green-600" />

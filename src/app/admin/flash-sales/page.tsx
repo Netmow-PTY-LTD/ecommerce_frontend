@@ -95,10 +95,12 @@ export default function AdminFlashSalesPage() {
 
   const fetchSaleDetails = async (id: number) => {
     setLoadingDetails(true);
+    setSaleDetails(null);
     try {
       const res = await api.get(`/pricing/flash-sales/${id}`);
       setSaleDetails(res.data.data);
-    } catch {
+    } catch (err: any) {
+      console.error('Failed to load flash sale details:', err?.response?.data || err?.message);
       setSaleDetails(null);
     } finally {
       setLoadingDetails(false);

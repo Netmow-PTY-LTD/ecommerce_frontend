@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, Eye, GitCompare, Star, Check, Sparkles, Truck, Package } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, GitCompare, Star, Check, Sparkles, Truck, Package, Gift } from 'lucide-react';
 import { Product } from '@/types';
 import { useCartStore, useWishlistStore, useCompareStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ interface ProductCardProps {
     showSaleBadge?: boolean;
     discountPercentage?: number;
     freeShipping?: boolean;
+    bogoDeal?: boolean;
 }
 
 export function ProductCard({
@@ -28,7 +29,8 @@ export function ProductCard({
     showNewBadge = false,
     showSaleBadge = false,
     discountPercentage = 0,
-    freeShipping = false
+    freeShipping = false,
+    bogoDeal = false
 }: ProductCardProps) {
     const addItem = useCartStore((state) => state.addItem);
     const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -221,6 +223,18 @@ export function ProductCard({
                         >
                             <Truck className="h-3 w-3" />
                             FREE SHIP
+                        </motion.span>
+                    )}
+
+                    {bogoDeal && (
+                        <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.25 }}
+                            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg"
+                        >
+                            <Gift className="h-3 w-3" />
+                            BOGO
                         </motion.span>
                     )}
 

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ChevronLeft, ChevronRight, Grid3x3, List, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
+import api from '@/lib/api';
 
 // Wrapper component to handle Suspense for useSearchParams
 export default function ShopPageWrapper() {
@@ -38,6 +39,19 @@ function ShopPage() {
         sort: sortBy,
         search: searchQuery || undefined
     });
+
+    // Fetch BOGO deals
+    const [bogoProductIds, setBogoProductIds] = useState<Set<number>>(new Set());
+    useEffect(() => {
+        api.get('/pricing/public/bogo-deals').then(res => {
+            const deals = res.data?.data || [];
+            const ids = new Set<number>();
+            deals.forEach((deal: any) => {
+                (deal.product_ids || []).forEach((id: number) => ids.add(id));
+            });
+            setBogoProductIds(ids);
+        }).catch(() => {});
+    }, []);
 
     const totalPages = pagination?.totalPage || 1;
 
@@ -222,6 +236,7 @@ function ShopPage() {
                                 product={product}
                                 showNewBadge={true}
                                 freeShipping={product.price > 100}
+                                bogoDeal={bogoProductIds.has(product.id)}
                             />
                         ))}
                     </div>

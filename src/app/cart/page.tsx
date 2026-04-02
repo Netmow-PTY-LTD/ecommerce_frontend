@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, Minus, ArrowRight, Package, Tag, X, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, Package, Tag, X, Loader2, Gift } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { validateCoupon } from '@/hooks/use-pricing';
+import api from '@/lib/api';
 
 export default function CartPage() {
     const { items, removeItem, updateQuantity, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
@@ -24,13 +25,52 @@ export default function CartPage() {
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState('');
 
+    // BOGO deals state
+    const [bogoProductIds, setBogoProductIds] = useState<Set<number>>(new Set());
+    const [bogoCouponCodes, setBogoCouponCodes] = useState<Map<number, string>>(new Map());
+
     useEffect(() => {
         setMounted(true);
+        // Fetch active BOGO deals
+        api.get('/pricing/public/bogo-deals').then(res => {
+            const deals = res.data?.data || res.data || [];
+            const ids = new Set<number>();
+            const codes = new Map<number, string>();
+            for (const deal of deals) {
+                for (const pid of deal.product_ids) {
+                    ids.add(pid);
+                    codes.set(pid, deal.coupon_code);
+                }
+            }
+            setBogoProductIds(ids);
+            setBogoCouponCodes(codes);
+        }).catch(() => {});
     }, []);
 
+    // Re-validate coupon when cart items change
+    useEffect(() => {
+        if (!coupon || !mounted) return;
+        const cartTotal = total();
+        if (cartTotal === 0) { removeCoupon(); return; }
+        validateCoupon(coupon.code, cartTotal, customer?.id,
+            items.map(i => ({ product_id: i.id, quantity: i.quantity, unit_price: i.price }))
+        ).then(res => {
+            if (res.data?.valid) {
+                applyCoupon(res.data.coupon, res.data.discountAmount, res.data.freeShipping);
+            } else {
+                removeCoupon();
+            }
+        }).catch(() => {
+            removeCoupon();
+        });
+    }, [items, coupon?.code, mounted]);
+
     const cartTotal = total();
+    const effectiveDiscount = Math.min(discountAmount, cartTotal);
     const shipping = freeShipping || cartTotal > 100 ? 0 : 15.00;
-    const finalTotal = Math.max(0, cartTotal - discountAmount + shipping);
+    const discountedSubtotal = Math.max(0, cartTotal - effectiveDiscount);
+    const tax = discountedSubtotal * 0.08;
+    const finalTotal = Math.max(0, discountedSubtotal + shipping + tax);
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -109,10 +149,28 @@ export default function CartPage() {
                                             <div className="flex justify-between">
                                                 <h3 className="text-base font-semibold">
                                                     <Link href={`/product/${item.slug || item.id}`} className="hover:underline">{item.name}</Link>
+                                                    {bogoProductIds.has(item.id) && (
+                                                        <span className="ml-2 inline-flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                                            <Gift className="h-3 w-3" /> BOGO
+                                                        </span>
+                                                    )}
                                                 </h3>
                                                 <p className="font-semibold">{formatCurrency(item.price * item.quantity)}</p>
                                             </div>
                                             <p className="mt-1 text-sm text-muted-foreground">{item.sku}</p>
+
+                                            {bogoProductIds.has(item.id) && item.quantity < 2 && (
+                                                <p className="mt-1 text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                                                    <Gift className="h-3 w-3" />
+                                                    Add 1 more for Buy 1 Get 1 Free (code: {bogoCouponCodes.get(item.id)})
+                                                </p>
+                                            )}
+                                            {bogoProductIds.has(item.id) && item.quantity >= 2 && (
+                                                <p className="mt-1 text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                                                    <Gift className="h-3 w-3" />
+                                                    BOGO eligible — {Math.floor(item.quantity / 2)} free item{Math.floor(item.quantity / 2) > 1 ? 's' : ''} with code {bogoCouponCodes.get(item.id)}
+                                                </p>
+                                            )}
 
                                             {item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0 && (
                                                 <div className="mt-2 flex flex-wrap gap-2">
@@ -132,8 +190,9 @@ export default function CartPage() {
                                         <div className="flex items-center justify-between mt-4">
                                             <div className="flex items-center border border-input rounded-md">
                                                 <button
-                                                    className="px-2 py-1 hover:bg-secondary transition-colors"
+                                                    className="px-2 py-1 hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedAttributes)}
+                                                    disabled={bogoProductIds.has(item.id) && item.quantity <= 2}
                                                 >
                                                     <Minus className="h-3 w-3" />
                                                 </button>
@@ -178,14 +237,14 @@ export default function CartPage() {
                                 <span className="font-medium">{formatCurrency(cartTotal)}</span>
                             </div>
 
-                            {discountAmount > 0 && (
+                            {effectiveDiscount > 0 && (
                                 <div className="flex justify-between text-green-600 dark:text-green-400">
                                     <span className="flex items-center gap-1">
                                         <Tag className="h-3.5 w-3.5" />
                                         Discount
                                         {coupon && <span className="text-xs">({coupon.code})</span>}
                                     </span>
-                                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                                    <span className="font-medium">-{formatCurrency(effectiveDiscount)}</span>
                                 </div>
                             )}
 
@@ -200,6 +259,11 @@ export default function CartPage() {
                                     Add {formatCurrency(100 - cartTotal)} more for free shipping.
                                 </p>
                             )}
+
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Tax</span>
+                                <span className="font-medium">{formatCurrency(tax)}</span>
+                            </div>
 
                             <div className="border-t border-border pt-4 flex justify-between items-center text-base font-bold">
                                 <span>Total</span>
