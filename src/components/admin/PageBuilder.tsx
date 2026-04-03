@@ -186,12 +186,12 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
             return { ...base, items: [{ icon: 'Facebook', url: '#' }], styles: { ...defaultBlockStyles, textAlign: 'center' } };
         case BLOCK_TYPES.COLUMNS: {
             const layoutKey = extra.layoutKey || '1-1';
-            const ratios = COLUMN_LAYOUTS[layoutKey]?.ratios || [1, 1];
+            const ratios = COLUMN_LAYOUTS[layoutKey as keyof typeof COLUMN_LAYOUTS]?.ratios || [1, 1];
             return {
                 ...base,
                 layoutKey,
                 styles: { ...defaultBlockStyles, paddingLeft: 8, paddingRight: 8, paddingTop: 8, paddingBottom: 8, backgroundColor: '#FFFFFF' },
-                columns: ratios.map((ratio) => ({
+                columns: ratios.map((ratio: any) => ({
                     id: Math.random().toString(36).slice(2, 10),
                     ratio,
                     blocks: [],
@@ -364,7 +364,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 
                 <div className="absolute -top-3 left-2 z-10">
                     <span className="text-[8px] font-black uppercase tracking-widest bg-[#6366F1] text-white px-2 py-0.5 rounded-full">
-                        {COLUMN_LAYOUTS[block.layoutKey]?.label || 'Columns'}
+                        {COLUMN_LAYOUTS[block.layoutKey as keyof typeof COLUMN_LAYOUTS]?.label || 'Columns'}
                     </span>
                 </div>
 
@@ -949,13 +949,13 @@ function ItemsListEditor({ items, onUpdate, fields }: { items: any[], onUpdate: 
                                         <textarea
                                             className="w-full h-20 p-3 text-xs bg-white border border-slate-200 rounded-xl resize-none outline-none focus:ring-2 focus:ring-[#00c3c0]/20"
                                             value={item[f.key] || ''}
-                                            onChange={(e) => updateItem(idx, f.key, e.target.value)}
+                                            onChange={(e: any) => updateItem(idx, f.key, e.target.value)}
                                         />
                                     ) : (
                                         <Input
                                             className="h-9 text-xs rounded-xl bg-white border-slate-200"
                                             value={item[f.key] || ''}
-                                            onChange={(e) => updateItem(idx, f.key, e.target.value)}
+                                            onChange={(e: any) => updateItem(idx, f.key, e.target.value)}
                                         />
                                     )}
                                 </div>
@@ -1074,10 +1074,10 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                             <button
                                                 key={key}
                                                 onClick={() => {
-                                                    const ratios = COLUMN_LAYOUTS[key].ratios;
+                                                    const ratios = COLUMN_LAYOUTS[key as keyof typeof COLUMN_LAYOUTS].ratios;
                                                     onUpdate(block.id, {
                                                         layoutKey: key,
-                                                        columns: ratios.map((ratio, i) => ({
+                                                        columns: ratios.map((ratio: any, i: any) => ({
                                                             id: block.columns[i]?.id || Math.random().toString(36).slice(2, 10),
                                                             ratio,
                                                             blocks: block.columns[i]?.blocks || [],
@@ -1099,7 +1099,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <textarea
                                         className="w-full min-h-[150px] p-4 text-xs font-mono bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#00c3c0]/20 focus:border-[#00c3c0] resize-none outline-none leading-relaxed"
                                         value={block.content}
-                                        onChange={(e) => setContent({ content: e.target.value })}
+                                        onChange={(e: any) => setContent({ content: e.target.value })}
                                     />
                                 </div>
                             )}
@@ -1109,7 +1109,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Image Source</Label>
                                         <div className="flex gap-2">
-                                            <Input className="h-10 text-xs rounded-xl" placeholder="https://..." value={block.src} onChange={(e) => setContent({ src: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl" placeholder="https://..." value={block.src} onChange={(e: any) => setContent({ src: e.target.value })} />
                                             <label className="shrink-0 h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
                                                 <RotateCw className={`w-4 h-4 text-slate-500 ${isUploading ? 'animate-spin' : ''}`} />
                                                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
@@ -1118,7 +1118,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alt Text</Label>
-                                        <Input className="h-10 text-xs rounded-xl" value={block.alt} onChange={(e) => setContent({ alt: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl" value={block.alt} onChange={(e: any) => setContent({ alt: e.target.value })} />
                                     </div>
                                 </div>
                             )}
@@ -1127,12 +1127,12 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Label Text</Label>
-                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.text} onChange={(e) => setContent({ text: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.text} onChange={(e: any) => setContent({ text: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Action URL</Label>
                                         <div className="relative">
-                                            <Input className="h-10 text-xs rounded-xl pl-9" value={block.url} onChange={(e) => setContent({ url: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl pl-9" value={block.url} onChange={(e: any) => setContent({ url: e.target.value })} />
                                             <Link className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                                         </div>
                                     </div>
@@ -1143,8 +1143,8 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-3">
                                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vertical Space (px)</Label>
                                     <div className="flex items-center gap-4">
-                                        <input type="range" min={0} max={200} value={block.height || 40} onChange={(e) => setContent({ height: Number(e.target.value) })} className="flex-1 accent-[#00c3c0]" />
-                                        <Input type="number" className="h-9 w-16 text-xs rounded-xl text-right font-bold" value={block.height || 40} onChange={(e) => setContent({ height: Number(e.target.value) })} />
+                                        <input type="range" min={0} max={200} value={block.height || 40} onChange={(e: any) => setContent({ height: Number(e.target.value) })} className="flex-1 accent-[#00c3c0]" />
+                                        <Input type="number" className="h-9 w-16 text-xs rounded-xl text-right font-bold" value={block.height || 40} onChange={(e: any) => setContent({ height: Number(e.target.value) })} />
                                     </div>
                                 </div>
                             )}
@@ -1153,15 +1153,15 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name</Label>
-                                        <Input className="h-10 text-xs rounded-xl" placeholder="Lucide icon name" value={block.icon} onChange={(e) => setContent({ icon: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl" placeholder="Lucide icon name" value={block.icon} onChange={(e: any) => setContent({ icon: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</Label>
-                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.title} onChange={(e) => setContent({ title: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.title} onChange={(e: any) => setContent({ title: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
-                                        <textarea className="w-full h-24 p-4 text-xs bg-slate-50 border border-slate-200 rounded-2xl resize-none outline-none focus:ring-2 focus:ring-[#ff8602]/20" value={block.description} onChange={(e) => setContent({ description: e.target.value })} />
+                                        <textarea className="w-full h-24 p-4 text-xs bg-slate-50 border border-slate-200 rounded-2xl resize-none outline-none focus:ring-2 focus:ring-[#ff8602]/20" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
                                 </div>
                             )}
@@ -1199,12 +1199,12 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Headings</Label>
-                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Heading" value={block.heading} onChange={(e) => setContent({ heading: e.target.value })} />
-                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e) => setContent({ headingHighlight: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Heading" value={block.heading} onChange={(e: any) => setContent({ heading: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Accent Color</Label>
-                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e) => setContent({ highlightColor: e.target.value })} />
+                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
                                         </div>
                                     </div>
                                     <ItemsListEditor
@@ -1223,10 +1223,10 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Header Content</Label>
-                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.title} onChange={(e) => setContent({ title: e.target.value })} />
-                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Subtitle" value={block.subtitle} onChange={(e) => setContent({ subtitle: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.title} onChange={(e: any) => setContent({ title: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Subtitle" value={block.subtitle} onChange={(e: any) => setContent({ subtitle: e.target.value })} />
                                         </div>
-                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e) => setContent({ description: e.target.value })} />
+                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
                                     <ItemsListEditor
                                         items={block.items || []}
@@ -1255,7 +1255,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                             {[{ l: 'Top', k: 'paddingTop' }, { l: 'Bottom', k: 'paddingBottom' }, { l: 'Left', k: 'paddingLeft' }, { l: 'Right', k: 'paddingRight' }].map(p => (
                                                 <div key={p.k} className="space-y-1.5">
                                                     <span className="text-[9px] text-slate-400">{p.l}</span>
-                                                    <Input type="number" value={s[p.k] ?? 16} onChange={e => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                    <Input type="number" value={s[p.k] ?? 16} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
                                                 </div>
                                             ))}
                                         </div>
@@ -1270,7 +1270,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                             {[{ l: 'Top', k: 'marginTop' }, { l: 'Bottom', k: 'marginBottom' }, { l: 'Left', k: 'marginLeft' }, { l: 'Right', k: 'marginRight' }].map(p => (
                                                 <div key={p.k} className="space-y-1.5">
                                                     <span className="text-[9px] text-slate-400">{p.l}</span>
-                                                    <Input type="number" value={s[p.k] ?? 0} onChange={e => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                    <Input type="number" value={s[p.k] ?? 0} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
                                                 </div>
                                             ))}
                                         </div>
@@ -1285,8 +1285,8 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
-                                            <input type="range" min={10} max={64} value={s.fontSize || 16} onChange={(e) => set('fontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" value={s.fontSize || 16} onChange={(e) => set('fontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                            <input type="range" min={10} max={64} value={s.fontSize || 16} onChange={(e: any) => set('fontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.fontSize || 16} onChange={(e: any) => set('fontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
                                         </div>
                                         <div className="flex gap-1.5">
                                             {[
@@ -1316,7 +1316,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                     style={{ backgroundColor: c }}
                                                     className={`w-7 h-7 rounded-lg border-2 transition-all ${s.backgroundColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-white hover:scale-110 shadow-sm'}`} />
                                             ))}
-                                            <input type="color" value={s.backgroundColor || '#FFFFFF'} onChange={(e) => set('backgroundColor', e.target.value)}
+                                            <input type="color" value={s.backgroundColor || '#FFFFFF'} onChange={(e: any) => set('backgroundColor', e.target.value)}
                                                 className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Custom color" />
                                         </div>
                                     </div>
@@ -1324,8 +1324,8 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-3">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
                                         <div className="flex items-center gap-3">
-                                            <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" value={s.borderRadius ?? 0} onChange={(e) => set('borderRadius', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                            <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
                                         </div>
                                     </div>
 
@@ -1336,7 +1336,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 <div key={p.k} className="space-y-1.5">
                                                     <span className="text-[9px] text-slate-400">{p.l}</span>
                                                     {p.k === 'borderTopWidth' ? (
-                                                        <Input type="number" value={s[p.k] || 0} onChange={e => {
+                                                        <Input type="number" value={s[p.k] || 0} onChange={(e: any) => {
                                                             const val = Number(e.target.value);
                                                             onUpdate(block.id, {
                                                                 styles: {
@@ -1346,7 +1346,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                             });
                                                         }} className="h-8 text-xs font-mono" />
                                                     ) : (
-                                                        <select value={s.borderStyle || 'solid'} onChange={e => set('borderStyle', e.target.value)} className="w-full h-8 px-2 text-[10px] font-bold border border-slate-200 rounded-lg bg-white outline-none">
+                                                        <select value={s.borderStyle || 'solid'} onChange={(e: any) => set('borderStyle', e.target.value)} className="w-full h-8 px-2 text-[10px] font-bold border border-slate-200 rounded-lg bg-white outline-none">
                                                             <option value="solid">Solid</option>
                                                             <option value="dashed">Dashed</option>
                                                             <option value="dotted">Dotted</option>
@@ -1357,7 +1357,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         </div>
                                         <div className="flex items-center gap-3 mt-1">
                                             <span className="text-[9px] text-slate-400 w-12">Color</span>
-                                            <Input type="color" value={s.borderColor || '#e2e8f0'} onChange={e => set('borderColor', e.target.value)} className="h-8 flex-1 p-1 cursor-pointer rounded-lg border-slate-200" />
+                                            <Input type="color" value={s.borderColor || '#e2e8f0'} onChange={(e: any) => set('borderColor', e.target.value)} className="h-8 flex-1 p-1 cursor-pointer rounded-lg border-slate-200" />
                                         </div>
                                     </div>
                                 </div>
@@ -1369,15 +1369,15 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML ID</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. contact-section" value={block.customId} onChange={(e) => setContent({ customId: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. contact-section" value={block.customId} onChange={(e: any) => setContent({ customId: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CSS Classes</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. custom-card shadow-lg" value={block.customClass} onChange={(e) => setContent({ customClass: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. custom-card shadow-lg" value={block.customClass} onChange={(e: any) => setContent({ customClass: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Class</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass} onChange={(e) => setContent({ parentClass: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass} onChange={(e: any) => setContent({ parentClass: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
@@ -1386,7 +1386,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 className="h-10 text-xs rounded-xl flex-1"
                                                 placeholder="https://..."
                                                 value={s.backgroundImage || ''}
-                                                onChange={(e) => set('backgroundImage', e.target.value)}
+                                                onChange={(e: any) => set('backgroundImage', e.target.value)}
                                             />
                                             <label className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
                                                 <RotateCw className={`w-4 h-4 text-slate-400 ${isUploading ? 'animate-spin' : ''}`} />
@@ -1685,7 +1685,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
                                         </div>
                                         <div className="text-left">
                                             <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-700">{label}</p>
-                                            <p className="text-[8px] text-slate-400">{COLUMN_LAYOUTS[layoutKey].label}</p>
+                                            <p className="text-[8px] text-slate-400">{COLUMN_LAYOUTS[layoutKey as keyof typeof COLUMN_LAYOUTS].label}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -1699,7 +1699,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
                     <div className="mx-auto transition-all duration-300" style={{ width: canvasWidth, maxWidth: '100%' }}>
                         <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200/80 overflow-hidden border border-slate-100">
                             <DndContext sensors={sensors} collisionDetection={closestCenter}
-                                onDragStart={e => setActiveId(e.active.id)} onDragEnd={handleDragEnd}>
+                                onDragStart={e => setActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
                                 <SortableContext items={blocks.map((b: any) => b.id)} strategy={verticalListSortingStrategy}>
                                     <div className="px-10 py-8 min-h-[400px] space-y-3 relative" id="page-builder-canvas">
                                         <style dangerouslySetInnerHTML={{
