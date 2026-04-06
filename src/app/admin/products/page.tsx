@@ -195,7 +195,7 @@ export default function AdminProductsPage() {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '100',
+        limit: '10',
       });
 
       if (selectedCategory) params.append('category_id', selectedCategory);

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign, User, Lock, Mail, Tag, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, Truck, Shield, CreditCard, DollarSign, User, Lock, Mail, Tag, X, Loader2, Gift } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -66,6 +66,26 @@ function CheckoutForm({
     const [couponCode, setCouponCode] = useState('');
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState('');
+
+    // BOGO deals state
+    const [bogoProductIds, setBogoProductIds] = useState<Set<number>>(new Set());
+    const [bogoCouponCodes, setBogoCouponCodes] = useState<Map<number, string>>(new Map());
+
+    useEffect(() => {
+        api.get('/pricing/public/bogo-deals').then(res => {
+            const deals = res.data?.data || res.data || [];
+            const ids = new Set<number>();
+            const codes = new Map<number, string>();
+            for (const deal of deals) {
+                for (const pid of deal.product_ids) {
+                    ids.add(pid);
+                    codes.set(pid, deal.coupon_code);
+                }
+            }
+            setBogoProductIds(ids);
+            setBogoCouponCodes(codes);
+        }).catch(() => {});
+    }, []);
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -179,7 +199,7 @@ function CheckoutForm({
                     items: items,
                     subtotal: cartTotals.cartTotal,
                     shipping_cost: cartTotals.shippingCost,
-                    tax_amount: cartTotals.tax,
+                    tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
                     total_amount: finalTotal,
                     payment_method: 'online',
                     customer_email: formData.email,
@@ -259,10 +279,10 @@ function CheckoutForm({
                         country: formData.country
                     }),
                     subtotal: cartTotals.cartTotal,
-                    tax_amount: cartTotals.tax,
+                    tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
                     shipping_cost: cartTotals.shippingCost,
                     total_amount: finalTotal,
-                    discount_amount: discountAmount,
+                    discount_amount: Math.min(discountAmount, cartTotals.cartTotal),
                     coupon_id: appliedCoupon?.id || null,
                     payment_method: 'cod',
                     payment_status: 'pending',
@@ -689,8 +709,26 @@ function CheckoutForm({
                                             )}
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className="text-sm font-medium line-clamp-1">{item.name}</h4>
+                                            <h4 className="text-sm font-medium line-clamp-1">
+                                                {item.name}
+                                                {bogoProductIds.has(item.id) && (
+                                                    <span className="ml-1.5 inline-flex items-center gap-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                                                        <Gift className="h-2.5 w-2.5" /> BOGO
+                                                    </span>
+                                                )}
+                                            </h4>
                                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+
+                                            {bogoProductIds.has(item.id) && item.quantity < 2 && (
+                                                <p className="text-[10px] text-orange-600 dark:text-orange-400 font-medium mt-0.5">
+                                                    Need 2+ for Buy 1 Get 1 Free (code: {bogoCouponCodes.get(item.id)})
+                                                </p>
+                                            )}
+                                            {bogoProductIds.has(item.id) && item.quantity >= 2 && (
+                                                <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">
+                                                    {Math.floor(item.quantity / 2)} free with code {bogoCouponCodes.get(item.id)}
+                                                </p>
+                                            )}
 
                                             {/* Selected Attributes */}
                                             {item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0 && (
@@ -725,7 +763,7 @@ function CheckoutForm({
                                         Discount
                                         {appliedCoupon && <span className="text-xs">({appliedCoupon.code})</span>}
                                     </span>
-                                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                                    <span className="font-medium">-{formatCurrency(Math.min(discountAmount, cartTotals.cartTotal))}</span>
                                 </div>
                             )}
                             <div className="flex justify-between">
@@ -736,7 +774,7 @@ function CheckoutForm({
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Tax</span>
-                                <span className="font-medium">{formatCurrency(cartTotals.tax)}</span>
+                                <span className="font-medium">{formatCurrency(Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08)}</span>
                             </div>
                             <div className="border-t border-border pt-3 flex justify-between items-center text-base font-bold">
                                 <span>Total</span>
@@ -901,6 +939,27 @@ function CheckoutPageContent() {
         }
     }, [items, total, searchParams]);
 
+    // Re-validate coupon when cart items change
+    useEffect(() => {
+        if (!coupon || !mounted) return;
+        const cartTotal = total();
+        if (cartTotal === 0) { removeCoupon(); return; }
+        api.post('/pricing/coupons/validate', {
+            code: coupon.code,
+            cart_total: cartTotal,
+            cart_items: items.map(i => ({ product_id: i.id, quantity: i.quantity, unit_price: i.price }))
+        }).then(res => {
+            const data = res.data?.data || res.data;
+            if (data?.valid) {
+                applyCoupon(data.coupon, data.discountAmount, data.freeShipping);
+            } else {
+                removeCoupon();
+            }
+        }).catch(() => {
+            removeCoupon();
+        });
+    }, [items, coupon?.code, mounted]);
+
     // Pre-fill form with customer data when logged in
     useEffect(() => {
         if (isAuthenticated && customer) {
@@ -927,7 +986,10 @@ function CheckoutPageContent() {
         }
     }, [isAuthenticated, customer]);
 
-    const finalTotal = Math.max(0, cartTotals.cartTotal - discountAmount + cartTotals.shippingCost + cartTotals.tax);
+    const effectiveDiscount = Math.min(discountAmount, cartTotals.cartTotal);
+    const discountedSubtotal = Math.max(0, cartTotals.cartTotal - effectiveDiscount);
+    const effectiveTax = discountedSubtotal * 0.08;
+    const finalTotal = Math.max(0, discountedSubtotal + cartTotals.shippingCost + effectiveTax);
 
     if (!mounted) {
         return (

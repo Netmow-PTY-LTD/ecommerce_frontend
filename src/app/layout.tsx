@@ -10,6 +10,7 @@ import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import AdminNavbarProvider from "@/components/admin/admin-navbar-provider";
 import MainWrapper from "@/components/admin/main-wrapper";
 import { cn } from "@/lib/utils";
+import { ChatWidget } from "@/components/chat/chat-widget";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -48,6 +49,7 @@ export default function RootLayout({
                   {children}
                 </MainWrapper>
                 <Footer />
+                <ChatWidget />
               </AdminNavbarProvider>
               <Toaster position="bottom-right" richColors />
             </CustomerAuthProvider>

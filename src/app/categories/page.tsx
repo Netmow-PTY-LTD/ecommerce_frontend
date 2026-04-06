@@ -4,8 +4,9 @@ import { useCategories, useProducts } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Loader2, ArrowRight, Package } from 'lucide-react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function CategoriesPage() {
     const { categories, isLoading, isError } = useCategories();
@@ -66,27 +67,49 @@ export default function CategoriesPage() {
                         transition={{ delay: index * 0.05 }}
                     >
                         <Link href={`/category/${category.slug || category.id}`} className="group block h-full">
-                            <div className="relative h-full bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-all p-8 flex flex-col justify-between min-h-[200px]">
-                                {/* Decorative Background */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-10 translate-x-10 group-hover:bg-primary/10 transition-colors" />
+                            <div className="relative h-full bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-all flex flex-col min-h-[200px]">
+                                {/* Category Image */}
+                                {category.image_url ? (
+                                    <div className="relative w-full h-48 overflow-hidden">
+                                        <Image
+                                            src={category.image_url}
+                                            alt={category.name}
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            unoptimized
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                        <div className="absolute bottom-3 left-4 right-4">
+                                            <h3 className="text-xl font-bold text-white drop-shadow-md">
+                                                {category.name}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative w-full h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                                        <Package className="h-16 w-16 text-primary/20" />
+                                        <div className="absolute bottom-3 left-4">
+                                            <h3 className="text-xl font-bold">
+                                                {category.name}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                )}
 
-                                <div className="relative z-10">
+                                <div className="p-6 flex flex-1 flex-col justify-between">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">
-                                            {category.name}
-                                        </h3>
-                                        <div className="flex items-center gap-1 text-sm font-semibold bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                        <p className="text-muted-foreground text-sm line-clamp-2">
+                                            {category.description || 'Discover products in this category.'}
+                                        </p>
+                                        <div className="flex items-center gap-1 text-sm font-semibold bg-primary/10 text-primary px-3 py-1 rounded-full ml-3 shrink-0">
                                             <Package className="w-4 h-4" />
                                             {categoryProductCounts[category.id] || 0}
                                         </div>
                                     </div>
-                                    <p className="text-muted-foreground line-clamp-2">
-                                        {category.description || 'Discover products in this category.'}
-                                    </p>
-                                </div>
 
-                                <div className="relative z-10 pt-8 flex items-center text-sm font-semibold text-primary">
-                                    Shop Now <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                                    <div className="pt-4 flex items-center text-sm font-semibold text-primary">
+                                        Shop Now <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                                    </div>
                                 </div>
                             </div>
                         </Link>

@@ -1749,8 +1749,11 @@ interface PropertyPanelProps {
 
 function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProps) {
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
-    const [isUploading, setIsUploading] = useState(false);
-    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [activeMediaField, setActiveMediaField] = useState<string | null>(null);
+    const isMediaModalOpen = !!activeMediaField;
+    const setIsMediaModalOpen = (open: boolean) => {
+        if (!open) setActiveMediaField(null);
+    };
 
     if (!block) {
         return (
@@ -1775,25 +1778,6 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
     };
     const setContent = (updates: Record<string, any>) => {
         onUpdate(block.id, updates);
-    };
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('image', file);
-        try {
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data?.url) setContent({ src: data.url });
-            else alert('Failed to get uploaded image URL.');
-        } catch (err) {
-            console.error('Upload error:', err);
-            alert('Failed to upload image.');
-        } finally {
-            setIsUploading(false);
-        }
     };
 
     return (
@@ -1864,7 +1848,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML Content</Label>
                                     <textarea
                                         className="w-full min-h-[150px] p-4 text-xs font-mono bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#00c3c0]/20 focus:border-[#00c3c0] resize-none outline-none leading-relaxed"
-                                        value={block.content}
+                                        value={block.content || ''}
                                         onChange={(e: any) => setContent({ content: e.target.value })}
                                     />
                                 </div>
@@ -1875,16 +1859,19 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Image Source</Label>
                                         <div className="flex gap-2">
-                                            <Input className="h-10 text-xs rounded-xl" placeholder="https://..." value={block.src} onChange={(e: any) => setContent({ src: e.target.value })} />
-                                            <label className="shrink-0 h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
-                                                <RotateCw className={`w-4 h-4 text-slate-500 ${isUploading ? 'animate-spin' : ''}`} />
-                                                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
-                                            </label>
+                                            <Input className="h-10 text-xs rounded-xl flex-1" placeholder="https://..." value={block.src || ''} onChange={(e: any) => setContent({ src: e.target.value })} />
+                                            <Button
+                                                onClick={() => setActiveMediaField('src')}
+                                                variant="outline"
+                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-all p-0 shadow-sm hover:scale-105 active:scale-95"
+                                            >
+                                                <ImageIcon className="w-4 h-4 text-[#ff8602]" />
+                                            </Button>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alt Text</Label>
-                                        <Input className="h-10 text-xs rounded-xl" value={block.alt} onChange={(e: any) => setContent({ alt: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl" value={block.alt || ''} onChange={(e: any) => setContent({ alt: e.target.value })} />
                                     </div>
                                 </div>
                             )}
@@ -1893,12 +1880,12 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Label Text</Label>
-                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.text} onChange={(e: any) => setContent({ text: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.text || ''} onChange={(e: any) => setContent({ text: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Action URL</Label>
                                         <div className="relative">
-                                            <Input className="h-10 text-xs rounded-xl pl-9" value={block.url} onChange={(e: any) => setContent({ url: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl pl-9" value={block.url || ''} onChange={(e: any) => setContent({ url: e.target.value })} />
                                             <Link className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                                         </div>
                                     </div>
@@ -1919,15 +1906,15 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name</Label>
-                                        <Input className="h-10 text-xs rounded-xl" placeholder="Lucide icon name" value={block.icon} onChange={(e: any) => setContent({ icon: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl" placeholder="Lucide icon name" value={block.icon || ''} onChange={(e: any) => setContent({ icon: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</Label>
-                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.title} onChange={(e: any) => setContent({ title: e.target.value })} />
+                                        <Input className="h-10 text-xs rounded-xl font-bold" value={block.title || ''} onChange={(e: any) => setContent({ title: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
-                                        <textarea className="w-full h-24 p-4 text-xs bg-slate-50 border border-slate-200 rounded-2xl resize-none outline-none focus:ring-2 focus:ring-[#ff8602]/20" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
+                                        <textarea className="w-full h-24 p-4 text-xs bg-slate-50 border border-slate-200 rounded-2xl resize-none outline-none focus:ring-2 focus:ring-[#ff8602]/20" value={block.description || ''} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
                                 </div>
                             )}
@@ -1964,13 +1951,26 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-6">
                                     <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                         <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Image</Label>
+                                            <div className="flex gap-2">
+                                                <Input className="h-10 text-xs rounded-xl flex-1" placeholder="https://..." value={block.imageUrl || ''} onChange={(e: any) => setContent({ imageUrl: e.target.value })} />
+                                                <Button
+                                                    onClick={() => setActiveMediaField('imageUrl')}
+                                                    variant="outline"
+                                                    className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-all p-0 shadow-sm hover:scale-105 active:scale-95"
+                                                >
+                                                    <ImageIcon className="w-4 h-4 text-[#ff8602]" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Headings</Label>
-                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Heading" value={block.heading} onChange={(e: any) => setContent({ heading: e.target.value })} />
-                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Heading" value={block.heading || ''} onChange={(e: any) => setContent({ heading: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight || ''} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Accent Color</Label>
-                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
+                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor || '#ff8602'} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
                                         </div>
                                     </div>
                                     <ItemsListEditor
@@ -1989,10 +1989,10 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Header Content</Label>
-                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.title} onChange={(e: any) => setContent({ title: e.target.value })} />
-                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Subtitle" value={block.subtitle} onChange={(e: any) => setContent({ subtitle: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.title || ''} onChange={(e: any) => setContent({ title: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Subtitle" value={block.subtitle || ''} onChange={(e: any) => setContent({ subtitle: e.target.value })} />
                                         </div>
-                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
+                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description || ''} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
                                     <ItemsListEditor
                                         items={block.items || []}
@@ -2011,14 +2011,14 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Header Content</Label>
-                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.heading} onChange={(e: any) => setContent({ heading: e.target.value })} />
-                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.heading || ''} onChange={(e: any) => setContent({ heading: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight || ''} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Accent Color</Label>
-                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
+                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor || '#ff8602'} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
                                         </div>
-                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
+                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description || ''} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
                                     <ItemsListEditor
                                         items={block.items || []}
@@ -2160,15 +2160,15 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HTML ID</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. contact-section" value={block.customId} onChange={(e: any) => setContent({ customId: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. contact-section" value={block.customId || ''} onChange={(e: any) => setContent({ customId: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CSS Classes</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. custom-card shadow-lg" value={block.customClass} onChange={(e: any) => setContent({ customClass: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. custom-card shadow-lg" value={block.customClass || ''} onChange={(e: any) => setContent({ customClass: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Class</Label>
-                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass} onChange={(e: any) => setContent({ parentClass: e.target.value })} />
+                                        <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass || ''} onChange={(e: any) => setContent({ parentClass: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
@@ -2180,25 +2180,32 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 onChange={(e: any) => set('backgroundImage', e.target.value)}
                                             />
                                             <Button
-                                                onClick={() => setIsMediaModalOpen(true)}
+                                                onClick={() => setActiveMediaField('backgroundImage')}
                                                 variant="outline"
-                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
+                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-all p-0 shadow-sm hover:scale-105 active:scale-95"
                                             >
-                                                <ImageIcon className="w-4 h-4 text-slate-400" />
+                                                <ImageIcon className="w-4 h-4 text-[#ff8602]" />
                                             </Button>
                                         </div>
                                     </div>
-                                    <MediaLibraryModal
-                                        open={isMediaModalOpen}
-                                        onOpenChange={setIsMediaModalOpen}
-                                        onSelect={(url) => set('backgroundImage', url)}
-                                    />
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
             </ScrollArea>
+            <MediaLibraryModal
+                open={isMediaModalOpen}
+                onOpenChange={setIsMediaModalOpen}
+                onSelect={(url) => {
+                    if (activeMediaField === 'backgroundImage') {
+                        set('backgroundImage', url);
+                    } else if (activeMediaField) {
+                        setContent({ [activeMediaField]: url });
+                    }
+                    setActiveMediaField(null);
+                }}
+            />
         </div>
     );
 }
