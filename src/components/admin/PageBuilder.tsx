@@ -61,6 +61,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { MediaLibraryModal } from '@/components/admin/MediaLibraryModal';
 
 // ─────────────────────────────────────────
 //  Constants
@@ -80,6 +82,7 @@ const BLOCK_TYPES = {
     SOCIAL: 'social',
     FAQ_SECTION: 'faq_section',
     FEATURE_SECTION: 'feature_section',
+    LOOP_GRID: 'loop_grid',
 };
 
 // Column layout presets: each number is the flex ratio for that column
@@ -149,6 +152,400 @@ const IconComponent = ({ icon: iconName, className = "w-6 h-6" }: { icon: string
     const Icon = (require('lucide-react')[iconName] as any) || (require('lucide-react')['HelpCircle'] as any);
     if (!Icon) return <div className={className} />;
     return <Icon className={className} />;
+};
+
+// Correct SVG paths for Lucide icons
+// Format: array of SVG element objects with type and attributes
+const LUCIDE_ICON_SVGS: { [key: string]: Array<{ type: string, attrs?: Record<string, string>, content?: string }> } = {
+    'Truck': [
+        { type: 'path', attrs: { d: 'M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2' } },
+        { type: 'path', attrs: { d: 'M15 18H9' } },
+        { type: 'path', attrs: { d: 'M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14' } },
+        { type: 'circle', attrs: { cx: '17', cy: '18', r: '2' } },
+        { type: 'circle', attrs: { cx: '7', cy: '18', r: '2' } }
+    ],
+    'Ship': [
+        { type: 'path', attrs: { d: 'M2 12h20' } },
+        { type: 'path', attrs: { d: 'M2 12l2-2m-2 2l2 2' } },
+        { type: 'path', attrs: { d: 'M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2' } },
+        { type: 'path', attrs: { d: 'm16.5 18.5-2.226-2.226' } },
+        { type: 'path', attrs: { d: 'm16.5 18.5 2.226-2.226' } }
+    ],
+    'Zap': [
+        { type: 'path', attrs: { d: 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z' } }
+    ],
+    'Package': [
+        { type: 'path', attrs: { d: 'm16.5 9.4-7.5 7.5-3.5-3.5 7.5-7.5' } },
+        { type: 'path', attrs: { d: 'm16.5 9.4-2.226-2.226' } },
+        { type: 'path', attrs: { d: 'm16.5 9.4 2.226 2.226' } },
+        { type: 'circle', attrs: { cx: '9', cy: '9', r: '2.5' } },
+        { type: 'circle', attrs: { cx: '17.5', cy: '9', r: '2.5' } }
+    ],
+    'Home': [
+        { type: 'path', attrs: { d: 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' } }
+    ],
+    'User': [
+        { type: 'path', attrs: { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' } },
+        { type: 'circle', attrs: { cx: '12', cy: '7', r: '4' } }
+    ],
+    'ShoppingCart': [
+        { type: 'circle', attrs: { cx: '8', cy: '21', r: '1' } },
+        { type: 'path', attrs: { d: 'm1 1 4 4-4 4' } },
+        { type: 'path', attrs: { d: 'M1 6h14l-1.68 8.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L13 6H5' } }
+    ],
+    'Settings': [
+        { type: 'path', attrs: { d: 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z' } },
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '3' } }
+    ],
+    'Heart': [
+        { type: 'path', attrs: { d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' } }
+    ],
+    'Star': [
+        { type: 'polygon', attrs: { points: '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2' } }
+    ],
+    'CheckCircle': [
+        { type: 'path', attrs: { d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' } },
+        { type: 'polyline', attrs: { points: '22 4 12 14.01 9 11.01' } }
+    ],
+    'XCircle': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'path', attrs: { d: 'm15 9-6 6' } },
+        { type: 'path', attrs: { d: 'm9 9 6 6' } }
+    ],
+    'AlertCircle': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'line', attrs: { x1: '12', y1: '8', x2: '12', y2: '12' } },
+        { type: 'line', attrs: { x1: '12', y1: '16', x2: '12.01', y2: '16' } }
+    ],
+    'Info': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'path', attrs: { d: 'M12 16v-4' } },
+        { type: 'path', attrs: { d: 'M12 8h.01' } }
+    ],
+    'Mail': [
+        { type: 'rect', attrs: { width: '20', height: '16', x: '2', y: '4', rx: '2' } },
+        { type: 'path', attrs: { d: 'm22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7' } }
+    ],
+    'Phone': [
+        { type: 'path', attrs: { d: 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z' } }
+    ],
+    'MapPin': [
+        { type: 'path', attrs: { d: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z' } },
+        { type: 'circle', attrs: { cx: '12', cy: '10', r: '3' } }
+    ],
+    'Clock': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'polyline', attrs: { points: '12 6 12 12 16 14' } }
+    ],
+    'Calendar': [
+        { type: 'rect', attrs: { width: '18', height: '18', x: '3', y: '4', rx: '2', ry: '2' } },
+        { type: 'line', attrs: { x1: '16', y1: '2', x2: '16', y2: '6' } },
+        { type: 'line', attrs: { x1: '8', y1: '2', x2: '8', y2: '6' } },
+        { type: 'line', attrs: { x1: '3', y1: '10', x2: '21', y2: '10' } }
+    ],
+    'Search': [
+        { type: 'circle', attrs: { cx: '11', cy: '11', r: '8' } },
+        { type: 'path', attrs: { d: 'm21 21-4.3-4.3' } }
+    ],
+    'Filter': [
+        { type: 'polygon', attrs: { points: '22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3' } }
+    ],
+    'Download': [
+        { type: 'path', attrs: { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' } },
+        { type: 'polyline', attrs: { points: '7 10 12 15 17 10' } },
+        { type: 'line', attrs: { x1: '12', y1: '15', x2: '12', y2: '3' } }
+    ],
+    'Upload': [
+        { type: 'path', attrs: { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' } },
+        { type: 'polyline', attrs: { points: '17 8 12 3 7 8' } },
+        { type: 'line', attrs: { x1: '12', y1: '3', x2: '12', y2: '15' } }
+    ],
+    'RefreshCw': [
+        { type: 'path', attrs: { d: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' } },
+        { type: 'path', attrs: { d: 'M21 3v5h-5' } },
+        { type: 'path', attrs: { d: 'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' } },
+        { type: 'path', attrs: { d: 'M8 16H3v5' } }
+    ],
+    'ArrowRight': [
+        { type: 'line', attrs: { x1: '5', y1: '12', x2: '19', y2: '12' } },
+        { type: 'polyline', attrs: { points: '12 5 19 12 12 19' } }
+    ],
+    'ArrowLeft': [
+        { type: 'line', attrs: { x1: '19', y1: '12', x2: '5', y2: '12' } },
+        { type: 'polyline', attrs: { points: '12 19 5 12 12 5' } }
+    ],
+    'ArrowUp': [
+        { type: 'line', attrs: { x1: '12', y1: '19', x2: '12', y2: '5' } },
+        { type: 'polyline', attrs: { points: '5 12 12 5 19 12' } }
+    ],
+    'ArrowDown': [
+        { type: 'line', attrs: { x1: '12', y1: '5', x2: '12', y2: '19' } },
+        { type: 'polyline', attrs: { points: '19 12 12 19 5 12' } }
+    ],
+    'ChevronDown': [
+        { type: 'path', attrs: { d: 'm6 9 6 6 6-6' } }
+    ],
+    'ChevronUp': [
+        { type: 'path', attrs: { d: 'm18 15-6-6-6 6' } }
+    ],
+    'ChevronLeft': [
+        { type: 'path', attrs: { d: 'm15 18-6-6 6-6' } }
+    ],
+    'ChevronRight': [
+        { type: 'path', attrs: { d: 'm9 18 6-6-6-6' } }
+    ],
+    'Menu': [
+        { type: 'line', attrs: { x1: '4', y1: '6', x2: '20', y2: '6' } },
+        { type: 'line', attrs: { x1: '4', y1: '12', x2: '20', y2: '12' } },
+        { type: 'line', attrs: { x1: '4', y1: '18', x2: '20', y2: '18' } }
+    ],
+    'Plus': [
+        { type: 'line', attrs: { x1: '12', y1: '5', x2: '12', y2: '19' } },
+        { type: 'line', attrs: { x1: '5', y1: '12', x2: '19', y2: '12' } }
+    ],
+    'Minus': [
+        { type: 'line', attrs: { x1: '5', y1: '12', x2: '19', y2: '12' } }
+    ],
+    'X': [
+        { type: 'line', attrs: { x1: '18', y1: '6', x2: '6', y2: '18' } },
+        { type: 'line', attrs: { x1: '6', y1: '6', x2: '18', y2: '18' } }
+    ],
+    'Check': [
+        { type: 'polyline', attrs: { points: '20 6 9 17 4 12' } }
+    ],
+    'Eye': [
+        { type: 'path', attrs: { d: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z' } },
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '3' } }
+    ],
+    'EyeOff': [
+        { type: 'path', attrs: { d: 'M9.88 9.88a3 3 0 1 0 4.24 4.24' } },
+        { type: 'path', attrs: { d: 'M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68' } },
+        { type: 'path', attrs: { d: 'M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61' } },
+        { type: 'line', attrs: { x1: '2', y1: '2', x2: '22', y2: '22' } }
+    ],
+    'Edit': [
+        { type: 'path', attrs: { d: 'M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z' } }
+    ],
+    'Trash': [
+        { type: 'path', attrs: { d: 'M3 6h18' } },
+        { type: 'path', attrs: { d: 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6' } },
+        { type: 'path', attrs: { d: 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2' } }
+    ],
+    'Shield': [
+        { type: 'path', attrs: { d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' } }
+    ],
+    'Award': [
+        { type: 'circle', attrs: { cx: '12', cy: '8', r: '6' } },
+        { type: 'path', attrs: { d: 'M15.477 12.89 17 22l-5-3-5 3 1.523-9.11' } }
+    ],
+    'Target': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '6' } },
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '2' } }
+    ],
+    'TrendingUp': [
+        { type: 'polyline', attrs: { points: '23 6 13.5 15.5 8.5 10.5 1 18' } },
+        { type: 'polyline', attrs: { points: '17 6 23 6 23 12' } }
+    ],
+    'TrendingDown': [
+        { type: 'polyline', attrs: { points: '23 18 13.5 8.5 8.5 13.5 1 6' } },
+        { type: 'polyline', attrs: { points: '17 18 23 18 23 12' } }
+    ],
+    'CreditCard': [
+        { type: 'rect', attrs: { width: '20', height: '14', x: '2', y: '5', rx: '2' } },
+        { type: 'line', attrs: { x1: '2', y1: '10', x2: '22', y2: '10' } }
+    ],
+    'DollarSign': [
+        { type: 'line', attrs: { x1: '12', y1: '1', x2: '12', y2: '23' } },
+        { type: 'path', attrs: { d: 'M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' } }
+    ],
+    'Lock': [
+        { type: 'rect', attrs: { width: '18', height: '11', x: '3', y: '11', rx: '2', ry: '2' } },
+        { type: 'path', attrs: { d: 'M7 11V7a5 5 0 0 1 10 0v4' } }
+    ],
+    'Unlock': [
+        { type: 'rect', attrs: { width: '18', height: '11', x: '3', y: '11', rx: '2', ry: '2' } },
+        { type: 'path', attrs: { d: 'M7 11V7a5 5 0 0 1 9.9-1' } }
+    ],
+    'Globe': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+        { type: 'path', attrs: { d: 'M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20' } },
+        { type: 'path', attrs: { d: 'M2 12h20' } }
+    ],
+    'MessageCircle': [
+        { type: 'path', attrs: { d: 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z' } }
+    ],
+    'Bell': [
+        { type: 'path', attrs: { d: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9' } },
+        { type: 'path', attrs: { d: 'M10.3 21a1.94 1.94 0 0 0 3.4 0' } }
+    ],
+    'FileText': [
+        { type: 'path', attrs: { d: 'M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z' } },
+        { type: 'polyline', attrs: { points: '14 2 14 8 20 8' } },
+        { type: 'line', attrs: { x1: '16', y1: '13', x2: '8', y2: '13' } },
+        { type: 'line', attrs: { x1: '16', y1: '17', x2: '8', y2: '17' } },
+        { type: 'line', attrs: { x1: '10', y1: '9', x2: '8', y2: '9' } }
+    ],
+    'Image': [
+        { type: 'rect', attrs: { width: '18', height: '18', x: '3', y: '3', rx: '2', ry: '2' } },
+        { type: 'circle', attrs: { cx: '9', cy: '9', r: '2' } },
+        { type: 'path', attrs: { d: 'm21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21' } }
+    ],
+    'Video': [
+        { type: 'path', attrs: { d: 'm22 8-6 4 6 4V8Z' } },
+        { type: 'rect', attrs: { width: '14', height: '12', x: '2', y: '6', rx: '2', ry: '2' } }
+    ],
+    'Music': [
+        { type: 'path', attrs: { d: 'M9 18V5l12-2v13' } },
+        { type: 'circle', attrs: { cx: '6', cy: '18', r: '3' } },
+        { type: 'circle', attrs: { cx: '18', cy: '16', r: '3' } }
+    ],
+    'Headphones': [
+        { type: 'path', attrs: { d: 'M3 18v-6a9 9 0 0 1 18 0v6' } },
+        { type: 'path', attrs: { d: 'M21 19a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2z' } },
+        { type: 'path', attrs: { d: 'M3 19a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z' } }
+    ],
+    'Mic': [
+        { type: 'path', attrs: { d: 'M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z' } },
+        { type: 'path', attrs: { d: 'M19 10v2a7 7 0 0 1-14 0v-2' } },
+        { type: 'line', attrs: { x1: '12', y1: '19', x2: '12', y2: '23' } },
+        { type: 'line', attrs: { x1: '8', y1: '23', x2: '16', y2: '23' } }
+    ],
+    'Wifi': [
+        { type: 'path', attrs: { d: 'M5 12.55a11 11 0 0 1 14.08 0' } },
+        { type: 'path', attrs: { d: 'M1.42 9a16 16 0 0 1 21.16 0' } },
+        { type: 'path', attrs: { d: 'M8.53 16.11a6 6 0 0 1 6.95 0' } },
+        { type: 'line', attrs: { x1: '12', y1: '20', x2: '12.01', y2: '20' } }
+    ],
+    'Bluetooth': [
+        { type: 'path', attrs: { d: 'm7 7 10 10-5 5V2l5 5-10 10' } }
+    ],
+    'Cast': [
+        { type: 'path', attrs: { d: 'M4 22V2l20 20Z' } },
+        { type: 'path', attrs: { d: 'm16 6-10 10' } },
+        { type: 'path', attrs: { d: 'm16 10-6 6' } },
+        { type: 'path', attrs: { d: 'm16 14-2 2' } }
+    ],
+    'Share': [
+        { type: 'path', attrs: { d: 'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8' } },
+        { type: 'polyline', attrs: { points: '16 6 12 2 8 6' } },
+        { type: 'line', attrs: { x1: '12', y1: '2', x2: '12', y2: '15' } }
+    ],
+    'Link': [
+        { type: 'path', attrs: { d: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71' } },
+        { type: 'path', attrs: { d: 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' } }
+    ],
+    'Copy': [
+        { type: 'rect', attrs: { width: '14', height: '14', x: '8', y: '8', rx: '2', ry: '2' } },
+        { type: 'path', attrs: { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' } }
+    ],
+    'Scissors': [
+        { type: 'circle', attrs: { cx: '6', cy: '6', r: '3' } },
+        { type: 'circle', attrs: { cx: '6', cy: '18', r: '3' } },
+        { type: 'line', attrs: { x1: '20', y1: '4', x2: '8.12', y2: '15.88' } },
+        { type: 'line', attrs: { x1: '14.47', y1: '14.48', x2: '20', y2: '20' } },
+        { type: 'line', attrs: { x1: '8.12', y1: '8.12', x2: '12', y2: '12' } }
+    ],
+    'Moon': [
+        { type: 'path', attrs: { d: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z' } }
+    ],
+    'Sun': [
+        { type: 'circle', attrs: { cx: '12', cy: '12', r: '4' } },
+        { type: 'path', attrs: { d: 'M12 2v2' } },
+        { type: 'path', attrs: { d: 'M12 20v2' } },
+        { type: 'path', attrs: { d: 'm4.93 4.93 1.41 1.41' } },
+        { type: 'path', attrs: { d: 'm17.66 17.66 1.41 1.41' } },
+        { type: 'path', attrs: { d: 'M2 12h2' } },
+        { type: 'path', attrs: { d: 'M20 12h2' } },
+        { type: 'path', attrs: { d: 'm6.34 17.66-1.41 1.41' } },
+        { type: 'path', attrs: { d: 'm19.07 4.93-1.41 1.41' } }
+    ],
+    'Cloud': [
+        { type: 'path', attrs: { d: 'M17.5 19c0-1.7-1.3-3-3-3h-11c-1.7 0-3 1.3-3 3s1.3 3 3 3h11c1.7 0 3-1.3 3-3z' } },
+        { type: 'path', attrs: { d: 'M14.5 5c-2.5 0-4.5 2-4.5 4.5' } },
+        { type: 'path', attrs: { d: 'M18 9.5A4.5 4.5 0 0 0 13.5 5' } }
+    ],
+    'Umbrella': [
+        { type: 'path', attrs: { d: 'M22 12a10.06 10.06 0 0 0-10-10A10.06 10.06 0 0 0 2 12' } },
+        { type: 'path', attrs: { d: 'M12 12v9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2' } }
+    ]
+};
+
+// Helper function to generate SVG HTML from icon data
+const getIconSVGHTML = (iconName: string): string => {
+    const iconElements = LUCIDE_ICON_SVGS[iconName] || LUCIDE_ICON_SVGS['Zap'];
+
+    return iconElements.map(el => {
+        const attrs = Object.entries(el.attrs || {}).map(([k, v]) => `${k}="${v}"`).join(' ');
+
+        if (el.type === 'path') {
+            return `<path ${attrs} />`;
+        } else if (el.type === 'circle') {
+            return `<circle ${attrs} />`;
+        } else if (el.type === 'polyline') {
+            return `<polyline ${attrs} />`;
+        } else if (el.type === 'line') {
+            return `<line ${attrs} />`;
+        } else if (el.type === 'rect') {
+            return `<rect ${attrs} />`;
+        } else if (el.type === 'polygon') {
+            return `<polygon ${attrs} />`;
+        }
+        return '';
+    }).join('\n                            ');
+};
+
+// Keep the old single-path version for simple icons (backward compatibility)
+const LUCIDE_ICON_PATHS: { [key: string]: string } = {
+    'Truck': 'M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2 M15 18H9 M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14 M17 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4 M7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4',
+    'Ship': 'M2 12h20M2 12l2-2m-2 2l2 2M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2m2-10V7a2 2 0 012-2h6a2 2 0 012 2v5 M16.5 18.5l-2.226-2.226 M16.5 18.5l2.226-2.226',
+    'Zap': 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z',
+    'Package': 'M16.5 9.4l-7.5 7.5-3.5-3.5 7.5-7.5 M16.5 9.4l-2.226-2.226 M16.5 9.4l2.226 2.226 M9 11.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z m8.5 0a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z',
+    'Home': 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+    'User': 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
+    'Settings': 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 0 .07.53c.07.2.38.22.66.43.84.42 1.07.16 1.54.3 2.01a2 2 0 0 0 .45 2.72l.06.13a2 2 0 0 0 .91 2.58c.24.55.65.86 1.2.95 1.63a2 2 0 0 0 .3 1.07v.35a2 2 0 0 0 .42.51 2.54 2.54 0 0 0 .3 1.3 2 2 0 0 0 .3 1.3 2 2 0 0 0 .42-.51 2-2 0 0 0 .3-1.3 2-2 0 0 0 .3-1.3.42-.51 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3v-.18a2 2 0 0 0-2-2h-.44zM7.78 21a2 2 0 0 1-2-2v-.18a2 2 0 0 0-.07-.53 2 2 0 0 0-.42-.51 2 2 0 0 0-.3-1.07 2 2 0 0 0-.45-2.72l-.06-.13a2 2 0 0 0-.91-2.58 2 2 0 0 0-.95-1.63 2 2 0 0 0-.3-2.01v-.35a2 2 0 0 0-.42-.51 2.54 2.54 0 0 0-.3-1.3 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54-.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3 2 2 0 0 0-.42.51 2-.54.3-.97.88-1.63 2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-2-2h-.44z',
+    'ShoppingCart': 'm9 25a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6v-7a6 6 0 0 1 6-6zm11.666-2h-2.664a4 4 0 0 1-1.768-3.563l-5.052-5.632A4 4 0 0 1 9.635 8h4.57a4 4 0 0 1 3.992 4',
+    'Layout': 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+    'Heart': 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
+    'Star': 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    'CheckCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
+    'XCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
+    'AlertCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+    'Info': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+    'Mail': 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
+    'Phone': 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z',
+    'MapPin': 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z',
+    'Clock': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+    'Calendar': 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z',
+    'Search': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+    'Filter': 'M20 10H4m16 0l-4 4m4-4-4 4M4 10l4 4m-4-4 4-4m12 6H4m16 0l-4-4m4 4-4 4',
+    'Download': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m7 10l5-5m-5 5l5-5m-5 5V3',
+    'Upload': 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m17-7l-5-5m5 5l-5-5m5 5H3',
+    'RefreshCw': 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8m0 0v5m0-5h-5m-2 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v-5m0 5h5',
+    'ArrowRight': 'M5 12h14m-7-7 7 7-7 7',
+    'ArrowLeft': 'M19 12H5m7-7-7 7 7 7',
+    'ArrowUp': 'M12 19V5m0 0l-7 7m7-7 7 7',
+    'ArrowDown': 'M12 5v14m0 0l7-7m-7 7-7-7',
+    'ChevronDown': 'm6 9 6 6 6-6',
+    'ChevronUp': 'm18 15-6-6-6 6',
+    'ChevronLeft': 'm15 18-6-6 6-6',
+    'ChevronRight': 'm9 18 6-6-6-6',
+    'Menu': 'M4 6h16M4 12h16M4 18h16',
+    'Plus': 'M12 5v14m-7-7h14',
+    'Minus': 'M5 12h14',
+    'Eye': 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z M12 12a3 3 0 1 1 0-6 3 3 0 0 1 0 6z',
+    'EyeOff': 'M9.9 17c-.9.4-2.2-.5-3.4-.5C4 16.5 2 12 2 12s2-4.5 4.5-4.5c1.2 0 2.5.1 3.4.5 M9.9 12L3.5 5.5 M14.1 17c.9.4 2.2.5 3.4.5 2.5 0 4.5-4.5 4.5-4.5s-2-4.5-4.5-4.5c-1.2 0-2.5.1-3.4.5 M14.1 12l6.4 6.4',
+    'Edit': 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7m-9 1 8.5-8.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z',
+    'Trash2': 'M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-6 5v6m4-6v6',
+    'Share2': 'M8 18c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4m8 0c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4m-8 6c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4m8-2c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4',
+    'Link': 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71',
+    'Globe': 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z M2 12h20',
+    'Facebook': 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z',
+    'Twitter': 'M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z',
+    'Instagram': 'M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z M17.5 6.5h.01',
+    'Youtube': 'M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z M9.75 15.02l5.75-3.27-5.75-3.27z',
+    'Linkedin': 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z M2 9h4v12H2z M4 2a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2z',
+    'HelpCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
 };
 
 function newBlock(type: string, extra: Record<string, any> = {}) {
@@ -224,6 +621,28 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
                     { icon: 'Ship', title: 'Ocean Freight', subtitle: 'Global Shipping' }
                 ],
                 styles: { ...defaultBlockStyles, paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0 }
+            };
+        case BLOCK_TYPES.LOOP_GRID:
+            return {
+                ...base,
+                heading: 'Popular',
+                headingHighlight: 'Faculties',
+                highlightColor: '#d2152a',
+                description: 'Discover the most sought-after subjects to kickstart your study in the UK journey.',
+                items: [
+                    { title: 'Business & Management', image: 'https://images.unsplash.com/photo-1454165833767-1319d3bb763c?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Computing', image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Engineering', image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Law', image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Nursing and Midwifery', image: 'https://images.unsplash.com/photo-1505751172107-573225a94042?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Allied Health', image: 'https://images.unsplash.com/photo-1576091160550-2173bdd99621?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Medicine & Dentistry', image: 'https://images.unsplash.com/photo-1559839734-2b71db197ec2?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Psychology', image: 'https://images.unsplash.com/photo-1516062423079-7ca13cdc7f5a?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Medical Sciences', image: 'https://images.unsplash.com/photo-1532187875605-1ef6c1a06709?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Architecture', image: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&q=80&w=200' },
+                    { title: 'Explore All', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=200' }
+                ],
+                styles: { ...defaultBlockStyles, backgroundColor: '#ffffff', paddingTop: 60, paddingBottom: 120, backgroundImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200' }
             };
         default:
             return base;
@@ -410,7 +829,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 
     return (
         <div ref={setNodeRef} style={style} onClick={(e) => { e.stopPropagation(); onSelect(block.id); }}
-            className={`group relative rounded-lg transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'} ${block.parentClass || ''}`}>
+            className={`group relative rounded-lg transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'}`}>
             <div {...attributes} {...listeners}
                 className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1.5 text-slate-300 hover:text-slate-500 transition-opacity">
                 <GripVertical className="w-4 h-4" />
@@ -421,7 +840,119 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>
             )}
-            <BlockRenderer block={block} onUpdateContent={updateBlockContent} />
+            <BlockRenderer block={block} onUpdateContent={updateBlockContent} viewMode={viewMode} />
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────
+//  FAQ Section Renderer (with collapse state)
+// ─────────────────────────────────────────
+function FAQSectionRenderer({ block, viewMode, containerStyle }: { block: any, viewMode?: string, containerStyle: any }) {
+    const [openIndex, setOpenIndex] = React.useState<number | null>(0);
+
+    return (
+        <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={block.customClass ? undefined : containerStyle}>
+            <div className="faq-section spacer py-10 px-4">
+                <h2 className="title text-center">
+                    {block.heading}{' '}
+                    <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
+                </h2>
+                <div className={`flex gap-10 items-center text-left mt-8 ${viewMode === 'mobile' ? 'flex-col' : 'md:flex-row'}`}>
+                    <div className="shrink-0 flex justify-center w-full md:w-auto">
+                        <div className="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                            <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                        </div>
+                    </div>
+                    <div className="flex-1 w-full space-y-3">
+                        {(block.items || []).map((item: any, idx: number) => (
+                            <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+                                <div
+                                    className="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors"
+                                    onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                                >
+                                    <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
+                                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
+                                </div>
+                                {openIndex === idx && (
+                                    <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed animate-in slide-in-from-top-2 duration-300">
+                                        {item.answer}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────
+//  Loop Grid Renderer
+// ─────────────────────────────────────────
+function LoopGridRenderer({ block, containerStyle, isMobile }: { block: any, containerStyle: any, isMobile: boolean }) {
+    const s = block.styles || {};
+    return (
+        <div
+            id={block.customId || `blk-${block.id}`}
+            className={cn("relative overflow-hidden", block.customClass)}
+            style={{ ...containerStyle, '--highlight-color': block.highlightColor || '#d2152a' } as React.CSSProperties}
+        >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="text-center mb-12 spacer">
+                    <h2 className="title">
+                        {block.heading}{' '}
+                        <span style={{ color: 'var(--highlight-color)' }}>{block.headingHighlight}</span>
+                    </h2>
+                    {block.description && (
+                        <p className="paragraph mx-auto">
+                            {block.description}
+                        </p>
+                    )}
+                </div>
+
+                <div className={cn(
+                    "grid gap-6",
+                    isMobile ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"
+                )}>
+                    {(block.items || []).map((item: any, idx: number) => (
+                        <div
+                            key={idx}
+                            className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-50 group hover:-translate-y-1"
+                        >
+                            <div className="w-20 h-20 mb-4 overflow-hidden rounded-xl flex items-center justify-center bg-slate-50">
+                                {item.image ? (
+                                    <img
+                                        src={item.image}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                                        <ImageIcon className="w-10 h-10" />
+                                    </div>
+                                )}
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 leading-tight">
+                                {item.title}
+                            </h3>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* City Skyline Background at bottom */}
+            {s.backgroundImage && (
+                <div className="absolute bottom-0 left-0 w-full h-[300px] pointer-events-none opacity-20">
+                    <img
+                        src={s.backgroundImage}
+                        alt=""
+                        className="w-full h-full object-cover object-bottom"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                </div>
+            )}
         </div>
     );
 }
@@ -444,9 +975,11 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
         borderRightWidth: `${s.borderRightWidth || 0}px`,
         borderColor: s.borderColor || '#e2e8f0',
         borderStyle: s.borderStyle || 'solid',
-        backgroundImage: s.backgroundImage ? `url(${s.backgroundImage})` : 'none',
+        backgroundImage: s.backgroundImage && block.type !== BLOCK_TYPES.LOOP_GRID ? `url(${s.backgroundImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
     };
     const textStyle = {
         color: s.color,
@@ -467,12 +1000,25 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
         }
     }, [block.content]);
 
+    // Helper to wrap content with parentClass if needed
+    const wrapWithParentClass = (content: React.ReactNode) => {
+        if (block.parentClass) {
+            return <div className={block.parentClass}>{content}</div>;
+        }
+        return content;
+    };
+
+    // Determine if we should apply containerStyle
+    // Don't apply inline styles when customClass or parentClass is set - let CSS classes handle it
+    const shouldApplyInlineStyles = !block.customClass && !block.parentClass;
+    const divStyle = shouldApplyInlineStyles ? containerStyle : undefined;
+
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
         case BLOCK_TYPES.HEADING:
         case BLOCK_TYPES.LIST:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     {block.type === BLOCK_TYPES.LIST && (
                         <style dangerouslySetInnerHTML={{
                             __html: `
@@ -569,13 +1115,13 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                 </div>
             );
         case BLOCK_TYPES.IMAGE:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />
                 </div>
             );
         case BLOCK_TYPES.BUTTON:
-            return (
+            return wrapWithParentClass(
                 <div id={block.customId || `blk-${block.id}`} style={{
                     ...containerStyle,
                     display: 'flex',
@@ -616,8 +1162,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                 </div>
             );
         case BLOCK_TYPES.DIVIDER:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     <hr style={{ borderColor: s.color || '#e2e8f0' }} />
                 </div>
             );
@@ -625,8 +1171,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             return <div style={{ height: block.height || 40, backgroundColor: 'transparent' }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono page-block-renderer">spacer · {block.height || 40}px</div>;
 
         case BLOCK_TYPES.ICON_BOX:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     <div className="flex flex-col items-center">
                         <IconComponent icon={block.icon || 'Layout'} className="w-10 h-10 mb-2" />
                         <h3 className="font-bold">{block.title}</h3>
@@ -636,8 +1182,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             );
 
         case BLOCK_TYPES.ACCORDION:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     {(block.items || []).map((item: any, i: number) => (
                         <div key={i} className="mb-2 border rounded-lg overflow-hidden">
                             <div className="p-3 bg-slate-50 font-bold flex justify-between items-center">
@@ -650,8 +1196,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             );
 
         case BLOCK_TYPES.VIDEO:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center text-white">
                         Video Placeholder: {block.url || 'No URL'}
                     </div>
@@ -659,8 +1205,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             );
 
         case BLOCK_TYPES.SOCIAL:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
                     <div className="flex gap-4 justify-center">
                         {(block.items || []).map((item: any, i: number) => (
                             <div key={i} className="p-2 bg-slate-100 rounded-full">
@@ -672,41 +1218,14 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             );
 
         case BLOCK_TYPES.FAQ_SECTION:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
-                    <div className="spacer">
-                        <h2 className="title text-center">
-                            {block.heading}{' '}
-                            <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
-                        </h2>
-                        <div className="flex gap-10 items-center flex-row text-left mt-8">
-                            <div className="shrink-0 flex justify-center w-full md:w-auto">
-                                <div className="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
-                                    <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
-                                </div>
-                            </div>
-                            <div className="flex-1 w-full space-y-3">
-                                {(block.items || []).map((item: any, idx: number) => (
-                                    <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                                        <div className="p-4 flex justify-between items-center bg-white group-hover:bg-slate-50/50 transition-colors">
-                                            <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
-                                            <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                                        </div>
-                                        <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed">
-                                            {item.answer}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            return wrapWithParentClass(
+                <FAQSectionRenderer block={block} viewMode={viewMode} containerStyle={divStyle} />
             );
 
         case BLOCK_TYPES.FEATURE_SECTION:
-            return (
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
-                    <div className="flex flex-col md:flex-row min-h-[450px] overflow-hidden rounded-3xl shadow-2xl">
+            return wrapWithParentClass(
+                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
+                    <div className="feature-section flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
                         <div
                             className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
                             style={{
@@ -721,7 +1240,7 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                             </div>
                         </div>
 
-                        <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center -mt-8 md:mt-0 md:-ml-12 z-10">
+                        <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center md:-mt-8 md:mt-0 md:-ml-12 z-10">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
                                 {(block.items || []).map((item: any, idx: number) => (
                                     <div
@@ -743,6 +1262,15 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                 </div>
             );
 
+        case BLOCK_TYPES.LOOP_GRID:
+            return wrapWithParentClass(
+                <LoopGridRenderer
+                    block={block}
+                    containerStyle={divStyle}
+                    isMobile={viewMode === 'mobile'}
+                />
+            );
+
         default:
             return null;
     }
@@ -755,24 +1283,42 @@ function blockToHTML(block: any): string {
     const s = block.styles || {};
     const marginCSS = `margin:${s.marginTop || 0}px ${s.marginRight || 0}px ${s.marginBottom || 0}px ${s.marginLeft || 0}px;`;
     const borderCSS = `border-top-width:${s.borderTopWidth || 0}px;border-bottom-width:${s.borderBottomWidth || 0}px;border-left-width:${s.borderLeftWidth || 0}px;border-right-width:${s.borderRightWidth || 0}px;border-color:${s.borderColor || '#e2e8f0'};border-style:${s.borderStyle || 'solid'};`;
-    const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};${s.backgroundImage ? `background-image:url(${s.backgroundImage});background-size:cover;background-position:center;` : ''}`;
-    const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
+        const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};${s.backgroundImage && block.type !== BLOCK_TYPES.LOOP_GRID ? `background-image:url(${s.backgroundImage});background-size:cover;background-position:center;` : ''}`;
+        const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
 
-    const wrap = (content: string) => `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}" style="padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}">${content}</div>`;
+        const wrap = (content: string) => {
+            // parentClass goes on a wrapper div, customClass goes on the content div
+            // When parentClass or customClass exists, DON'T apply inline styles - let CSS classes handle styling
+            const wrapperStyle = `padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}position:relative;overflow:hidden;`;
+
+        if (block.parentClass) {
+            // parentClass wrapper with NO inline styles
+            // The inner div has customClass but also NO inline styles
+            return `<div class="${block.parentClass}">
+          <div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}">${content}</div>
+        </div>`;
+        }
+        if (block.customClass) {
+            // customClass on the wrapper div, NO inline styles - let the CSS class handle it
+            return `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass}">${content}</div>`;
+        }
+        // No custom classes, apply all styles inline
+        return `<div id="${block.customId || `blk-${block.id}`}" class="" style="${wrapperStyle}">${content}</div>`;
+    };
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
         case BLOCK_TYPES.HEADING:
         case BLOCK_TYPES.LIST: {
             const extraStyles = [
-                block.type === BLOCK_TYPES.LIST ? `#blk-${block.id} li::marker { color: ${s.bulletColor || s.color || '#00c3c0'}; }` : '',
-                `#blk-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 16}px; padding: ${s.paragraphPadding ?? 0}px; margin-top: 0; }`,
-                `#blk-${block.id} p:last-child { margin-bottom: 0; }`,
-                `#blk-${block.id} ul, #blk-${block.id} ol { list-style-position: inside; padding-left: 0; margin: 0; text-align: ${s.textAlign || 'left'}; }`,
-                `#blk-${block.id} li { text-align: ${s.textAlign || 'left'}; margin-bottom: ${s.listItemSpacing ?? 0}px !important; }`,
-                `#blk-${block.id} li:last-child { margin-bottom: 0 !important; }`,
+                block.type === BLOCK_TYPES.LIST ? `#block-${block.id} li::marker { color: ${s.bulletColor || s.color || '#00c3c0'}; }` : '',
+                `#block-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 16}px; padding: ${s.paragraphPadding ?? 0}px; margin-top: 0; }`,
+                `#block-${block.id} p:last-child { margin-bottom: 0; }`,
+                `#block-${block.id} ul, #block-${block.id} ol { list-style-position: inside; padding-left: 0; margin: 0; text-align: ${s.textAlign || 'left'}; }`,
+                `#block-${block.id} li { text-align: ${s.textAlign || 'left'}; margin-bottom: ${s.listItemSpacing ?? 0}px !important; }`,
+                `#block-${block.id} li:last-child { margin-bottom: 0 !important; }`,
                 block.type === BLOCK_TYPES.HEADING ? `
-                    #blk-${block.id} h2 {
+                    #block-${block.id} h2 {
                         font-size: ${s.h2FontSize ?? 28}px;
                         color: ${s.h2Color ?? '#1e293b'};
                         font-weight: ${s.h2FontWeight ?? 700};
@@ -787,72 +1333,120 @@ function blockToHTML(block: any): string {
                     }
                 ` : ''
             ].join(' ');
-            const listIdAttr = `id="blk-${block.id}"`;
+            const listIdAttr = `id="block-${block.id}"`;
             const content = `<style>${extraStyles}</style><div ${listIdAttr} style="color:${s.color};font-size:${s.fontSize}px;line-height:${s.lineHeight || 1.5};letter-spacing:${s.letterSpacing || 0}px;text-transform:${s.textTransform || 'none'};text-align:${s.textAlign};font-weight:${s.fontWeight || 'normal'};font-style:${s.fontStyle || 'normal'};text-decoration:${s.textDecoration || 'none'};">${block.content}</div>`;
             return wrap(content);
         }
         case BLOCK_TYPES.IMAGE:
             return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;border-radius:${s.borderRadius || 0}px;" />`);
         case BLOCK_TYPES.BUTTON:
-            return wrap(`<div style="text-align:${s.textAlign};"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`);
+            return wrap(`<div style="display:flex;justify-content:${s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start'};"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`);
         case BLOCK_TYPES.DIVIDER:
             return wrap(`<hr style="border:none;border-top:1px solid ${s.color || '#e2e8f0'};" />`);
         case BLOCK_TYPES.SPACER:
             return `<div style="height:${block.height || 40}px;"></div>`;
         case BLOCK_TYPES.COLUMNS: {
-            const totalRatio = block.columns.reduce((a: number, c: any) => a + c.ratio, 0);
             const colHTMLs = block.columns.map((col: any) => {
-                const pct = Math.round((col.ratio / totalRatio) * 100);
                 const childHTML = col.blocks.map(blockToHTML).join('');
-                return `<td class="col-block" valign="top" style="width:${pct}%;padding:4px;">${childHTML}</td>`;
+                return `<div class="col-block" style="flex:${col.ratio};padding:4px;min-width:0;">${childHTML}</div>`;
             }).join('');
-            return wrap(`<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>`);
+            return wrap(`<div class="col-row" style="display:flex;gap:8px;flex-wrap:wrap;">${colHTMLs}</div>`);
         }
-        case BLOCK_TYPES.ICON_BOX:
+        case BLOCK_TYPES.ICON_BOX: {
+            const getIconSVG = (iconName: string) => {
+                const iconMap: { [key: string]: string } = {
+                    'Layout': 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
+                    'Truck': 'M10 17h4V3H3v14h7z M10 17l6-6-6 1.41-1.41L10 14.17l6 6 1.41 1.41-6-6z',
+                    'Ship': 'M2 12h20M2 12l2-2m-2 2l2 2M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2m2-10V7a2 2 0 012-2h6a2 2 0 012 2v5',
+                    'Zap': 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z',
+                    'Package': 'm16.5 1.5-9.5 9-9.5 9.5 9.5 9.5-9.5-9.5-9.5zM9 13a2 2 0 011-2 2 2 0 012 2 2 2 0 011-2zm4 0a2 2 0 011-2 2 2 0 012 2 2 2 0 011-2z',
+                    'Home': 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+                    'User': 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
+                    'Settings': 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 0 .07.53c.07.2.38.22.66.43.84.42 1.07.16 1.54.3 2.01a2 2 0 0 0 .45 2.72l.06.13a2 2 0 0 0 .91 2.58c.24.55.65.86 1.2.95 1.63a2 2 0 0 0 .3 1.07v.35a2 2 0 0 0 .42.51 2.54 2 0 0 0 .3 1.3 2 2 0 0 0 .3 1.3 2 2 0 0 0 .42-.51 2-2 0 0 0 .3-1.3 2-2 0 0 0 .3-1.3.42-.51 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3v-.18a2 2 0 0 0-2-2h-.44zM7.78 21a2 2 0 0 1-2-2v-.18a2 2 0 0 0-.07-.53 2 2 0 0 0-.42-.51 2 2 0 0 0-.3-1.07 2 2 0 0 0-.45-2.72l-.06-.13a2 2 0 0 0-.91-2.58 2 2 0 0 0-.95-1.63 2 2 0 0 0-.3-2.01v-.35a2 2 0 0 0-.42-.51 2.54 2 0 0 0-.3-1.3 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54-.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3 2 2 0 0 0-.42.51 2-.54.3-.97.88-1.63 2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-2-2h-.44z',
+                    'ShoppingCart': 'm9 25a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6v-7a6 6 0 0 1 6-6zm11.666-2h-2.664a4 4 0 0 1-1.768-3.563l-5.052-5.632A4 4 0 0 1 9.635 8h4.57a4 4 0 0 1 3.992 4',
+                    'Heart': 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
+                    'Star': 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+                    'CheckCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
+                    'XCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
+                    'AlertCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+                    'Info': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+                    'Mail': 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
+                    'Phone': 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z',
+                    'MapPin': 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z',
+                    'Clock': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
+                    'Calendar': 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z',
+                };
+                return iconMap[iconName] || iconMap['Layout'];
+            };
+
             return wrap(`
                 <div style="text-align: ${s.textAlign || 'center'};">
-                    <div style="margin-bottom: 10px;">Icon: ${block.icon}</div>
-                    <h3 style="margin: 0 0 5px; font-size: 18px;">${block.title}</h3>
+                    <div style="margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 40px; height: 40px;">
+                            ${getIconSVGHTML(block.icon || 'Layout')}
+                        </svg>
+                    </div>
+                    <h3 style="margin: 0 0 5px; font-size: 18px; font-weight: bold;">${block.title}</h3>
                     <p style="margin: 0; font-size: 14px; opacity: 0.8;">${block.description}</p>
                 </div>
             `);
+        }
         case BLOCK_TYPES.ACCORDION:
             const accItems = (block.items || []).map((item: any) => `
-                <div style="margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                    <div style="padding: 10px; background: #f8fafc; font-weight: bold;">${item.title}</div>
-                    <div style="padding: 10px; font-size: 14px;">${item.content}</div>
+                <div style="margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 12px; background: #f8fafc; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                        ${item.title}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </div>
                 </div>
             `).join('');
             return wrap(`<div>${accItems}</div>`);
         case BLOCK_TYPES.VIDEO:
-            return wrap(`<div style="background: #000; color: #fff; padding: 40px; text-align: center; border-radius: 8px;">Video: ${block.url || 'No URL'}</div>`);
-        case BLOCK_TYPES.SOCIAL:
-            const socialItems = (block.items || []).map((item: any) => `
-                <a href="${item.url}" style="display: inline-block; margin: 0 5px; text-decoration: none;">Icon: ${item.icon}</a>
-            `).join('');
+            return wrap(`<div style="background: #0f172a; color: #fff; padding: 60px 40px; text-align: center; border-radius: 8px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">Video Placeholder: ${block.url || 'No URL'}</div>`);
+        case BLOCK_TYPES.SOCIAL: {
+            const socialItems = (block.items || []).map((item: any) => {
+                const iconSVG = getIconSVGHTML(item.icon || 'Link');
+
+                return `
+                <a href="${item.url}" style="display: inline-flex; margin: 0 8px; text-decoration: none; padding: 8px; background: #f1f5f9; border-radius: 50%;" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                        ${iconSVG}
+                    </svg>
+                </a>
+            `}).join('');
             return wrap(`<div style="text-align: ${s.textAlign || 'center'};">${socialItems}</div>`);
+        }
         case BLOCK_TYPES.FAQ_SECTION: {
-            const itemsHTML = (block.items || []).map((item: any) => `
-                <div class="faq-item" style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
-                    <div class="faq-question" style="padding: 16px; font-weight: 600; color: #334155; cursor: pointer;">
-                        ${item.question}
+            const itemsHTML = (block.items || []).map((item: any, idx: number) => {
+                const isFirstItem = idx === 0;
+                return `
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+                    <div class="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors" onclick="if(this.nextElementSibling.style.display==='none'){this.nextElementSibling.style.display='block';this.querySelector('svg').style.transform='rotate(180deg)'}else{this.nextElementSibling.style.display='none';this.querySelector('svg').style.transform='rotate(0deg)'}">
+                        <span class="font-semibold text-slate-700 text-[15px]">${item.question}</span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-300" style="transform: ${isFirstItem ? 'rotate(180deg)' : 'rotate(0deg)'}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
                     </div>
-                    <div class="faq-answer" style="padding: 0 16px 16px; color: #64748b; font-size: 14px;">
+                    <div class="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed" style="display: ${isFirstItem ? 'block' : 'none'};">
                         ${item.answer}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
 
             const content = `
-                <div class="faq-section spacer" style="padding: 40px 0;">
-                    <h2 class="title text-center" style="text-align: center; margin-bottom: 30px;">
+                <div class="faq-section spacer py-10 px-4">
+                    <h2 class="title text-center">
                         ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
                     </h2>
-                    <div class="faq-container" style="display: flex; gap: 40px; align-items: center;">
-                        <div class="faq-image" style="flex: 0 0 auto;">
-                            <img src="${block.imageUrl}" alt="FAQ" style="width: 250px; height: 250px; border-radius: 50%; object-fit: cover;" />
+                    <div class="flex flex-col md:flex-row gap-10 items-center text-left mt-8">
+                        <div class="shrink-0 flex justify-center w-full md:w-auto">
+                            <div class="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                                <img src="${block.imageUrl}" alt="FAQ" class="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                            </div>
                         </div>
-                        <div class="faq-items" style="flex: 1;">
+                        <div class="flex-1 w-full space-y-3">
                             ${itemsHTML}
                         </div>
                     </div>
@@ -861,27 +1455,80 @@ function blockToHTML(block: any): string {
             return wrap(content);
         }
         case BLOCK_TYPES.FEATURE_SECTION: {
-            const featuresHTML = (block.items || []).map((item: any) => `
-                <div class="feature-card" style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #f8fafc; margin-bottom: 16px;">
-                    <div class="feature-icon" style="width: 40px; height: 40px; margin-bottom: 12px;">
-                        Icon: ${item.icon}
+            const featuresHTML = (block.items || []).map((item: any) => {
+                // Get the SVG icon path from lucide-react
+                const getIconSVG = (iconName: string) => {
+                    const iconMap: { [key: string]: string } = {
+                        'Truck': 'M10 17h4V3H3v14h7z M10 17l6-6-6 1.41-1.41L10 14.17l6 6 1.41 1.41-6-6z',
+                        'Ship': 'M2 12h20M2 12l2-2m-2 2l2 2M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2m2-10V7a2 2 0 012-2h6a2 2 0 012 2v5',
+                        'Zap': 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z',
+                        'Package': 'm16.5 1.5-9.5 9-9.5 9.5 9.5 9.5-9.5-9.5-9.5zM9 13a2 2 0 011-2 2 2 0 012 2 2 0 011-2zm4 0a2 2 0 011-2 2 2 0 012 2 2 0 011-2z',
+                        'Home': 'm3 9 9-7 7 7-7',
+                        'User': 'M20 21v-2a4 4 0 0 0-4-4V8a4 4 0 0 0-4-4h-1a5 5 0 0 0-2-2V5a5 5 0 0 0 2-2h11a5 5 0 0 0 2 2v4a5 5 0 0 0 2 2h2a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-1m-8-8V9a3 3 0 0 1 3-3h1m8 0V5a3 3 0 0 1 3-3h2',
+                        'Settings': 'm12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 0 .07.53c.07.2.38.22.66.43.84.42 1.07.16 1.54.3 2.01a2 2 0 0 0 .45 2.72l.06.13a2 2 0 0 0 .91 2.58c.24.55.65.86 1.2.95 1.63a2 2 0 0 0 .3 1.07v.35a2 2 0 0 0 .42.51 2.54 2 0 0 0 .3 1.3 2 2 0 0 0 .3 1.3 2 2 0 0 0 .42-.51 2-2 0 0 0 .3-1.3 2-2 0 0 0 .3-1.3.42-.51 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3v-.18a2 2 0 0 0-2-2h-.44zM7.78 21a2 2 0 0 1-2-2v-.18a2 2 0 0 0-.07-.53 2 2 0 0 0-.42-.51 2 2 0 0 0-.3-1.07 2 2 0 0 0-.45-2.72l-.06-.13a2 2 0 0 0-.91-2.58 2 2 0 0 0-.95-1.63 2 2 0 0 0-.3-2.01v-.35a2 2 0 0 0-.42-.51 2.54 2 0 0 0-.3-1.3 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54-.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3 2 2 0 0 0-.42.51 2-.54.3-.97.88-1.63 2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-2-2h-.44z',
+                        'ShoppingCart': 'm9 25a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6v-7a6 6 0 0 1 6-6zm11.666-2h-2.664a4 4 0 0 1-1.768-3.563l-5.052-5.632A4 4 0 0 1 9.635 8h4.57a4 4 0 0 1 3.992 4',
+                    };
+                    return iconMap[iconName] || iconMap['Zap'];
+                };
+
+                return `
+                <div class="feature-card bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group">
+                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            ${getIconSVGHTML(item.icon || 'Zap')}
+                        </svg>
                     </div>
-                    <h4 style="margin: 0 0 4px; font-weight: 900; color: #1e293b;">${item.title}</h4>
-                    <span style="font-size: 10px; text-transform: uppercase; color: #94a3b8;">${item.subtitle}</span>
+                    <div class="flex flex-col">
+                        <h4 class="font-black text-slate-800 text-sm mb-0.5">${item.title}</h4>
+                        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">${item.subtitle}</span>
+                    </div>
+                </div>
+            `}).join('');
+
+            const content = `
+                <div class="feature-section flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative" style="background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%);">
+                        <div class="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none"></div>
+                        <div class="spacer">
+                            <h3 class="subtitle">${block.subtitle}</h3>
+                            <h2 class="title">${block.title}</h2>
+                            <p class="paragraph">${block.description}</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center md:-mt-8 md:mt-0 md:-ml-12 z-10">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                            ${featuresHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            return wrap(content);
+        }
+        case BLOCK_TYPES.LOOP_GRID: {
+            const itemsHTML = (block.items || []).map((item: any) => `
+                <div class="bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-50 group hover:-translate-y-1">
+                    <div class="w-20 h-20 mb-4 overflow-hidden rounded-xl flex items-center justify-center bg-slate-50">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />` : ''}
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.title}</h3>
                 </div>
             `).join('');
 
             const content = `
-                <div class="feature-section" style="display: flex; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);">
-                    <div class="feature-info" style="width: 50%; padding: 60px; background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%); color: #fff;">
-                        <span style="font-size: 14px; text-transform: uppercase; opacity: 0.8;">${block.subtitle}</span>
-                        <h2 style="font-size: 36px; font-weight: 700; margin: 8px 0 16px;">${block.title}</h2>
-                        <p style="opacity: 0.9; line-height: 1.6;">${block.description}</p>
-                    </div>
-                    <div class="feature-grid" style="width: 50%; padding: 40px; background: #f8fafc; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        ${featuresHTML}
+                <div class="spacer text-center relative z-10" style="--highlight-color: ${block.highlightColor || '#d2152a'}">
+                        <h2 class="title">
+                            ${block.heading} <span style="color: var(--highlight-color)">${block.headingHighlight}</span>
+                        </h2>
+                        ${block.description ? `<p class="paragraph mx-auto">${block.description}</p>` : ''}
+                    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 loop-grid-container">
+                        ${itemsHTML}
                     </div>
                 </div>
+                ${s.backgroundImage ? `
+                <div class="loop-grid-bg absolute bottom-0 left-0 w-full h-[300px] pointer-events-none opacity-20">
+                    <img src="${s.backgroundImage}" alt="" class="w-full h-full object-cover object-bottom" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent"></div>
+                </div>` : ''}
             `;
             return wrap(content);
         }
@@ -892,9 +1539,14 @@ function blockToHTML(block: any): string {
 
 function generateHTML(blocks: any[]) {
     const blocksHtml = blocks.map(blockToHTML).join('\n');
+    // REMOVED: Global CSS reset that was breaking the entire page layout
+    // The `* { margin: 0; padding: 0; box-sizing: border-box; }` was affecting
+    // the entire page (header, footer, navigation), not just the page content.
     const responsiveCSS = `<style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        @media only screen and (max-width:600px){.col-row{width:100%!important;}.col-block{display:block!important;width:100%!important;box-sizing:border-box;}}
+        @media only screen and (max-width:600px){
+            .page-content .col-row{flex-direction:column!important;}
+            .page-content .col-block{width:100%!important;}
+        }
     </style>`;
 
     const designComment = `\n<!-- PAGE_BLOCKS:${JSON.stringify(blocks).replace(/--/g, '\\u002d\\u002d')} -->`;
@@ -931,6 +1583,16 @@ function ItemsListEditor({ items, onUpdate, fields }: { items: any[], onUpdate: 
         onUpdate(newItems);
     };
 
+    const [mediaModalOpen, setMediaModalOpen] = useState(false);
+    const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
+    const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
+
+    const openMediaModal = (index: number, key: string) => {
+        setActiveItemIndex(index);
+        setActiveFieldKey(key);
+        setMediaModalOpen(true);
+    };
+
     return (
         <div className="space-y-4">
             <div className="space-y-3">
@@ -949,13 +1611,42 @@ function ItemsListEditor({ items, onUpdate, fields }: { items: any[], onUpdate: 
                                         <textarea
                                             className="w-full h-20 p-3 text-xs bg-white border border-slate-200 rounded-xl resize-none outline-none focus:ring-2 focus:ring-[#00c3c0]/20"
                                             value={item[f.key] || ''}
-                                            onChange={(e: any) => updateItem(idx, f.key, e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateItem(idx, f.key, e.target.value)}
                                         />
+                                    ) : f.type === 'icon' ? (
+                                        <div className="flex items-center gap-2">
+                                            <IconSelector
+                                                value={item[f.key] || ''}
+                                                onChange={(icon) => updateItem(idx, f.key, icon)}
+                                            />
+                                            <Input
+                                                className="h-9 text-xs rounded-xl bg-white border-slate-200 flex-1"
+                                                value={item[f.key] || ''}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(idx, f.key, e.target.value)}
+                                                placeholder="Or type icon name..."
+                                            />
+                                        </div>
+                                    ) : f.type === 'image' ? (
+                                        <div className="flex gap-2">
+                                            <Input
+                                                className="h-9 text-xs rounded-xl bg-white border-slate-200 flex-1"
+                                                value={item[f.key] || ''}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(idx, f.key, e.target.value)}
+                                                placeholder="https://..."
+                                            />
+                                            <Button
+                                                onClick={() => openMediaModal(idx, f.key)}
+                                                variant="outline"
+                                                className="shrink-0 h-9 w-9 bg-white border-slate-200 rounded-xl flex items-center justify-center p-0 hover:bg-slate-50"
+                                            >
+                                                <ImageIcon className="w-4 h-4 text-slate-400" />
+                                            </Button>
+                                        </div>
                                     ) : (
                                         <Input
                                             className="h-9 text-xs rounded-xl bg-white border-slate-200"
                                             value={item[f.key] || ''}
-                                            onChange={(e: any) => updateItem(idx, f.key, e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateItem(idx, f.key, e.target.value)}
                                         />
                                     )}
                                 </div>
@@ -968,6 +1659,90 @@ function ItemsListEditor({ items, onUpdate, fields }: { items: any[], onUpdate: 
                 <PlusCircle className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Add New Item</span>
             </Button>
+
+            <MediaLibraryModal
+                open={mediaModalOpen}
+                onOpenChange={setMediaModalOpen}
+                onSelect={(url) => {
+                    if (activeItemIndex !== null && activeFieldKey !== null) {
+                        updateItem(activeItemIndex, activeFieldKey, url);
+                    }
+                }}
+            />
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────
+//  Icon Selector Component
+// ─────────────────────────────────────────
+interface IconSelectorProps {
+    value: string;
+    onChange: (icon: string) => void;
+}
+
+const COMMON_ICONS = [
+    'Truck', 'Ship', 'Package', 'Home', 'User', 'Settings', 'Zap', 'ShoppingCart',
+    'Heart', 'Star', 'CheckCircle', 'XCircle', 'AlertCircle', 'Info',
+    'Mail', 'Phone', 'MapPin', 'Clock', 'Calendar', 'Search', 'Filter',
+    'Download', 'Upload', 'RefreshCw', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown',
+    'ChevronDown', 'ChevronUp', 'ChevronLeft', 'ChevronRight', 'Menu', 'X',
+    'Plus', 'Minus', 'Check', 'Eye', 'EyeOff', 'Edit', 'Trash', 'Share', 'Link',
+    'Globe', 'Shield', 'Award', 'Target', 'TrendingUp', 'TrendingDown',
+    'CreditCard', 'DollarSign', 'Lock', 'Unlock',
+    'MessageCircle', 'Bell', 'FileText', 'Image', 'Video', 'Music', 'Headphones', 'Mic',
+    'Wifi', 'Bluetooth', 'Cast', 'Copy', 'Scissors',
+    'Moon', 'Sun', 'Cloud', 'Umbrella'
+];
+
+function IconSelector({ value, onChange }: IconSelectorProps) {
+    const [search, setSearch] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+
+    const filteredIcons = search
+        ? COMMON_ICONS.filter(icon => icon.toLowerCase().includes(search.toLowerCase()))
+        : COMMON_ICONS;
+
+    return (
+        <div className="relative">
+            <Button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-10 h-10 p-0 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
+                type="button"
+            >
+                {value ? <IconComponent icon={value} className="w-5 h-5 text-slate-600" /> : <Plus className="w-4 h-4 text-slate-400" />}
+            </Button>
+
+            {isOpen && (
+                <div className="absolute z-50 left-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl p-4 w-80 max-h-80 overflow-hidden">
+                    <Input
+                        placeholder="Search icons..."
+                        value={search}
+                        onChange={(e: any) => setSearch(e.target.value)}
+                        className="mb-3"
+                        autoFocus
+                    />
+                    <div className="grid grid-cols-6 gap-2 overflow-y-auto max-h-60">
+                        {filteredIcons.map((icon) => (
+                            <button
+                                key={icon}
+                                onClick={() => {
+                                    onChange(icon);
+                                    setIsOpen(false);
+                                }}
+                                className={`p-2 rounded-lg border transition-all flex items-center justify-center ${value === icon
+                                    ? 'bg-[#00c3c0]/10 border-[#00c3c0] text-[#00c3c0]'
+                                    : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                    }`}
+                                title={icon}
+                                type="button"
+                            >
+                                <IconComponent icon={icon} className="w-5 h-5" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -985,6 +1760,7 @@ interface PropertyPanelProps {
 function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProps) {
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
     const [isUploading, setIsUploading] = useState(false);
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
     if (!block) {
         return (
@@ -1187,7 +1963,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         items={block.items || []}
                                         onUpdate={(newItems) => setContent({ items: newItems })}
                                         fields={[
-                                            { key: 'icon', label: 'Platform (Lucide Icon)', type: 'text' },
+                                            { key: 'icon', label: 'Platform (Lucide Icon)', type: 'icon' },
                                             { key: 'url', label: 'Profile Link', type: 'text' }
                                         ]}
                                     />
@@ -1232,9 +2008,34 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         items={block.items || []}
                                         onUpdate={(newItems) => setContent({ items: newItems })}
                                         fields={[
-                                            { key: 'icon', label: 'Icon', type: 'text' },
+                                            { key: 'icon', label: 'Icon', type: 'icon' },
                                             { key: 'title', label: 'Label', type: 'text' },
                                             { key: 'subtitle', label: 'Subtext', type: 'text' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
+
+                            {block.type === BLOCK_TYPES.LOOP_GRID && (
+                                <div className="space-y-6">
+                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Header Content</Label>
+                                            <Input className="h-10 text-xs rounded-xl font-bold bg-white" placeholder="Main Title" value={block.heading} onChange={(e: any) => setContent({ heading: e.target.value })} />
+                                            <Input className="h-10 text-xs rounded-xl bg-white" placeholder="Highlighted Text" value={block.headingHighlight} onChange={(e: any) => setContent({ headingHighlight: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Accent Color</Label>
+                                            <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer" value={block.highlightColor} onChange={(e: any) => setContent({ highlightColor: e.target.value })} />
+                                        </div>
+                                        <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description} onChange={(e: any) => setContent({ description: e.target.value })} />
+                                    </div>
+                                    <ItemsListEditor
+                                        items={block.items || []}
+                                        onUpdate={(newItems) => setContent({ items: newItems })}
+                                        fields={[
+                                            { key: 'image', label: 'Item Image', type: 'image' },
+                                            { key: 'title', label: 'Item Title', type: 'text' }
                                         ]}
                                     />
                                 </div>
@@ -1388,33 +2189,20 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 value={s.backgroundImage || ''}
                                                 onChange={(e: any) => set('backgroundImage', e.target.value)}
                                             />
-                                            <label className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
-                                                <RotateCw className={`w-4 h-4 text-slate-400 ${isUploading ? 'animate-spin' : ''}`} />
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (!file) return;
-                                                        setIsUploading(true);
-                                                        const formData = new FormData();
-                                                        formData.append('image', file);
-                                                        try {
-                                                            const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                                                            const data = await res.json();
-                                                            if (data?.url) set('backgroundImage', data.url);
-                                                            else alert('Failed upload');
-                                                        } catch (err) {
-                                                            console.error(err);
-                                                        } finally {
-                                                            setIsUploading(false);
-                                                        }
-                                                    }}
-                                                />
-                                            </label>
+                                            <Button
+                                                onClick={() => setIsMediaModalOpen(true)}
+                                                variant="outline"
+                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
+                                            >
+                                                <ImageIcon className="w-4 h-4 text-slate-400" />
+                                            </Button>
                                         </div>
                                     </div>
+                                    <MediaLibraryModal
+                                        open={isMediaModalOpen}
+                                        onOpenChange={setIsMediaModalOpen}
+                                        onSelect={(url) => set('backgroundImage', url)}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -1567,7 +2355,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
         }
     }
 
-    const canvasWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 600 : 800;
+    const canvasWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 600 : 1200;
 
     const BLOCK_PALETTE = [
         { type: BLOCK_TYPES.HEADING, icon: Type, label: 'Heading' },
@@ -1586,6 +2374,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
         { type: BLOCK_TYPES.SOCIAL, icon: Share2, label: 'Social' },
         { type: BLOCK_TYPES.FAQ_SECTION, icon: HelpCircle, label: 'FAQ Sec' },
         { type: BLOCK_TYPES.FEATURE_SECTION, icon: Zap, label: 'Feature Sec' },
+        { type: BLOCK_TYPES.LOOP_GRID, icon: LayoutTemplate, label: 'Loop Grid' },
     ];
 
     const COLUMN_PALETTE = [

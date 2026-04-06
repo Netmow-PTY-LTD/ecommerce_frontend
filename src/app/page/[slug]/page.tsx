@@ -40,17 +40,11 @@ export default function PublicPagePage() {
       console.log('🔍 API Response:', response);
       console.log('📦 Page Data:', response.data);
 
-      // Remove global CSS reset that breaks the page
+      // Clean up the page content - remove HTML comment to reduce size
       let content = response.data.data.content;
-      
-      // Backwards compatibility for previously saved pages with raw global CSS
-      content = content.replace(/\*\s*\{\s*margin:\s*0;\s*padding:\s*0;\s*box-sizing:\s*border-box;\s*\}/g, '.page-content * { margin: 0; padding: 0; box-sizing: border-box; }');
-      content = content.replace(/details summary::-webkit-details-marker/g, '.page-content details summary::-webkit-details-marker');
-      content = content.replace(/details summary\s*\{/g, '.page-content details summary {');
-      content = content.replace(/details\[open\]\s*\.acc-icon/g, '.page-content details[open] .acc-icon');
-      content = content.replace(/(?<!\.page-content\s)\.acc-icon\s*\{/g, '.page-content .acc-icon {');
-      
-      content = content.replace(/<!-- PAGE_BLOCKS:.*?-->/g, ''); // Remove HTML comment
+
+      // Remove the HTML comment containing block data (not needed for display)
+      content = content.replace(/<!-- PAGE_BLOCKS:.*?-->/g, '');
 
       console.log('✨ Cleaned Content Length:', content.length);
 
@@ -154,7 +148,7 @@ export default function PublicPagePage() {
         </div>
       </div>
 
-      {/* Debug Info - Show at top for visibility */}
+      {/* Debug Info - Available but commented out */}
       {/* {debug && (
         <div className="bg-blue-50 border-b-4 border-blue-500 py-4">
           <div className="container mx-auto px-4">
@@ -169,9 +163,9 @@ export default function PublicPagePage() {
         </div>
       )} */}
 
-      {/* Content - Wrap PageBuilder content with proper spacing */}
-      <div className="bg-gray-50 py-12">
-        <div className="">
+      {/* Content - Wrap PageBuilder content with proper spacing and isolation */}
+      <div className="py-12">
+        <div className="page-builder-wrapper">
           <div className="overflow-hidden">
             <div
               dangerouslySetInnerHTML={{ __html: page.content }}
