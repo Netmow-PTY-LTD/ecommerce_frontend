@@ -29,8 +29,12 @@ import {
   Tag,
   Zap,
   MessageCircle,
+  MessageSquare,
+  BookOpen,
+  Sparkles,
   Mail,
   BarChart3,
+  TrendingUp,
   Globe,
   DollarSign
 } from 'lucide-react';
@@ -91,7 +95,14 @@ const navigation: NavItem[] = [
       { name: 'Flash Sales', href: '/admin/flash-sales', icon: Zap },
     ],
   },
-  { name: 'Chat Support', href: '/admin/chat', icon: MessageCircle },
+  {
+    name: 'Chat Support',
+    icon: MessageCircle,
+    subitems: [
+      { name: 'Chats', href: '/admin/chat/chats', icon: MessageSquare },
+      { name: 'Answer Guide', href: '/admin/chat/answer-guide', icon: BookOpen },
+    ],
+  },
   {
     name: 'Email',
     icon: Mail,
@@ -101,7 +112,17 @@ const navigation: NavItem[] = [
       { name: 'Logs', href: '/admin/email/logs', icon: Mail },
     ],
   },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  {
+    name: 'Analytics',
+    icon: BarChart3,
+    subitems: [
+      { name: 'Sales & Revenue', href: '/admin/analytics/sales', icon: TrendingUp },
+      { name: 'Products', href: '/admin/analytics/products', icon: Package },
+      { name: 'Customers', href: '/admin/analytics/customers', icon: Users },
+      { name: 'Orders', href: '/admin/analytics/orders', icon: ShoppingCart },
+      { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
+    ],
+  },
   {
     name: 'Localization',
     icon: Globe,

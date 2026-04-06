@@ -37,9 +37,14 @@ export default function CartPage() {
             const ids = new Set<number>();
             const codes = new Map<number, string>();
             for (const deal of deals) {
-                for (const pid of deal.product_ids) {
-                    ids.add(pid);
-                    codes.set(pid, deal.coupon_code);
+                let pids = deal.product_ids;
+                if (typeof pids === 'string') {
+                    try { pids = JSON.parse(pids); } catch { pids = []; }
+                }
+                if (!Array.isArray(pids)) continue;
+                for (const pid of pids) {
+                    ids.add(Number(pid));
+                    codes.set(Number(pid), deal.coupon_code);
                 }
             }
             setBogoProductIds(ids);

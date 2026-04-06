@@ -65,6 +65,7 @@ export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedDateRange, setSelectedDateRange] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [success, setSuccess] = useState('');
@@ -80,7 +81,7 @@ export default function AdminOrdersPage() {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
+  }, [isAuthenticated, currentPage, selectedStatus, selectedDateRange, appliedSearch]);
 
   const fetchOrders = async () => {
     try {
@@ -90,6 +91,37 @@ export default function AdminOrdersPage() {
       });
       if (selectedStatus) params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
+
+      // Date range filter
+      if (selectedDateRange) {
+        const today = new Date();
+        const end = today.toISOString().split('T')[0];
+        let start: Date;
+        switch (selectedDateRange) {
+          case 'today':
+            start = today;
+            break;
+          case '7d':
+            start = new Date(today); start.setDate(start.getDate() - 7);
+            break;
+          case '30d':
+            start = new Date(today); start.setDate(start.getDate() - 30);
+            break;
+          case '45d':
+            start = new Date(today); start.setDate(start.getDate() - 45);
+            break;
+          case '60d':
+            start = new Date(today); start.setDate(start.getDate() - 60);
+            break;
+          case '90d':
+            start = new Date(today); start.setDate(start.getDate() - 90);
+            break;
+          default:
+            start = new Date(today);
+        }
+        params.append('start_date', start.toISOString().split('T')[0]);
+        params.append('end_date', end);
+      }
 
       const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
@@ -144,6 +176,8 @@ export default function AdminOrdersPage() {
   const handleClearSearch = () => {
     setSearchTerm('');
     setAppliedSearch('');
+    setSelectedStatus('');
+    setSelectedDateRange('');
     setCurrentPage(1);
   };
 
@@ -348,6 +382,24 @@ export default function AdminOrdersPage() {
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
+                </Select>
+              </div>
+              <div>
+                <Select
+                  value={selectedDateRange}
+                  onChange={(e) => {
+                    setSelectedDateRange(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-12 w-48"
+                >
+                  <option value="">All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="45d">Last 45 Days</option>
+                  <option value="60d">Last 60 Days</option>
+                  <option value="90d">Last 90 Days</option>
                 </Select>
               </div>
               <Button
