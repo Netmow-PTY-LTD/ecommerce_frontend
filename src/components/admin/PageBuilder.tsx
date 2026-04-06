@@ -143,6 +143,10 @@ const defaultBlockStyles = {
     h2TextDecoration: 'none',
     h2MarginBottom: 16,
     backgroundImage: '',
+    backgroundImages: [],
+    backgroundPositions: [],
+    backgroundSizes: [],
+    backgroundRepeats: [],
 };
 
 // ─────────────────────────────────────────
@@ -835,6 +839,18 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                         borderRightWidth: `${block.styles?.borderRightWidth || 0}px`,
                         borderColor: block.styles?.borderColor || '#e2e8f0',
                         borderStyle: block.styles?.borderStyle || 'solid',
+                        backgroundImage: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                            ? block.styles?.backgroundImages.map((img: string) => `url(${img})`).join(', ')
+                            : (block.styles?.backgroundImage ? `url(${block.styles?.backgroundImage})` : 'none'),
+                        backgroundPosition: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                            ? (block.styles?.backgroundPositions || []).map((pos: string) => pos || 'center center').join(', ')
+                            : 'center center',
+                        backgroundSize: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                            ? (block.styles?.backgroundSizes || []).map((size: string) => size || 'cover').join(', ')
+                            : (block.styles?.backgroundSize || 'cover'),
+                        backgroundRepeat: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                            ? (block.styles?.backgroundRepeats || []).map((rep: string) => rep || 'no-repeat').join(', ')
+                            : 'no-repeat',
                     }}
                     className={`mt-2 gap-2 ${viewMode === 'mobile' ? 'flex flex-col' : 'flex'}`}
                 >
@@ -882,7 +898,7 @@ function FAQSectionRenderer({ block, viewMode, containerStyle }: { block: any, v
     const [openIndex, setOpenIndex] = React.useState<number | null>(0);
 
     return (
-        <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={block.customClass ? undefined : containerStyle}>
+        <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
             <div className="faq-section spacer py-10 px-4">
                 <h2 className="title text-center">
                     {block.heading}{' '}
@@ -972,17 +988,6 @@ function LoopGridRenderer({ block, containerStyle, isMobile }: { block: any, con
                 </div>
             </div>
 
-            {/* City Skyline Background at bottom */}
-            {s.backgroundImage && (
-                <div className="absolute bottom-0 left-0 w-full h-[300px] pointer-events-none opacity-20">
-                    <img
-                        src={s.backgroundImage}
-                        alt=""
-                        className="w-full h-full object-cover object-bottom"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-                </div>
-            )}
         </div>
     );
 }
@@ -1005,9 +1010,18 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
         borderRightWidth: `${s.borderRightWidth || 0}px`,
         borderColor: s.borderColor || '#e2e8f0',
         borderStyle: s.borderStyle || 'solid',
-        backgroundImage: s.backgroundImage && block.type !== BLOCK_TYPES.LOOP_GRID ? `url(${s.backgroundImage})` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundImage: (s.backgroundImages && s.backgroundImages.length > 0)
+            ? s.backgroundImages.map((img: string) => `url(${img})`).join(', ')
+            : (s.backgroundImage ? `url(${s.backgroundImage})` : 'none'),
+        backgroundPosition: (s.backgroundImages && s.backgroundImages.length > 0)
+            ? (s.backgroundPositions || []).map((pos: string) => pos || 'center center').join(', ')
+            : 'center center',
+        backgroundSize: (s.backgroundImages && s.backgroundImages.length > 0)
+            ? (s.backgroundSizes || []).map((size: string) => size || 'cover').join(', ')
+            : (s.backgroundSize || 'cover'),
+        backgroundRepeat: (s.backgroundImages && s.backgroundImages.length > 0)
+            ? (s.backgroundRepeats || []).map((rep: string) => rep || 'no-repeat').join(', ')
+            : 'no-repeat',
         position: 'relative' as const,
         overflow: 'hidden' as const,
     };
@@ -1038,10 +1052,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
         return content;
     };
 
-    // Determine if we should apply containerStyle
-    // Don't apply inline styles when customClass or parentClass is set - let CSS classes handle it
-    const shouldApplyInlineStyles = !block.customClass && !block.parentClass;
-    const divStyle = shouldApplyInlineStyles ? containerStyle : undefined;
+    // Always apply containerStyle (padding, margin, background, etc.)
+    const divStyle = containerStyle;
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
@@ -1198,7 +1210,7 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                 </div>
             );
         case BLOCK_TYPES.SPACER:
-            return <div style={{ height: block.height || 40, backgroundColor: 'transparent' }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono page-block-renderer">spacer · {block.height || 40}px</div>;
+            return <div style={{ height: block.height || 40, ...divStyle }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono page-block-renderer">spacer · {block.height || 40}px</div>;
 
         case BLOCK_TYPES.ICON_BOX:
             return wrapWithParentClass(
@@ -1313,27 +1325,23 @@ function blockToHTML(block: any): string {
     const s = block.styles || {};
     const marginCSS = `margin:${s.marginTop || 0}px ${s.marginRight || 0}px ${s.marginBottom || 0}px ${s.marginLeft || 0}px;`;
     const borderCSS = `border-top-width:${s.borderTopWidth || 0}px;border-bottom-width:${s.borderBottomWidth || 0}px;border-left-width:${s.borderLeftWidth || 0}px;border-right-width:${s.borderRightWidth || 0}px;border-color:${s.borderColor || '#e2e8f0'};border-style:${s.borderStyle || 'solid'};`;
-        const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};${s.backgroundImage && block.type !== BLOCK_TYPES.LOOP_GRID ? `background-image:url(${s.backgroundImage});background-size:cover;background-position:center;` : ''}`;
-        const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
+    const bgImageCSS = (s.backgroundImages && s.backgroundImages.length > 0)
+        ? `background-image:${s.backgroundImages.map((img: string) => `url(${img})`).join(', ')};background-position:${(s.backgroundPositions || []).map((pos: string) => pos || 'center center').join(', ')};background-size:${(s.backgroundSizes || []).map((size: string) => size || 'cover').join(', ')};background-repeat:${(s.backgroundRepeats || []).map((rep: string) => rep || 'no-repeat').join(', ')};`
+        : (s.backgroundImage ? `background-image:url(${s.backgroundImage});background-size:cover;background-position:center;background-repeat:no-repeat;` : '');
+    const backgroundCSS = `background-color:${s.backgroundColor || 'transparent'};${bgImageCSS}`;
+    const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
 
-        const wrap = (content: string) => {
-            // parentClass goes on a wrapper div, customClass goes on the content div
-            // When parentClass or customClass exists, DON'T apply inline styles - let CSS classes handle styling
-            const wrapperStyle = `padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}position:relative;overflow:hidden;`;
+    const wrap = (content: string) => {
+        // parentClass goes on a wrapper div, customClass goes on the content div
+        const wrapperStyle = `padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}position:relative;overflow:hidden;`;
 
+        let result = content;
         if (block.parentClass) {
-            // parentClass wrapper with NO inline styles
-            // The inner div has customClass but also NO inline styles
-            return `<div class="${block.parentClass}">
-          <div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}">${content}</div>
-        </div>`;
+            result = `<div class="${block.parentClass}">${result}</div>`;
         }
-        if (block.customClass) {
-            // customClass on the wrapper div, NO inline styles - let the CSS class handle it
-            return `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass}">${content}</div>`;
-        }
-        // No custom classes, apply all styles inline
-        return `<div id="${block.customId || `blk-${block.id}`}" class="" style="${wrapperStyle}">${content}</div>`;
+
+        // Wrap with the styled div that has customId and customClass
+        return `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}" style="${wrapperStyle}">${result}</div>`;
     };
 
     switch (block.type) {
@@ -1374,7 +1382,7 @@ function blockToHTML(block: any): string {
         case BLOCK_TYPES.DIVIDER:
             return wrap(`<hr style="border:none;border-top:1px solid ${s.color || '#e2e8f0'};" />`);
         case BLOCK_TYPES.SPACER:
-            return `<div style="height:${block.height || 40}px;"></div>`;
+            return wrap(`<div style="height:${block.height || 40}px;"></div>`);
         case BLOCK_TYPES.COLUMNS: {
             const colHTMLs = block.columns.map((col: any) => {
                 const childHTML = col.blocks.map(blockToHTML).join('');
@@ -1513,11 +1521,7 @@ function blockToHTML(block: any): string {
                         ${itemsHTML}
                     </div>
                 </div>
-                ${s.backgroundImage ? `
-                <div class="loop-grid-bg absolute bottom-0 left-0 w-full h-[300px] pointer-events-none opacity-20">
-                    <img src="${s.backgroundImage}" alt="" class="w-full h-full object-cover object-bottom" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent"></div>
-                </div>` : ''}
+                </div>
             `;
             return wrap(content);
         }
@@ -1751,6 +1755,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
     const [isUploading, setIsUploading] = useState(false);
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
 
     if (!block) {
         return (
@@ -1772,6 +1777,9 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
     const s = block.styles || {};
     const set = (key: string, val: any) => {
         onUpdate(block.id, { styles: { ...(block.styles || {}), [key]: val } });
+    };
+    const setStyles = (updates: Record<string, any>) => {
+        onUpdate(block.id, { styles: { ...(block.styles || {}), ...updates } });
     };
     const setContent = (updates: Record<string, any>) => {
         onUpdate(block.id, updates);
@@ -2111,8 +2119,160 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Custom color" />
                                         </div>
                                     </div>
+                                    {/* Background Images - Only for Sections */}
+                                    {[BLOCK_TYPES.COLUMNS, BLOCK_TYPES.FAQ_SECTION, BLOCK_TYPES.FEATURE_SECTION, BLOCK_TYPES.LOOP_GRID].includes(block.type) && (
+                                        <div className="space-y-4 pt-2 border-t border-slate-50">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Images</Label>
+                                                <Button
+                                                    onClick={() => {
+                                                        const currentImgs = s.backgroundImages || [];
+                                                        const currentPos = s.backgroundPositions || [];
+                                                        const currentSizes = s.backgroundSizes || [];
+                                                        const currentRepeats = s.backgroundRepeats || [];
+                                                        setStyles({
+                                                            backgroundImages: [...currentImgs, ''],
+                                                            backgroundPositions: [...currentPos, 'center center'],
+                                                            backgroundSizes: [...currentSizes, 'cover'],
+                                                            backgroundRepeats: [...currentRepeats, 'no-repeat']
+                                                        });
+                                                    }}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 text-[9px] font-black uppercase tracking-widest text-[#ff8602] hover:text-[#ff8602] hover:bg-[#ff8602]/5 px-2"
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" />
+                                                    Add Bg Image
+                                                </Button>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {/* Support legacy single image if exists and no list yet */}
+                                                {(!s.backgroundImages || s.backgroundImages.length === 0) && s.backgroundImage && (
+                                                    <div className="flex gap-2 animate-in fade-in slide-in-from-top-1">
+                                                        <Input
+                                                            className="h-10 text-xs rounded-xl flex-1"
+                                                            value={s.backgroundImage}
+                                                            readOnly
+                                                        />
+                                                        <Button
+                                                            onClick={() => {
+                                                                setStyles({
+                                                                    backgroundImages: [s.backgroundImage],
+                                                                    backgroundPositions: ['center center'],
+                                                                    backgroundSizes: ['cover'],
+                                                                    backgroundRepeats: ['no-repeat'],
+                                                                    backgroundImage: ''
+                                                                });
+                                                            }}
+                                                            variant="outline"
+                                                            className="h-10 px-3 text-[10px] font-bold uppercase tracking-wider"
+                                                        >
+                                                            Convert to List
+                                                        </Button>
+                                                    </div>
+                                                )}
 
-                                    <div className="space-y-3">
+                                                {(s.backgroundImages || []).map((img: string, idx: number) => (
+                                                    <div key={idx} className="space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 relative group/bgitem">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[9px] font-bold text-slate-400">Image {idx + 1}</span>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const newList = [...s.backgroundImages];
+                                                                    const newPos = [...(s.backgroundPositions || [])];
+                                                                    const newSizes = [...(s.backgroundSizes || [])];
+                                                                    const newRepeats = [...(s.backgroundRepeats || [])];
+                                                                    newList.splice(idx, 1);
+                                                                    if (newPos[idx]) newPos.splice(idx, 1);
+                                                                    if (newSizes[idx]) newSizes.splice(idx, 1);
+                                                                    if (newRepeats[idx]) newRepeats.splice(idx, 1);
+                                                                    setStyles({
+                                                                        backgroundImages: newList,
+                                                                        backgroundPositions: newPos,
+                                                                        backgroundSizes: newSizes,
+                                                                        backgroundRepeats: newRepeats
+                                                                    });
+                                                                }}
+                                                                className="text-slate-300 hover:text-red-500 transition-colors"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <div className="flex-1 space-y-2">
+                                                                <Input
+                                                                    className="h-9 text-xs rounded-xl w-full bg-white border-slate-200"
+                                                                    placeholder="https://..."
+                                                                    value={img}
+                                                                    onChange={(e: any) => {
+                                                                        const newList = [...s.backgroundImages];
+                                                                        newList[idx] = e.target.value;
+                                                                        set('backgroundImages', newList);
+                                                                    }}
+                                                                />
+                                                                <select
+                                                                    className="h-8 text-[10px] font-bold w-full rounded-lg bg-white border border-slate-200 px-2 outline-none focus:ring-2 focus:ring-[#ff8602]/20"
+                                                                    value={s.backgroundPositions?.[idx] || 'center center'}
+                                                                    onChange={(e) => {
+                                                                        const newPos = [...(s.backgroundPositions || [])];
+                                                                        newPos[idx] = e.target.value;
+                                                                        set('backgroundPositions', newPos);
+                                                                    }}
+                                                                >
+                                                                    <option value="top left">Top Left</option>
+                                                                    <option value="top center">Top Center</option>
+                                                                    <option value="top right">Top Right</option>
+                                                                    <option value="center left">Center Left</option>
+                                                                    <option value="center center">Center Center</option>
+                                                                    <option value="center right">Center Right</option>
+                                                                    <option value="bottom left">Bottom Left</option>
+                                                                    <option value="bottom center">Bottom Center</option>
+                                                                    <option value="bottom right">Bottom Right</option>
+                                                                </select>
+                                                                <select
+                                                                    className="h-8 text-[10px] font-bold w-full rounded-lg bg-white border border-slate-200 px-2 outline-none focus:ring-2 focus:ring-[#ff8602]/20"
+                                                                    value={s.backgroundSizes?.[idx] || 'cover'}
+                                                                    onChange={(e) => {
+                                                                        const newSizes = [...(s.backgroundSizes || [])];
+                                                                        newSizes[idx] = e.target.value;
+                                                                        set('backgroundSizes', newSizes);
+                                                                    }}
+                                                                >
+                                                                    <option value="cover">Cover (Auto Resize)</option>
+                                                                    <option value="contain">Contain (Show All)</option>
+                                                                    <option value="auto">Auto (Original)</option>
+                                                                    <option value="100% 100%">Full (Stretch)</option>
+                                                                </select>
+                                                                <select
+                                                                    className="h-8 text-[10px] font-bold w-full rounded-lg bg-white border border-slate-200 px-2 outline-none focus:ring-2 focus:ring-[#ff8602]/20"
+                                                                    value={s.backgroundRepeats?.[idx] || 'no-repeat'}
+                                                                    onChange={(e) => {
+                                                                        const newRepeats = [...(s.backgroundRepeats || [])];
+                                                                        newRepeats[idx] = e.target.value;
+                                                                        set('backgroundRepeats', newRepeats);
+                                                                    }}
+                                                                >
+                                                                    <option value="no-repeat">No Repeat</option>
+                                                                    <option value="repeat">Repeat</option>
+                                                                </select>
+                                                            </div>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    setActiveItemIndex(idx);
+                                                                    setIsMediaModalOpen(true);
+                                                                }}
+                                                                variant="outline"
+                                                                className="shrink-0 h-9 w-9 bg-white border-slate-200 rounded-xl flex items-center justify-center p-0"
+                                                            >
+                                                                <ImageIcon className="w-4 h-4 text-slate-400" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="space-y-3 pt-4 border-t border-slate-100">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
                                         <div className="flex items-center gap-3">
                                             <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
@@ -2120,7 +2280,7 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 pt-4 border-t border-slate-100">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Border Settings</Label>
                                         <div className="grid grid-cols-2 gap-4">
                                             {[{ l: 'Width (px)', k: 'borderTopWidth' }, { l: 'Style', k: 'borderStyle' }].map(p => (
@@ -2170,28 +2330,28 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Class</Label>
                                         <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass || ''} onChange={(e: any) => setContent({ parentClass: e.target.value })} />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                className="h-10 text-xs rounded-xl flex-1"
-                                                placeholder="https://..."
-                                                value={s.backgroundImage || ''}
-                                                onChange={(e: any) => set('backgroundImage', e.target.value)}
-                                            />
-                                            <Button
-                                                onClick={() => setIsMediaModalOpen(true)}
-                                                variant="outline"
-                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
-                                            >
-                                                <ImageIcon className="w-4 h-4 text-slate-400" />
-                                            </Button>
-                                        </div>
-                                    </div>
                                     <MediaLibraryModal
                                         open={isMediaModalOpen}
                                         onOpenChange={setIsMediaModalOpen}
-                                        onSelect={(url) => set('backgroundImage', url)}
+                                        onSelect={(url) => {
+                                            if (activeItemIndex !== null) {
+                                                const newList = [...(s.backgroundImages || [])];
+                                                newList[activeItemIndex] = url;
+                                                set('backgroundImages', newList);
+                                                setActiveItemIndex(null);
+                                            } else {
+                                                const newList = [...(s.backgroundImages || []), url];
+                                                const newPos = [...(s.backgroundPositions || []), 'center center'];
+                                                const newSizes = [...(s.backgroundSizes || []), 'cover'];
+                                                const newRepeats = [...(s.backgroundRepeats || []), 'no-repeat'];
+                                                setStyles({
+                                                    backgroundImages: newList,
+                                                    backgroundPositions: newPos,
+                                                    backgroundSizes: newSizes,
+                                                    backgroundRepeats: newRepeats
+                                                });
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>
