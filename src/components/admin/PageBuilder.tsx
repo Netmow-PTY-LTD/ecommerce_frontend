@@ -1753,8 +1753,15 @@ interface PropertyPanelProps {
 
 function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProps) {
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
-    const [isUploading, setIsUploading] = useState(false);
-    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [activeMediaField, setActiveMediaField] = useState<string | null>(null);
+    const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
+    const isMediaModalOpen = !!activeMediaField || activeItemIndex !== null;
+    const setIsMediaModalOpen = (open: boolean) => {
+        if (!open) {
+            setActiveMediaField(null);
+            setActiveItemIndex(null);
+        }
+    };
 
     if (!block) {
         return (
@@ -2328,19 +2335,14 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 onChange={(e: any) => set('backgroundImage', e.target.value)}
                                             />
                                             <Button
-                                                onClick={() => setIsMediaModalOpen(true)}
+                                                onClick={() => setActiveMediaField('backgroundImage')}
                                                 variant="outline"
                                                 className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
                                             >
-                                                <ImageIcon className="w-4 h-4 text-slate-400" />
+                                                <ImageIcon className="w-4 h-4 text-[#ff8602]" />
                                             </Button>
                                         </div>
                                     </div>
-                                    <MediaLibraryModal
-                                        open={isMediaModalOpen}
-                                        onOpenChange={setIsMediaModalOpen}
-                                        onSelect={(url) => set('backgroundImage', url)}
-                                    />
                                 </div>
                             </div>
                         </div>
