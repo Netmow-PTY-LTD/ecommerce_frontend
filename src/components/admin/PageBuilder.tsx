@@ -594,9 +594,27 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
     };
     switch (type) {
         case BLOCK_TYPES.TEXT:
-            return { ...base, content: '<p>Click here to edit this text block.</p>' };
+            return {
+                ...base,
+                content: '<p>Click here to edit this text block.</p>',
+                styles: {
+                    ...defaultBlockStyles,
+                    paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                    marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0
+                }
+            };
         case BLOCK_TYPES.HEADING:
-            return { ...base, content: '<h2>Section Heading</h2>', styles: { ...defaultBlockStyles, h2FontSize: 28, h2FontWeight: 700 } };
+            return {
+                ...base,
+                content: '<h2>Section Heading</h2>',
+                styles: {
+                    ...defaultBlockStyles,
+                    fontSize: 28,
+                    fontWeight: 700,
+                    paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0,
+                    marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0
+                }
+            };
         case BLOCK_TYPES.IMAGE:
             return { ...base, src: 'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&q=80&w=1170', alt: 'Page image', styles: { ...defaultBlockStyles, paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0 } };
         case BLOCK_TYPES.BUTTON:
@@ -802,7 +820,38 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 
     if (block.type === BLOCK_TYPES.COLUMNS) {
         return (
-            <div ref={setNodeRef} style={style} onClick={(e) => { e.stopPropagation(); onSelect(block.id); }}
+            <div ref={setNodeRef} onClick={(e) => { e.stopPropagation(); onSelect(block.id); }}
+                style={{
+                    ...style,
+                    paddingTop: block.styles?.paddingTop,
+                    paddingBottom: block.styles?.paddingBottom,
+                    paddingLeft: block.styles?.paddingLeft,
+                    paddingRight: block.styles?.paddingRight,
+                    marginTop: block.styles?.marginTop,
+                    marginBottom: block.styles?.marginBottom,
+                    marginLeft: block.styles?.marginLeft,
+                    marginRight: block.styles?.marginRight,
+                    backgroundColor: block.styles?.backgroundColor,
+                    borderRadius: block.styles?.borderRadius,
+                    borderTopWidth: `${block.styles?.borderTopWidth || 0}px`,
+                    borderBottomWidth: `${block.styles?.borderBottomWidth || 0}px`,
+                    borderLeftWidth: `${block.styles?.borderLeftWidth || 0}px`,
+                    borderRightWidth: `${block.styles?.borderRightWidth || 0}px`,
+                    borderColor: block.styles?.borderColor || '#e2e8f0',
+                    borderStyle: block.styles?.borderStyle || 'solid',
+                    backgroundImage: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                        ? block.styles?.backgroundImages.map((img: string) => `url(${img})`).join(', ')
+                        : (block.styles?.backgroundImage ? `url(${block.styles?.backgroundImage})` : 'none'),
+                    backgroundPosition: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                        ? (block.styles?.backgroundPositions || []).map((pos: string) => pos || 'center center').join(', ')
+                        : 'center center',
+                    backgroundSize: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                        ? (block.styles?.backgroundSizes || []).map((size: string) => size || 'cover').join(', ')
+                        : (block.styles?.backgroundSize || 'cover'),
+                    backgroundRepeat: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
+                        ? (block.styles?.backgroundRepeats || []).map((rep: string) => rep || 'no-repeat').join(', ')
+                        : 'no-repeat',
+                }}
                 className={`group relative rounded-xl transition-all border-2 ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'} ${block.parentClass || ''}`}>
                 <div {...attributes} {...listeners}
                     className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1.5 text-slate-300 hover:text-slate-500 transition-opacity">
@@ -821,53 +870,23 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                     </span>
                 </div>
 
-                <div
-                    style={{
-                        paddingTop: block.styles?.paddingTop,
-                        paddingBottom: block.styles?.paddingBottom,
-                        paddingLeft: block.styles?.paddingLeft,
-                        paddingRight: block.styles?.paddingRight,
-                        marginTop: block.styles?.marginTop,
-                        marginBottom: block.styles?.marginBottom,
-                        marginLeft: block.styles?.marginLeft,
-                        marginRight: block.styles?.marginRight,
-                        backgroundColor: block.styles?.backgroundColor,
-                        borderRadius: block.styles?.borderRadius,
-                        borderTopWidth: `${block.styles?.borderTopWidth || 0}px`,
-                        borderBottomWidth: `${block.styles?.borderBottomWidth || 0}px`,
-                        borderLeftWidth: `${block.styles?.borderLeftWidth || 0}px`,
-                        borderRightWidth: `${block.styles?.borderRightWidth || 0}px`,
-                        borderColor: block.styles?.borderColor || '#e2e8f0',
-                        borderStyle: block.styles?.borderStyle || 'solid',
-                        backgroundImage: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
-                            ? block.styles?.backgroundImages.map((img: string) => `url(${img})`).join(', ')
-                            : (block.styles?.backgroundImage ? `url(${block.styles?.backgroundImage})` : 'none'),
-                        backgroundPosition: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
-                            ? (block.styles?.backgroundPositions || []).map((pos: string) => pos || 'center center').join(', ')
-                            : 'center center',
-                        backgroundSize: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
-                            ? (block.styles?.backgroundSizes || []).map((size: string) => size || 'cover').join(', ')
-                            : (block.styles?.backgroundSize || 'cover'),
-                        backgroundRepeat: (block.styles?.backgroundImages && block.styles?.backgroundImages.length > 0)
-                            ? (block.styles?.backgroundRepeats || []).map((rep: string) => rep || 'no-repeat').join(', ')
-                            : 'no-repeat',
-                    }}
-                    className={`mt-2 gap-2 ${viewMode === 'mobile' ? 'flex flex-col' : 'flex'}`}
-                >
-                    {block.columns.map((col: any, colIdx: number) => (
-                        <ColumnCell
-                            key={col.id}
-                            column={col}
-                            colIndex={colIdx}
-                            parentBlockId={block.id}
-                            selectedId={selectedId}
-                            onSelect={onSelect}
-                            onDeleteChild={onDeleteChild}
-                            onAddBlockToColumn={onAddBlockToColumn}
-                            updateBlockContent={updateBlockContent}
-                            isMobile={viewMode === 'mobile'}
-                        />
-                    ))}
+                <div id={block.customId || `blk-${block.id}`} className={block.customClass || ''}>
+                    <div className={`mt-2 gap-2 ${viewMode === 'mobile' ? 'flex flex-col' : 'flex'}`}>
+                        {block.columns.map((col: any, colIdx: number) => (
+                            <ColumnCell
+                                key={col.id}
+                                column={col}
+                                colIndex={colIdx}
+                                parentBlockId={block.id}
+                                selectedId={selectedId}
+                                onSelect={onSelect}
+                                onDeleteChild={onDeleteChild}
+                                onAddBlockToColumn={onAddBlockToColumn}
+                                updateBlockContent={updateBlockContent}
+                                isMobile={viewMode === 'mobile'}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -894,101 +913,90 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 // ─────────────────────────────────────────
 //  FAQ Section Renderer (with collapse state)
 // ─────────────────────────────────────────
-function FAQSectionRenderer({ block, viewMode, containerStyle }: { block: any, viewMode?: string, containerStyle: any }) {
+function FAQSectionRenderer({ block, viewMode }: { block: any, viewMode?: string }) {
     const [openIndex, setOpenIndex] = React.useState<number | null>(0);
 
     return (
-        <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={containerStyle}>
-            <div className="faq-section spacer py-10 px-4">
-                <h2 className="title text-center">
-                    {block.heading}{' '}
-                    <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
-                </h2>
-                <div className={`flex gap-10 items-center text-left mt-8 ${viewMode === 'mobile' ? 'flex-col' : 'md:flex-row'}`}>
-                    <div className="shrink-0 flex justify-center w-full md:w-auto">
-                        <div className="w-80 h-80 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
-                            <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
-                        </div>
-                    </div>
-                    <div className="flex-1 w-full space-y-3">
-                        {(block.items || []).map((item: any, idx: number) => (
-                            <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
-                                <div
-                                    className="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors"
-                                    onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                                >
-                                    <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
-                                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
-                                </div>
-                                {openIndex === idx && (
-                                    <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed animate-in slide-in-from-top-2 duration-300">
-                                        {item.answer}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+        <>
+            <h2 className="title text-center">
+                {block.heading}{' '}
+                <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
+            </h2>
+            <div className={cn("flex gap-12 items-center text-left", viewMode === 'mobile' ? 'flex-col' : 'md:flex-row')}>
+                <div className="shrink-0 flex justify-center w-full md:w-1/3 max-w-md">
+                    <div className="w-full aspect-square rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                        <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
                     </div>
                 </div>
+                <div className="flex-1 w-full space-y-4">
+                    {(block.items || []).map((item: any, idx: number) => (
+                        <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
+                            <div
+                                className="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors"
+                                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                            >
+                                <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
+                                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
+                            </div>
+                            {openIndex === idx && (
+                                <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed animate-in slide-in-from-top-2 duration-300">
+                                    {item.answer}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 
 // ─────────────────────────────────────────
 //  Loop Grid Renderer
 // ─────────────────────────────────────────
-function LoopGridRenderer({ block, containerStyle, isMobile }: { block: any, containerStyle: any, isMobile: boolean }) {
+function LoopGridRenderer({ block, isMobile }: { block: any, isMobile: boolean }) {
     const s = block.styles || {};
     return (
-        <div
-            id={block.customId || `blk-${block.id}`}
-            className={cn("relative overflow-hidden", block.customClass)}
-            style={{ ...containerStyle, '--highlight-color': block.highlightColor || '#d2152a' } as React.CSSProperties}
-        >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div className="text-center mb-12 spacer">
-                    <h2 className="title">
-                        {block.heading}{' '}
-                        <span style={{ color: 'var(--highlight-color)' }}>{block.headingHighlight}</span>
-                    </h2>
-                    {block.description && (
-                        <p className="paragraph mx-auto">
-                            {block.description}
-                        </p>
-                    )}
-                </div>
+        <>
+            <h2 className="title text-center">
+                {block.heading}{' '}
+                <span style={{ color: 'var(--highlight-color)' }}>{block.headingHighlight}</span>
+            </h2>
+            {block.description && (
+                <p className="paragraph mx-auto text-center">
+                    {block.description}
+                </p>
+            )}
 
-                <div className={cn(
-                    "grid gap-6",
-                    isMobile ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"
-                )}>
-                    {(block.items || []).map((item: any, idx: number) => (
-                        <div
-                            key={idx}
-                            className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-50 group hover:-translate-y-1"
-                        >
-                            <div className="w-20 h-20 mb-4 overflow-hidden rounded-xl flex items-center justify-center bg-slate-50">
-                                {item.image ? (
-                                    <img
-                                        src={item.image}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                                        <ImageIcon className="w-10 h-10" />
-                                    </div>
-                                )}
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800 leading-tight">
-                                {item.title}
-                            </h3>
+            <div className={cn(
+                "grid gap-6",
+                isMobile ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"
+            )}>
+                {(block.items || []).map((item: any, idx: number) => (
+                    <div
+                        key={idx}
+                        className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-50 group hover:-translate-y-1"
+                    >
+                        <div className="w-20 h-20 mb-4 overflow-hidden rounded-xl flex items-center justify-center bg-slate-50">
+                            {item.image ? (
+                                <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                                    <ImageIcon className="w-10 h-10" />
+                                </div>
+                            )}
                         </div>
-                    ))}
-                </div>
+                        <h3 className="text-lg font-bold text-slate-800 leading-tight">
+                            {item.title}
+                        </h3>
+                    </div>
+                ))}
             </div>
-
-        </div>
+        </>
     );
 }
 
@@ -997,19 +1005,13 @@ function LoopGridRenderer({ block, containerStyle, isMobile }: { block: any, con
 // ─────────────────────────────────────────
 function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpdateContent: any, viewMode?: string }) {
     const s = block.styles || {};
-    const containerStyle = {
-        paddingTop: s.paddingTop, paddingBottom: s.paddingBottom,
-        paddingLeft: s.paddingLeft, paddingRight: s.paddingRight,
-        marginTop: s.marginTop, marginBottom: s.marginBottom,
-        marginLeft: s.marginLeft, marginRight: s.marginRight,
-        backgroundColor: s.backgroundColor,
-        borderRadius: s.borderRadius,
-        borderTopWidth: `${s.borderTopWidth || 0}px`,
-        borderBottomWidth: `${s.borderBottomWidth || 0}px`,
-        borderLeftWidth: `${s.borderLeftWidth || 0}px`,
-        borderRightWidth: `${s.borderRightWidth || 0}px`,
-        borderColor: s.borderColor || '#e2e8f0',
-        borderStyle: s.borderStyle || 'solid',
+
+    const parentStyle = {
+        paddingTop: `${s.paddingTop || 0}px`,
+        paddingBottom: `${s.paddingBottom || 0}px`,
+        marginTop: `${s.marginTop || 0}px`,
+        marginBottom: `${s.marginBottom || 0}px`,
+        backgroundColor: s.backgroundColor || 'transparent',
         backgroundImage: (s.backgroundImages && s.backgroundImages.length > 0)
             ? s.backgroundImages.map((img: string) => `url(${img})`).join(', ')
             : (s.backgroundImage ? `url(${s.backgroundImage})` : 'none'),
@@ -1024,7 +1026,34 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             : 'no-repeat',
         position: 'relative' as const,
         overflow: 'hidden' as const,
-    };
+        width: '100%',
+        '--highlight-color': block.highlightColor || '#d2152a',
+    } as any;
+
+    const blockStyle: React.CSSProperties = {
+        paddingLeft: s.paddingLeft, paddingRight: s.paddingRight,
+        marginLeft: s.marginLeft, marginRight: s.marginRight,
+        paddingTop: 0,
+        paddingBottom: 0,
+        marginTop: 0,
+        marginBottom: 0,
+        backgroundColor: 'transparent',
+        borderRadius: s.borderRadius,
+        borderTopWidth: `${s.borderTopWidth || 0}px`,
+        borderBottomWidth: `${s.borderBottomWidth || 0}px`,
+        borderLeftWidth: `${s.borderLeftWidth || 0}px`,
+        borderRightWidth: `${s.borderRightWidth || 0}px`,
+        borderColor: s.borderColor || '#e2e8f0',
+        borderStyle: s.borderStyle || 'solid',
+        backgroundImage: 'none',
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+        '--highlight-color': block.highlightColor || '#d2152a',
+    } as any;
+
     const textStyle = {
         color: s.color,
         fontSize: s.fontSize,
@@ -1045,22 +1074,107 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
     }, [block.content]);
 
     // Helper to wrap content with parentClass if needed
-    const wrapWithParentClass = (content: React.ReactNode) => {
-        if (block.parentClass) {
-            return <div className={block.parentClass}>{content}</div>;
-        }
-        return content;
+    const wrapWithParentClass = (content: React.ReactNode, parentStyle: React.CSSProperties, innerStyle: React.CSSProperties) => {
+        const id = block.customId || `blk-${block.id}`;
+        const parentClassName = block.parentClass || 'section-wrapper';
+        const customClass = block.customClass || '';
+
+        return (
+            <div className={parentClassName} style={parentStyle}>
+                <div className={customClass} id={id}>
+                    <div className={block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}>
+                        {content}
+                    </div>
+                </div>
+            </div>
+        );
     };
 
-    // Always apply containerStyle (padding, margin, background, etc.)
-    const divStyle = containerStyle;
+    const divStyle = blockStyle;
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
         case BLOCK_TYPES.HEADING:
-        case BLOCK_TYPES.LIST:
-            return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
+        case BLOCK_TYPES.LIST: {
+            // Helper to get inner HTML without the outer tag
+            const getInner = (html: string, type: string) => {
+                if (type === BLOCK_TYPES.HEADING) return html.replace(/^<h2[^>]*>|<\/h2>$/gi, '');
+                if (type === BLOCK_TYPES.TEXT) return html.replace(/^<p[^>]*>|<\/p>$/gi, '');
+                return html;
+            };
+
+            const innerHTML = getInner(block.content, block.type);
+            const Tag: any = block.type === BLOCK_TYPES.HEADING ? 'h2' : (block.type === BLOCK_TYPES.TEXT ? 'p' : 'div');
+
+            // Collect only dynamic (non-default) styles for style attribute
+            const dynamicStyles: React.CSSProperties = {};
+
+            // Standardize: use generic keys for both Heading and Text
+            const isHeading = block.type === BLOCK_TYPES.HEADING;
+            const isText = block.type === BLOCK_TYPES.TEXT;
+
+            if (isHeading || isText) {
+                const defSize = isHeading ? 28 : 16;
+                const defWeight: any = isHeading ? 700 : 'normal';
+                const defColor = isHeading ? '#1e293b' : '#334155';
+
+                if (s.fontSize !== defSize) dynamicStyles.fontSize = s.fontSize;
+                if (s.fontWeight !== defWeight) dynamicStyles.fontWeight = s.fontWeight;
+                if (s.color !== defColor) dynamicStyles.color = s.color;
+                if (s.textAlign !== 'left') dynamicStyles.textAlign = s.textAlign as any;
+                if (s.lineHeight !== (isHeading ? 1.2 : 1.5)) dynamicStyles.lineHeight = s.lineHeight;
+                if (s.letterSpacing !== 0) dynamicStyles.letterSpacing = `${s.letterSpacing}px`;
+                if (s.textTransform !== 'none') dynamicStyles.textTransform = s.textTransform as any;
+                if (s.fontStyle !== 'normal') dynamicStyles.fontStyle = s.fontStyle;
+                if (s.textDecoration !== 'none') dynamicStyles.textDecoration = s.textDecoration;
+
+                // Add Border support
+                if (s.borderTopWidth > 0) {
+                    dynamicStyles.borderWidth = `${s.borderTopWidth}px`;
+                    dynamicStyles.borderStyle = s.borderStyle || 'solid';
+                    dynamicStyles.borderColor = s.borderColor || '#e2e8f0';
+                }
+                if (s.borderRadius > 0) dynamicStyles.borderRadius = `${s.borderRadius}px`;
+                if (s.backgroundColor && s.backgroundColor !== '#FFFFFF') dynamicStyles.backgroundColor = s.backgroundColor;
+
+                // Add Padding support
+                if (s.paddingTop) dynamicStyles.paddingTop = `${s.paddingTop}px`;
+                if (s.paddingBottom) dynamicStyles.paddingBottom = `${s.paddingBottom}px`;
+                if (s.paddingLeft) dynamicStyles.paddingLeft = `${s.paddingLeft}px`;
+                if (s.paddingRight) dynamicStyles.paddingRight = `${s.paddingRight}px`;
+            }
+
+            const baseClasses = isHeading
+                ? "text-[28px] font-bold text-[#1e293b] leading-tight"
+                : (isText ? "text-[16px] text-[#334155] leading-relaxed" : "prose prose-slate max-w-none");
+
+            const inner = (
+                <Tag
+                    id={`block-${block.id}`}
+                    ref={contentRef}
+                    style={dynamicStyles}
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e: any) => {
+                        const newInner = e.currentTarget.innerHTML;
+                        const newHTML = block.type === BLOCK_TYPES.HEADING ? `<h2>${newInner}</h2>` : (block.type === BLOCK_TYPES.TEXT ? `<p>${newInner}</p>` : newInner);
+                        if (newHTML !== block.content) {
+                            onUpdateContent(block.id, newHTML);
+                        }
+                    }}
+                    onPaste={(e: any) => {
+                        e.preventDefault();
+                        const text = e.clipboardData.getData('text/plain');
+                        document.execCommand('insertText', false, text);
+                    }}
+                    className={`${baseClasses} outline-none focus:ring-2 focus:ring-[#00c3c0]/10 rounded transition-all`}
+                    dangerouslySetInnerHTML={{ __html: innerHTML }}
+                />
+            );
+
+            const blockId = block.customId || `blk-${block.id}`;
+            let result = (
+                <>
                     {block.type === BLOCK_TYPES.LIST && (
                         <style dangerouslySetInnerHTML={{
                             __html: `
@@ -1073,102 +1187,42 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                                     margin: 0 !important;
                                     text-align: ${s.textAlign || 'left'} !important;
                                 }
-                                #block-${block.id} li {
-                                    text-align: ${s.textAlign || 'left'} !important;
-                                    display: list-item !important;
-                                }
-                            `
-                        }} />
-                    )}
-                    <style dangerouslySetInnerHTML={{
-                        __html: `#block-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 16}px !important; padding: ${s.paragraphPadding ?? 0}px !important; margin-top: 0 !important; } #block-${block.id} p:last-child { margin-bottom: 0 !important; }`
-                    }} />
-                    {block.type === BLOCK_TYPES.HEADING && (
-                        <style dangerouslySetInnerHTML={{
-                            __html: `
-                                #block-${block.id} h2 {
-                                    font-size: ${s.h2FontSize ?? 28}px !important;
-                                    color: ${s.h2Color ?? '#1e293b'} !important;
-                                    font-weight: ${s.h2FontWeight ?? 700} !important;
-                                    text-align: ${s.h2TextAlign ?? 'left'} !important;
-                                    line-height: ${s.h2LineHeight ?? 1.2} !important;
-                                    letter-spacing: ${s.h2LetterSpacing ?? 0}px !important;
-                                    text-transform: ${s.h2TextTransform ?? 'none'} !important;
-                                    font-style: ${s.h2FontStyle ?? 'normal'} !important;
-                                    text-decoration: ${s.h2TextDecoration ?? 'none'} !important;
-                                    margin-bottom: ${s.h2MarginBottom ?? 0}px !important;
+                                #block-${block.id} p {
+                                    margin-bottom: ${s.paragraphSpacing ?? 0}px !important;
+                                    padding: ${s.paragraphPadding ?? 0}px !important;
                                     margin-top: 0 !important;
                                 }
+                                #block-${block.id} p:last-child { margin-bottom: 0 !important; }
+                                #block-${block.id} img { border-radius: ${s.borderRadius || 0}px !important; }
                             `
                         }} />
                     )}
-                    <div className="relative group/text-content">
-                        <div className="absolute -top-12 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-xl p-1.5 hidden group-focus-within/text-content:flex items-center gap-1 animate-in fade-in slide-in-from-bottom-2">
-                            {[
-                                { label: 'Bold', icon: Bold, cmd: 'bold' },
-                                { label: 'Italic', icon: Italic, cmd: 'italic' },
-                                { label: 'Underline', icon: Underline, cmd: 'underline' },
-                            ].map(({ label, icon: Icon, cmd }) => (
-                                <button
-                                    key={cmd}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        document.execCommand(cmd, false);
-                                    }}
-                                    className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-[#00c3c0] transition-colors"
-                                    title={label}
-                                >
-                                    <Icon className="w-3.5 h-3.5" />
-                                </button>
-                            ))}
-                            <div className="w-px h-4 bg-slate-100 mx-1" />
-                            <button
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    document.execCommand('removeFormat', false);
-                                }}
-                                className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-red-500 transition-colors"
-                                title="Clear Formatting"
-                            >
-                                <RotateCw className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-
-                        <div
-                            id={`block-${block.id}`}
-                            ref={contentRef}
-                            style={textStyle}
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                                const newHTML = e.currentTarget.innerHTML;
-                                if (newHTML !== block.content) {
-                                    onUpdateContent(block.id, newHTML);
-                                }
-                            }}
-                            onPaste={(e) => {
-                                e.preventDefault();
-                                const text = e.clipboardData.getData('text/plain');
-                                document.execCommand('insertText', false, text);
-                            }}
-                            className="prose prose-slate max-w-none outline-none focus:ring-2 focus:ring-[#00c3c0]/10 rounded px-1 transition-all"
-                        />
-                    </div>
-                </div>
+                    {inner}
+                </>
             );
+
+            if (block.customClass) {
+                result = <div className={block.customClass} id={blockId}>{result}</div>;
+            }
+            if (block.parentClass) {
+                const shouldAddId = !block.customClass;
+                result = <div className={block.parentClass} id={shouldAddId ? blockId : undefined}>{result}</div>;
+            }
+
+            return result;
+        }
         case BLOCK_TYPES.IMAGE:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />
-                </div>
+                <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />,
+                parentStyle,
+                divStyle
             );
         case BLOCK_TYPES.BUTTON:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} style={{
-                    ...containerStyle,
+                <div style={{
                     display: 'flex',
                     justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
-                }} className={`${block.customClass || ''}`}>
+                }}>
                     <a
                         href={block.url}
                         target={block.target || '_self'}
@@ -1201,116 +1255,162 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                     >
                         {block.text}
                     </a>
-                </div>
+                </div>,
+                parentStyle,
+                divStyle
             );
         case BLOCK_TYPES.DIVIDER:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <hr style={{ borderColor: s.color || '#e2e8f0' }} />
-                </div>
+                <hr style={{ borderColor: s.color || '#e2e8f0' }} />,
+                parentStyle,
+                divStyle
             );
         case BLOCK_TYPES.SPACER:
             return <div style={{ height: block.height || 40, ...divStyle }} className="border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300 text-xs font-mono page-block-renderer">spacer · {block.height || 40}px</div>;
 
         case BLOCK_TYPES.ICON_BOX:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <div className="flex flex-col items-center">
-                        <IconComponent icon={block.icon || 'Layout'} className="w-10 h-10 mb-2" />
-                        <h3 className="font-bold">{block.title}</h3>
-                        <p className="text-sm opacity-80">{block.description}</p>
-                    </div>
-                </div>
+                <div className="flex flex-col items-center">
+                    <IconComponent icon={block.icon || 'Layout'} className="w-10 h-10 mb-2" />
+                    <h3 className="font-bold">{block.title}</h3>
+                    <p className="text-sm opacity-80">{block.description}</p>
+                </div>,
+                parentStyle,
+                divStyle
             );
 
         case BLOCK_TYPES.ACCORDION:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
+                <div className="w-full">
                     {(block.items || []).map((item: any, i: number) => (
-                        <div key={i} className="mb-2 border rounded-lg overflow-hidden">
-                            <div className="p-3 bg-slate-50 font-bold flex justify-between items-center">
+                        <details key={i} className="mb-3 border border-slate-200 rounded-xl overflow-hidden group">
+                            <summary
+                                className="p-4 bg-slate-50 flex justify-between items-center cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+                                style={{
+                                    fontSize: s.qFontSize || 16,
+                                    color: s.qColor || '#1e293b',
+                                    fontWeight: s.qFontWeight || 700
+                                }}
+                            >
                                 {item.title}
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className="w-5 h-5 transition-transform group-open:rotate-180" style={{ color: s.qColor || '#1e293b' }} />
+                            </summary>
+                            <div
+                                className="p-4 border-t border-slate-200 bg-white"
+                                style={{
+                                    fontSize: s.aFontSize || 15,
+                                    color: s.aColor || '#475569',
+                                    lineHeight: 1.6
+                                }}
+                            >
+                                {item.content}
                             </div>
-                        </div>
+                        </details>
                     ))}
-                </div>
+                </div>,
+                parentStyle,
+                divStyle
             );
 
-        case BLOCK_TYPES.VIDEO:
+        case BLOCK_TYPES.VIDEO: {
+            const getEmbedUrl = (u: string) => {
+                if (!u) return '';
+                if (u.includes('youtube.com/watch?v=')) return u.replace('watch?v=', 'embed/');
+                if (u.includes('youtu.be/')) return u.replace('youtu.be/', 'youtube.com/embed/');
+                if (u.includes('vimeo.com/')) return `https://player.vimeo.com/video/${u.split('/').pop()}`;
+                return u;
+            };
+            const embedUrl = getEmbedUrl(block.url);
+
+            if (!embedUrl) {
+                return wrapWithParentClass(
+                    <div className="aspect-video bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white shadow-inner">
+                        <Video className="w-8 h-8 text-slate-500 mb-2" />
+                        <span className="text-slate-400 text-sm font-medium">Video Placeholder: No URL provided</span>
+                    </div>,
+                    parentStyle,
+                    divStyle
+                );
+            }
+            if (embedUrl.match(/\.(mp4|webm|ogg)$/)) {
+                return wrapWithParentClass(
+                    <video src={embedUrl} controls className="w-full aspect-video rounded-lg shadow-md" style={{ borderRadius: s.borderRadius || 8, objectFit: 'cover' }} />,
+                    parentStyle, divStyle
+                );
+            }
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center text-white">
-                        Video Placeholder: {block.url || 'No URL'}
-                    </div>
-                </div>
+                <iframe src={embedUrl} className="w-full aspect-video rounded-lg shadow-md" style={{ borderRadius: s.borderRadius || 8, border: 'none' }} allowFullScreen></iframe>,
+                parentStyle, divStyle
             );
-
+        }
         case BLOCK_TYPES.SOCIAL:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <div className="flex gap-4 justify-center">
-                        {(block.items || []).map((item: any, i: number) => (
-                            <div key={i} className="p-2 bg-slate-100 rounded-full">
-                                <IconComponent icon={item.icon || 'Link'} className="w-5 h-5" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <div className="flex gap-4 justify-center">
+                    {(block.items || []).map((item: any, i: number) => (
+                        <div key={i} className="p-2 bg-slate-100 rounded-full">
+                            <IconComponent icon={item.icon || 'Link'} className="w-5 h-5" />
+                        </div>
+                    ))}
+                </div>,
+                parentStyle,
+                divStyle
             );
 
         case BLOCK_TYPES.FAQ_SECTION:
             return wrapWithParentClass(
-                <FAQSectionRenderer block={block} viewMode={viewMode} containerStyle={divStyle} />
+                <FAQSectionRenderer block={block} viewMode={viewMode} />,
+                parentStyle,
+                divStyle
             );
 
         case BLOCK_TYPES.FEATURE_SECTION:
             return wrapWithParentClass(
-                <div id={block.customId || `blk-${block.id}`} className={`${block.customClass || ''}`} style={divStyle}>
-                    <div className="feature-section flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
-                        <div
-                            className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
-                            style={{
-                                background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)`
-                            }}
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none" />
-                            <div className="spacer">
-                                <h3 className="subtitle">{block.subtitle}</h3>
-                                <h2 className="title">{block.title}</h2>
-                                <p className="paragraph">{block.description}</p>
-                            </div>
-                        </div>
-
-                        <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center md:-mt-8 md:mt-0 md:-ml-12 z-10">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-                                {(block.items || []).map((item: any, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        className="bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group"
-                                    >
-                                        <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
-                                            <IconComponent icon={item.icon || 'Zap'} className="w-6 h-6" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <h4 className="font-black text-slate-800 text-sm mb-0.5">{item.title}</h4>
-                                            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">{item.subtitle}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                <div className="flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
+                    <div
+                        className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
+                        style={{
+                            background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)`
+                        }}
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none" />
+                        <div className="spacer">
+                            <h3 className="subtitle">{block.subtitle}</h3>
+                            <h2 className="title">{block.title}</h2>
+                            <p className="paragraph">{block.description}</p>
                         </div>
                     </div>
-                </div>
+
+                    <div className="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center md:-mt-8 md:mt-0 md:-ml-12 z-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                            {(block.items || []).map((item: any, idx: number) => (
+                                <div
+                                    key={idx}
+                                    className="bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group"
+                                >
+                                    <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
+                                        <IconComponent icon={item.icon || 'Zap'} className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <h4 className="font-black text-slate-800 text-sm mb-0.5">{item.title}</h4>
+                                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">{item.subtitle}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>,
+                parentStyle,
+                divStyle
             );
 
         case BLOCK_TYPES.LOOP_GRID:
             return wrapWithParentClass(
                 <LoopGridRenderer
                     block={block}
-                    containerStyle={divStyle}
                     isMobile={viewMode === 'mobile'}
-                />
+                />,
+                parentStyle,
+                divStyle
             );
 
         default:
@@ -1332,47 +1432,119 @@ function blockToHTML(block: any): string {
     const borderRadiusCSS = `border-radius:${s.borderRadius || 0}px;`;
 
     const wrap = (content: string) => {
-        // parentClass goes on a wrapper div, customClass goes on the content div
-        const wrapperStyle = `padding:${s.paddingTop || 0}px ${s.paddingRight || 0}px ${s.paddingBottom || 0}px ${s.paddingLeft || 0}px;${backgroundCSS}${borderRadiusCSS}box-sizing:border-box;${marginCSS}${borderCSS}position:relative;overflow:hidden;`;
+        const parentStyleProps = [];
+        const innerStyleProps = [];
 
-        let result = content;
-        if (block.parentClass) {
-            result = `<div class="${block.parentClass}">${result}</div>`;
-        }
+        // Always split styles between parent and inner
+        parentStyleProps.push(`padding-top: ${s.paddingTop || 0}px`);
+        parentStyleProps.push(`padding-bottom: ${s.paddingBottom || 0}px`);
+        parentStyleProps.push(`margin-top: ${s.marginTop || 0}px`);
+        parentStyleProps.push(`margin-bottom: ${s.marginBottom || 0}px`);
+        parentStyleProps.push(`background-color: ${s.backgroundColor || 'transparent'}`);
+        if (bgImageCSS) parentStyleProps.push(bgImageCSS);
+        parentStyleProps.push(`--highlight-color: ${block.highlightColor || '#d2152a'}`);
 
-        // Wrap with the styled div that has customId and customClass
-        return `<div id="${block.customId || `blk-${block.id}`}" class="${block.customClass || ''}" style="${wrapperStyle}">${result}</div>`;
+        innerStyleProps.push(`padding-left: ${s.paddingLeft || 0}px`);
+        innerStyleProps.push(`padding-right: ${s.paddingRight || 0}px`);
+        innerStyleProps.push(`margin-left: ${s.marginLeft || 0}px`);
+        innerStyleProps.push(`margin-right: ${s.marginRight || 0}px`);
+
+        innerStyleProps.push(`border-top-width: ${s.borderTopWidth || 0}px`);
+        innerStyleProps.push(`border-bottom-width: ${s.borderBottomWidth || 0}px`);
+        innerStyleProps.push(`border-left-width: ${s.borderLeftWidth || 0}px`);
+        innerStyleProps.push(`border-right-width: ${s.borderRightWidth || 0}px`);
+        innerStyleProps.push(`border-color: ${s.borderColor || '#e2e8f0'}`);
+        innerStyleProps.push(`border-style: ${s.borderStyle || 'solid'}`);
+        innerStyleProps.push(`border-radius: ${s.borderRadius || 0}px`);
+        innerStyleProps.push(`box-sizing: border-box`);
+        innerStyleProps.push(`position: relative`);
+        innerStyleProps.push(`overflow: hidden`);
+
+        const pStyle = parentStyleProps.join('; ');
+        const iStyle = innerStyleProps.join('; ');
+
+        const id = block.customId || `blk-${block.id}`;
+        const parentClassName = block.parentClass || 'section-wrapper';
+        const customClass = block.customClass || '';
+
+        return `
+            <div class="${parentClassName}" style="${pStyle}">
+                <div class="${customClass}" id="${id}">
+                    <div class="${block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}">
+                        ${content}
+                    </div>
+                </div>
+            </div>
+        `;
     };
 
     switch (block.type) {
         case BLOCK_TYPES.TEXT:
         case BLOCK_TYPES.HEADING:
         case BLOCK_TYPES.LIST: {
+            // Helper to get inner HTML without the outer tag
+            const getInner = (html: string, type: string) => {
+                if (type === BLOCK_TYPES.HEADING) return html.replace(/^<h2[^>]*>|<\/h2>$/gi, '');
+                if (type === BLOCK_TYPES.TEXT) return html.replace(/^<p[^>]*>|<\/p>$/gi, '');
+                return html;
+            };
+
+            const innerHTML = getInner(block.content, block.type);
             const extraStyles = [
                 block.type === BLOCK_TYPES.LIST ? `#block-${block.id} li::marker { color: ${s.bulletColor || s.color || '#00c3c0'}; }` : '',
-                `#block-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 16}px; padding: ${s.paragraphPadding ?? 0}px; margin-top: 0; }`,
+                `#block-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 0}px; padding: ${s.paragraphPadding ?? 0}px; margin-top: 0; }`,
                 `#block-${block.id} p:last-child { margin-bottom: 0; }`,
                 `#block-${block.id} ul, #block-${block.id} ol { list-style-position: inside; padding-left: 0; margin: 0; text-align: ${s.textAlign || 'left'}; }`,
                 `#block-${block.id} li { text-align: ${s.textAlign || 'left'}; margin-bottom: ${s.listItemSpacing ?? 0}px !important; }`,
-                `#block-${block.id} li:last-child { margin-bottom: 0 !important; }`,
-                block.type === BLOCK_TYPES.HEADING ? `
-                    #block-${block.id} h2 {
-                        font-size: ${s.h2FontSize ?? 28}px;
-                        color: ${s.h2Color ?? '#1e293b'};
-                        font-weight: ${s.h2FontWeight ?? 700};
-                        text-align: ${s.h2TextAlign ?? 'left'};
-                        line-height: ${s.h2LineHeight ?? 1.2};
-                        letter-spacing: ${s.h2LetterSpacing ?? 0}px;
-                        text-transform: ${s.h2TextTransform ?? 'none'};
-                        font-style: ${s.h2FontStyle ?? 'normal'};
-                        text-decoration: ${s.h2TextDecoration ?? 'none'};
-                        margin-bottom: ${s.h2MarginBottom ?? 16}px;
-                        margin-top: 0;
-                    }
-                ` : ''
-            ].join(' ');
+                `#block-${block.id} li:last-child { margin-bottom: 0 !important; }`
+            ].filter(Boolean).join(' ');
+
+            // Dynamic styles (overrides)
+            const overrides = [];
+            const isHeading = block.type === BLOCK_TYPES.HEADING;
+            const isText = block.type === BLOCK_TYPES.TEXT;
+
+            if (isHeading || isText) {
+                const defSize = isHeading ? 28 : 16;
+                const defWeight = isHeading ? 700 : 'normal';
+                const defColor = isHeading ? '#1e293b' : '#334155';
+
+                if (s.fontSize !== defSize) overrides.push(`font-size:${s.fontSize}px`);
+                if (s.fontWeight !== defWeight) overrides.push(`font-weight:${s.fontWeight}`);
+                if (s.color !== defColor) overrides.push(`color:${s.color}`);
+                if (s.textAlign !== 'left') overrides.push(`text-align:${s.textAlign}`);
+                if (s.lineHeight !== (isHeading ? 1.2 : 1.5)) overrides.push(`line-height:${s.lineHeight}`);
+                if (s.letterSpacing !== 0) overrides.push(`letter-spacing:${s.letterSpacing}px`);
+                if (s.textTransform !== 'none') overrides.push(`text-transform:${s.textTransform}`);
+                if (s.fontStyle !== 'normal') overrides.push(`font-style:${s.fontStyle}`);
+                if (s.textDecoration !== 'none') overrides.push(`text-decoration:${s.textDecoration}`);
+
+                // Border Support
+                if (s.borderTopWidth > 0) {
+                    overrides.push(`border-width:${s.borderTopWidth}px`);
+                    overrides.push(`border-style:${s.borderStyle || 'solid'}`);
+                    overrides.push(`border-color:${s.borderColor || '#e2e8f0'}`);
+                }
+                if (s.borderRadius > 0) overrides.push(`border-radius:${s.borderRadius}px`);
+                if (s.backgroundColor && s.backgroundColor !== '#FFFFFF') overrides.push(`background-color:${s.backgroundColor}`);
+
+                // Padding Support
+                if (s.paddingTop) overrides.push(`padding-top:${s.paddingTop}px`);
+                if (s.paddingBottom) overrides.push(`padding-bottom:${s.paddingBottom}px`);
+                if (s.paddingLeft) overrides.push(`padding-left:${s.paddingLeft}px`);
+                if (s.paddingRight) overrides.push(`padding-right:${s.paddingRight}px`);
+            }
+
+            const baseClasses = isHeading
+                ? "text-[28px] font-bold text-[#1e293b] leading-tight"
+                : (isText ? "text-[16px] text-[#334155] leading-relaxed" : "prose prose-slate max-w-none");
+
+            const styleString = overrides.join(';');
+            const tag = isHeading ? 'h2' : (isText ? 'p' : 'div');
             const listIdAttr = `id="block-${block.id}"`;
-            const content = `<style>${extraStyles}</style><div ${listIdAttr} style="color:${s.color};font-size:${s.fontSize}px;line-height:${s.lineHeight || 1.5};letter-spacing:${s.letterSpacing || 0}px;text-transform:${s.textTransform || 'none'};text-align:${s.textAlign};font-weight:${s.fontWeight || 'normal'};font-style:${s.fontStyle || 'normal'};text-decoration:${s.textDecoration || 'none'};">${block.content}</div>`;
+
+            const styleAttr = styleString ? `style="${styleString}"` : '';
+            const content = `<style>${extraStyles}</style><${tag} ${listIdAttr} class="${baseClasses}" ${styleAttr}>${innerHTML}</${tag}>`;
             return wrap(content);
         }
         case BLOCK_TYPES.IMAGE:
@@ -1386,7 +1558,7 @@ function blockToHTML(block: any): string {
         case BLOCK_TYPES.COLUMNS: {
             const colHTMLs = block.columns.map((col: any) => {
                 const childHTML = col.blocks.map(blockToHTML).join('');
-                return `<div class="col-block" style="flex:${col.ratio};padding:4px;min-width:0;">${childHTML}</div>`;
+                return `<div class="col-block" style="flex:${col.ratio};min-width:0;">${childHTML}</div>`;
             }).join('');
             return wrap(`<div class="col-row" style="display:flex;gap:8px;flex-wrap:wrap;">${colHTMLs}</div>`);
         }
@@ -1405,18 +1577,38 @@ function blockToHTML(block: any): string {
         }
         case BLOCK_TYPES.ACCORDION:
             const accItems = (block.items || []).map((item: any) => `
-                <div style="margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-                    <div style="padding: 12px; background: #f8fafc; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                        ${item.title}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                <details style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
+                    <summary style="padding: 16px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; font-size: ${s.qFontSize || 16}px; color: ${s.qColor || '#1e293b'}; font-weight: ${s.qFontWeight || 700};">
+                        <span>${item.title}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: ${s.qColor || '#1e293b'};">
                             <path d="m6 9 6 6 6-6"></path>
                         </svg>
+                    </summary>
+                    <div style="padding: 16px; border-top: 1px solid #e2e8f0; font-size: ${s.aFontSize || 15}px; color: ${s.aColor || '#475569'}; line-height: 1.6;">
+                        ${item.content}
                     </div>
-                </div>
+                </details>
+                <style>details > summary::-webkit-details-marker { display: none; }</style>
             `).join('');
-            return wrap(`<div>${accItems}</div>`);
-        case BLOCK_TYPES.VIDEO:
-            return wrap(`<div style="background: #0f172a; color: #fff; padding: 60px 40px; text-align: center; border-radius: 8px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">Video Placeholder: ${block.url || 'No URL'}</div>`);
+            return wrap(`<div style="width: 100%;">${accItems}</div>`);
+        case BLOCK_TYPES.VIDEO: {
+            const getEmbedUrl = (u: string) => {
+                if (!u) return '';
+                if (u.includes('youtube.com/watch?v=')) return u.replace('watch?v=', 'embed/');
+                if (u.includes('youtu.be/')) return u.replace('youtu.be/', 'youtube.com/embed/');
+                if (u.includes('vimeo.com/')) return `https://player.vimeo.com/video/${u.split('/').pop()}`;
+                return u;
+            };
+            const embedUrl = getEmbedUrl(block.url);
+
+            if (!embedUrl) {
+                return wrap(`<div style="background: #0f172a; color: #94a3b8; text-align: center; border-radius: 8px; aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif;">Video Placeholder: No URL provided</div>`);
+            }
+            if (embedUrl.match(/\.(mp4|webm|ogg)$/)) {
+                return wrap(`<video src="${embedUrl}" controls style="width: 100%; aspect-ratio: 16/9; border-radius: ${s.borderRadius || 8}px; object-fit: cover; display: block;"></video>`);
+            }
+            return wrap(`<iframe src="${embedUrl}" style="width: 100%; aspect-ratio: 16/9; border-radius: ${s.borderRadius || 8}px; border: none; display: block;" allowfullscreen></iframe>`);
+        }
         case BLOCK_TYPES.SOCIAL: {
             const socialItems = (block.items || []).map((item: any) => {
                 const iconSVG = getIconSVGHTML(item.icon || 'Link');
@@ -1448,17 +1640,17 @@ function blockToHTML(block: any): string {
             `}).join('');
 
             const content = `
-                <div class="faq-section spacer py-10 px-4">
+                <div class="faq-container relative z-10">
                     <h2 class="title text-center">
                         ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
                     </h2>
-                    <div class="flex flex-col md:flex-row gap-10 items-center text-left mt-8">
-                        <div class="shrink-0 flex justify-center w-full md:w-auto">
-                            <div class="w-80 h-80 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                    <div class="flex flex-col md:flex-row gap-12 items-center text-left mt-8">
+                        <div class="shrink-0 flex justify-center w-full md:w-1/3">
+                            <div class="w-full aspect-square rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
                                 <img src="${block.imageUrl}" alt="FAQ" class="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
                             </div>
                         </div>
-                        <div class="flex-1 w-full space-y-3">
+                        <div class="flex-1 w-full space-y-4">
                             ${itemsHTML}
                         </div>
                     </div>
@@ -1483,7 +1675,7 @@ function blockToHTML(block: any): string {
             `}).join('');
 
             const content = `
-                <div class="feature-section flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
+                <div class="flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
                     <div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative" style="background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%);">
                         <div class="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none"></div>
                         <div class="spacer">
@@ -1512,15 +1704,14 @@ function blockToHTML(block: any): string {
             `).join('');
 
             const content = `
-                <div class="spacer text-center relative z-10" style="--highlight-color: ${block.highlightColor || '#d2152a'}">
-                        <h2 class="title">
-                            ${block.heading} <span style="color: var(--highlight-color)">${block.headingHighlight}</span>
-                        </h2>
-                        ${block.description ? `<p class="paragraph mx-auto">${block.description}</p>` : ''}
+                <div class="loop-grid-content text-center relative z-10" style="--highlight-color: ${block.highlightColor || '#d2152a'}">
+                    <h2 class="title text-center">
+                        ${block.heading} <span style="color: var(--highlight-color)">${block.headingHighlight}</span>
+                    </h2>
+                    ${block.description ? `<p class="paragraph mx-auto text-center" style="max-width: 800px; opacity: 0.8;">${block.description}</p>` : ''}
                     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 loop-grid-container">
                         ${itemsHTML}
                     </div>
-                </div>
                 </div>
             `;
             return wrap(content);
@@ -1864,6 +2055,16 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                     />
                                 </div>
                             )}
+                            {block.type === BLOCK_TYPES.VIDEO && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Video Source URL (YouTube, Vimeo, MP4)</Label>
+                                        <div className="flex gap-2">
+                                            <Input className="h-10 text-xs rounded-xl flex-1" placeholder="https://www.youtube.com/watch?v=..." value={block.url || ''} onChange={(e: any) => setContent({ url: e.target.value })} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {block.type === BLOCK_TYPES.IMAGE && (
                                 <div className="space-y-4">
@@ -2045,43 +2246,45 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                     ) : (
                         <div className="space-y-8 animate-in fade-in slide-in-from-left-1 duration-300">
                             {/* Layout Spacing */}
-                            <div className="space-y-6">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Container Spacing</p>
-                                <div className="space-y-5">
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Padding</Label>
-                                            <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Inward</Badge>
+                            {(block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER) && (
+                                <div className="space-y-6">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Container Spacing</p>
+                                    <div className="space-y-5">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Padding</Label>
+                                                <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Inward</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {[{ l: 'Top', k: 'paddingTop' }, { l: 'Bottom', k: 'paddingBottom' }, { l: 'Left', k: 'paddingLeft' }, { l: 'Right', k: 'paddingRight' }].map(p => (
+                                                    <div key={p.k} className="space-y-1.5">
+                                                        <span className="text-[9px] text-slate-400">{p.l}</span>
+                                                        <Input type="number" value={s[p.k] ?? 0} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            {[{ l: 'Top', k: 'paddingTop' }, { l: 'Bottom', k: 'paddingBottom' }, { l: 'Left', k: 'paddingLeft' }, { l: 'Right', k: 'paddingRight' }].map(p => (
-                                                <div key={p.k} className="space-y-1.5">
-                                                    <span className="text-[9px] text-slate-400">{p.l}</span>
-                                                    <Input type="number" value={s[p.k] ?? 16} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-50 h-px w-full" />
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Margin</Label>
-                                            <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Outward</Badge>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            {[{ l: 'Top', k: 'marginTop' }, { l: 'Bottom', k: 'marginBottom' }, { l: 'Left', k: 'marginLeft' }, { l: 'Right', k: 'marginRight' }].map(p => (
-                                                <div key={p.k} className="space-y-1.5">
-                                                    <span className="text-[9px] text-slate-400">{p.l}</span>
-                                                    <Input type="number" value={s[p.k] ?? 0} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
-                                                </div>
-                                            ))}
+                                        <div className="bg-slate-50 h-px w-full" />
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Margin</Label>
+                                                <Badge className="bg-slate-100 text-slate-400 border-none px-1.5 text-[8px]">Outward</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {[{ l: 'Top', k: 'marginTop' }, { l: 'Bottom', k: 'marginBottom' }, { l: 'Left', k: 'marginLeft' }, { l: 'Right', k: 'marginRight' }].map(p => (
+                                                    <div key={p.k} className="space-y-1.5">
+                                                        <span className="text-[9px] text-slate-400">{p.l}</span>
+                                                        <Input type="number" value={s[p.k] ?? 0} onChange={(e: any) => set(p.k, Number(e.target.value))} className="h-8 text-xs font-bold font-mono rounded-lg" />
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Typography */}
-                            {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && (
+                            {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && block.type !== BLOCK_TYPES.VIDEO && block.type !== BLOCK_TYPES.ACCORDION && (
                                 <div className="space-y-4">
                                     <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Typography</p>
                                     <div className="space-y-4">
@@ -2106,19 +2309,61 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 </div>
                             )}
 
+                            {block.type === BLOCK_TYPES.ACCORDION && (
+                                <div className="space-y-6">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Questions Typography</p>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
+                                            <input type="range" min={10} max={64} value={s.qFontSize || 16} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.qFontSize || 16} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Color</span>
+                                            <input type="color" value={s.qColor || '#1e293b'} onChange={(e: any) => set('qColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Answers Typography</p>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
+                                            <input type="range" min={10} max={64} value={s.aFontSize || 15} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.aFontSize || 15} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Color</span>
+                                            <input type="color" value={s.aColor || '#475569'} onChange={(e: any) => set('aColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Visual Decor */}
                             <div className="space-y-6">
                                 <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Visual Design</p>
                                 <div className="space-y-4">
                                     <div className="space-y-3">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Color</Label>
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            {[BLOCK_TYPES.HEADING, BLOCK_TYPES.TEXT].includes(block.type) ? 'Text Color' : 'Background Color'}
+                                        </Label>
                                         <div className="flex flex-wrap gap-2">
-                                            {PALETTE_COLORS.map(c => (
-                                                <button key={c} onClick={() => set('backgroundColor', c)}
-                                                    style={{ backgroundColor: c }}
-                                                    className={`w-7 h-7 rounded-lg border-2 transition-all ${s.backgroundColor === c ? 'border-slate-800 scale-110 shadow-md' : 'border-white hover:scale-110 shadow-sm'}`} />
-                                            ))}
-                                            <input type="color" value={s.backgroundColor || '#FFFFFF'} onChange={(e: any) => set('backgroundColor', e.target.value)}
+                                            {PALETTE_COLORS.map(c => {
+                                                const colorKey = [BLOCK_TYPES.HEADING, BLOCK_TYPES.TEXT].includes(block.type) ? 'color' : 'backgroundColor';
+                                                const defColorVal = [BLOCK_TYPES.HEADING, BLOCK_TYPES.TEXT].includes(block.type)
+                                                    ? (block.type === BLOCK_TYPES.HEADING ? '#1e293b' : '#334155')
+                                                    : '#FFFFFF';
+                                                return (
+                                                    <button key={c} onClick={() => set(colorKey, c)}
+                                                        style={{ backgroundColor: c }}
+                                                        className={`w-7 h-7 rounded-lg border-2 transition-all ${s[colorKey] === c ? 'border-slate-800 scale-110 shadow-md' : 'border-white hover:scale-110 shadow-sm'}`} />
+                                                );
+                                            })}
+                                            <input type="color"
+                                                value={[BLOCK_TYPES.HEADING, BLOCK_TYPES.TEXT].includes(block.type)
+                                                    ? (s.color || (block.type === BLOCK_TYPES.HEADING ? '#1e293b' : '#334155'))
+                                                    : (s.backgroundColor || '#FFFFFF')}
+                                                onChange={(e: any) => set([BLOCK_TYPES.HEADING, BLOCK_TYPES.TEXT].includes(block.type) ? 'color' : 'backgroundColor', e.target.value)}
                                                 className="w-7 h-7 rounded-lg border-2 border-slate-200 cursor-pointer overflow-hidden p-0" title="Custom color" />
                                         </div>
                                     </div>
@@ -2267,13 +2512,15 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                             </div>
                                         </div>
                                     )}
-                                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
-                                        <div className="flex items-center gap-3">
-                                            <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                    {(block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.HEADING && block.type !== BLOCK_TYPES.TEXT) && (
+                                        <div className="space-y-3 pt-4 border-t border-slate-100">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Corner Radius</Label>
+                                            <div className="flex items-center gap-3">
+                                                <input type="range" min={0} max={48} value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                                <Input type="number" value={s.borderRadius ?? 0} onChange={(e: any) => set('borderRadius', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     <div className="space-y-3 pt-4 border-t border-slate-100">
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Border Settings</Label>
@@ -2464,7 +2711,19 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
     };
 
     const updateBlock = (id: string, updates: any) => {
-        setBlocks(prev => prev.map((b: any) => b.id === id ? { ...b, ...updates } : b));
+        setBlocks(prev => prev.map((b: any) => {
+            if (b.id === id) return { ...b, ...updates };
+            if (b.type === BLOCK_TYPES.COLUMNS) {
+                return {
+                    ...b,
+                    columns: b.columns.map((col: any) => ({
+                        ...col,
+                        blocks: col.blocks.map((cb: any) => cb.id === id ? { ...cb, ...updates } : cb)
+                    }))
+                };
+            }
+            return b;
+        }));
     };
 
     const addBlockToColumn = useCallback((parentId: string, colIndex: number, type: string) => {
