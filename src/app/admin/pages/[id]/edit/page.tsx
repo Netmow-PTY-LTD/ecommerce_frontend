@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LayoutTemplate } from 'lucide-react';
 import Link from 'next/link';
 import PageBuilder from '@/components/admin/PageBuilder';
 
@@ -161,8 +161,8 @@ export default function EditPagePage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <AdminLayout 
-      title={`Edit: ${page.title}`} 
+    <AdminLayout
+      title={`Edit: ${page.title}`}
       subtitle="Update page content and settings"
       defaultSidebarCollapsed={true}
     >
@@ -262,8 +262,14 @@ export default function EditPagePage({ params }: { params: Promise<{ id: string 
 
           {/* Content */}
           <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-lg font-semibold text-gray-900">Content</h2>
+              <Link href={`/admin/pages/content/${id}/edit`}>
+                <Button type="button" size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md flex items-center gap-2 cursor-pointer">
+                  <LayoutTemplate className="h-4 w-4" />
+                  Full Screen Editor
+                </Button>
+              </Link>
             </div>
             <div className="p-6">
               <div>

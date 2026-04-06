@@ -165,11 +165,11 @@ const LUCIDE_ICON_SVGS: { [key: string]: Array<{ type: string, attrs?: Record<st
         { type: 'circle', attrs: { cx: '7', cy: '18', r: '2' } }
     ],
     'Ship': [
-        { type: 'path', attrs: { d: 'M2 12h20' } },
-        { type: 'path', attrs: { d: 'M2 12l2-2m-2 2l2 2' } },
-        { type: 'path', attrs: { d: 'M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2' } },
-        { type: 'path', attrs: { d: 'm16.5 18.5-2.226-2.226' } },
-        { type: 'path', attrs: { d: 'm16.5 18.5 2.226-2.226' } }
+        { type: 'path', attrs: { d: 'M12 10.189V14' } },
+        { type: 'path', attrs: { d: 'M12 2v3' } },
+        { type: 'path', attrs: { d: 'M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6' } },
+        { type: 'path', attrs: { d: 'M19.38 20A11.6 11.6 0 0 0 21 14l-8.188-3.639a2 2 0 0 0-1.624 0L3 14a11.6 11.6 0 0 0 2.81 7.76' } },
+        { type: 'path', attrs: { d: 'M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1' } }
     ],
     'Zap': [
         { type: 'path', attrs: { d: 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z' } }
@@ -182,7 +182,8 @@ const LUCIDE_ICON_SVGS: { [key: string]: Array<{ type: string, attrs?: Record<st
         { type: 'circle', attrs: { cx: '17.5', cy: '9', r: '2.5' } }
     ],
     'Home': [
-        { type: 'path', attrs: { d: 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' } }
+        { type: 'path', attrs: { d: 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' } },
+        { type: 'polyline', attrs: { points: '9 22 9 12 15 12 15 22' } }
     ],
     'User': [
         { type: 'path', attrs: { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' } },
@@ -468,31 +469,60 @@ const LUCIDE_ICON_SVGS: { [key: string]: Array<{ type: string, attrs?: Record<st
     'Umbrella': [
         { type: 'path', attrs: { d: 'M22 12a10.06 10.06 0 0 0-10-10A10.06 10.06 0 0 0 2 12' } },
         { type: 'path', attrs: { d: 'M12 12v9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2' } }
+    ],
+    'Facebook': [
+        { type: 'path', attrs: { d: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' } }
+    ],
+    'Twitter': [
+        { type: 'path', attrs: { d: 'M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z' } }
+    ],
+    'Instagram': [
+        { type: 'rect', attrs: { width: '20', height: '20', x: '2', y: '2', rx: '5', ry: '5' } },
+        { type: 'path', attrs: { d: 'M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' } },
+        { type: 'line', attrs: { x1: '17.5', y1: '6.5', x2: '17.51', y2: '6.5' } }
+    ],
+    'Youtube': [
+        { type: 'path', attrs: { d: 'M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z' } },
+        { type: 'polygon', attrs: { points: '9.75 15.02 15.5 12 9.75 8.98 9.75 15.02' } }
+    ],
+    'Linkedin': [
+        { type: 'path', attrs: { d: 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z' } },
+        { type: 'rect', attrs: { width: '4', height: '12', x: '2', y: '9' } },
+        { type: 'circle', attrs: { cx: '4', cy: '4', r: '2' } }
+    ],
+    'Github': [
+        { type: 'path', attrs: { d: 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22' } }
     ]
 };
 
 // Helper function to generate SVG HTML from icon data
 const getIconSVGHTML = (iconName: string): string => {
-    const iconElements = LUCIDE_ICON_SVGS[iconName] || LUCIDE_ICON_SVGS['Zap'];
+    // Try newer multi-element SVG map first
+    if (LUCIDE_ICON_SVGS[iconName]) {
+        const iconElements = LUCIDE_ICON_SVGS[iconName];
+        return iconElements.map(el => {
+            const attrs = Object.entries(el.attrs || {}).map(([k, v]) => `${k}="${v}"`).join(' ');
 
-    return iconElements.map(el => {
-        const attrs = Object.entries(el.attrs || {}).map(([k, v]) => `${k}="${v}"`).join(' ');
+            if (el.type === 'path') {
+                return `<path ${attrs} />`;
+            } else if (el.type === 'circle') {
+                return `<circle ${attrs} />`;
+            } else if (el.type === 'polyline') {
+                return `<polyline ${attrs} />`;
+            } else if (el.type === 'line') {
+                return `<line ${attrs} />`;
+            } else if (el.type === 'rect') {
+                return `<rect ${attrs} />`;
+            } else if (el.type === 'polygon') {
+                return `<polygon ${attrs} />`;
+            }
+            return '';
+        }).join('\n                            ');
+    }
 
-        if (el.type === 'path') {
-            return `<path ${attrs} />`;
-        } else if (el.type === 'circle') {
-            return `<circle ${attrs} />`;
-        } else if (el.type === 'polyline') {
-            return `<polyline ${attrs} />`;
-        } else if (el.type === 'line') {
-            return `<line ${attrs} />`;
-        } else if (el.type === 'rect') {
-            return `<rect ${attrs} />`;
-        } else if (el.type === 'polygon') {
-            return `<polygon ${attrs} />`;
-        }
-        return '';
-    }).join('\n                            ');
+    // Fallback to legacy single-path icon map
+    const path = LUCIDE_ICON_PATHS[iconName] || LUCIDE_ICON_PATHS['Zap'];
+    return `<path d="${path}" />`;
 };
 
 // Keep the old single-path version for simple icons (backward compatibility)
@@ -860,7 +890,7 @@ function FAQSectionRenderer({ block, viewMode, containerStyle }: { block: any, v
                 </h2>
                 <div className={`flex gap-10 items-center text-left mt-8 ${viewMode === 'mobile' ? 'flex-col' : 'md:flex-row'}`}>
                     <div className="shrink-0 flex justify-center w-full md:w-auto">
-                        <div className="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                        <div className="w-80 h-80 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
                             <img src={block.imageUrl} alt="FAQ" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
                         </div>
                     </div>
@@ -1353,32 +1383,6 @@ function blockToHTML(block: any): string {
             return wrap(`<div class="col-row" style="display:flex;gap:8px;flex-wrap:wrap;">${colHTMLs}</div>`);
         }
         case BLOCK_TYPES.ICON_BOX: {
-            const getIconSVG = (iconName: string) => {
-                const iconMap: { [key: string]: string } = {
-                    'Layout': 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
-                    'Truck': 'M10 17h4V3H3v14h7z M10 17l6-6-6 1.41-1.41L10 14.17l6 6 1.41 1.41-6-6z',
-                    'Ship': 'M2 12h20M2 12l2-2m-2 2l2 2M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2m2-10V7a2 2 0 012-2h6a2 2 0 012 2v5',
-                    'Zap': 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z',
-                    'Package': 'm16.5 1.5-9.5 9-9.5 9.5 9.5 9.5-9.5-9.5-9.5zM9 13a2 2 0 011-2 2 2 0 012 2 2 2 0 011-2zm4 0a2 2 0 011-2 2 2 0 012 2 2 2 0 011-2z',
-                    'Home': 'm3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
-                    'User': 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
-                    'Settings': 'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 0 .07.53c.07.2.38.22.66.43.84.42 1.07.16 1.54.3 2.01a2 2 0 0 0 .45 2.72l.06.13a2 2 0 0 0 .91 2.58c.24.55.65.86 1.2.95 1.63a2 2 0 0 0 .3 1.07v.35a2 2 0 0 0 .42.51 2.54 2 0 0 0 .3 1.3 2 2 0 0 0 .3 1.3 2 2 0 0 0 .42-.51 2-2 0 0 0 .3-1.3 2-2 0 0 0 .3-1.3.42-.51 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3v-.18a2 2 0 0 0-2-2h-.44zM7.78 21a2 2 0 0 1-2-2v-.18a2 2 0 0 0-.07-.53 2 2 0 0 0-.42-.51 2 2 0 0 0-.3-1.07 2 2 0 0 0-.45-2.72l-.06-.13a2 2 0 0 0-.91-2.58 2 2 0 0 0-.95-1.63 2 2 0 0 0-.3-2.01v-.35a2 2 0 0 0-.42-.51 2.54 2 0 0 0-.3-1.3 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54-.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3 2 2 0 0 0-.42.51 2-.54.3-.97.88-1.63 2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-2-2h-.44z',
-                    'ShoppingCart': 'm9 25a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6v-7a6 6 0 0 1 6-6zm11.666-2h-2.664a4 4 0 0 1-1.768-3.563l-5.052-5.632A4 4 0 0 1 9.635 8h4.57a4 4 0 0 1 3.992 4',
-                    'Heart': 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
-                    'Star': 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-                    'CheckCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
-                    'XCircle': 'M22 11.08V12a10 10 0 1 1-5.93-9.14',
-                    'AlertCircle': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
-                    'Info': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
-                    'Mail': 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
-                    'Phone': 'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z',
-                    'MapPin': 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z',
-                    'Clock': 'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z',
-                    'Calendar': 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z',
-                };
-                return iconMap[iconName] || iconMap['Layout'];
-            };
-
             return wrap(`
                 <div style="text-align: ${s.textAlign || 'center'};">
                     <div style="margin-bottom: 10px;">
@@ -1442,7 +1446,7 @@ function blockToHTML(block: any): string {
                     </h2>
                     <div class="flex flex-col md:flex-row gap-10 items-center text-left mt-8">
                         <div class="shrink-0 flex justify-center w-full md:w-auto">
-                            <div class="w-64 h-64 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                            <div class="w-80 h-80 rounded-full overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
                                 <img src="${block.imageUrl}" alt="FAQ" class="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
                             </div>
                         </div>
@@ -1456,21 +1460,6 @@ function blockToHTML(block: any): string {
         }
         case BLOCK_TYPES.FEATURE_SECTION: {
             const featuresHTML = (block.items || []).map((item: any) => {
-                // Get the SVG icon path from lucide-react
-                const getIconSVG = (iconName: string) => {
-                    const iconMap: { [key: string]: string } = {
-                        'Truck': 'M10 17h4V3H3v14h7z M10 17l6-6-6 1.41-1.41L10 14.17l6 6 1.41 1.41-6-6z',
-                        'Ship': 'M2 12h20M2 12l2-2m-2 2l2 2M2 12h6l3-3m-3 3h4l2-2m-2 2l2 2m2-10V7a2 2 0 012-2h6a2 2 0 012 2v5',
-                        'Zap': 'M13 2L3 14h9l-1 6h6l1-6h9L13 2z',
-                        'Package': 'm16.5 1.5-9.5 9-9.5 9.5 9.5 9.5-9.5-9.5-9.5zM9 13a2 2 0 011-2 2 2 0 012 2 2 0 011-2zm4 0a2 2 0 011-2 2 2 0 012 2 2 0 011-2z',
-                        'Home': 'm3 9 9-7 7 7-7',
-                        'User': 'M20 21v-2a4 4 0 0 0-4-4V8a4 4 0 0 0-4-4h-1a5 5 0 0 0-2-2V5a5 5 0 0 0 2-2h11a5 5 0 0 0 2 2v4a5 5 0 0 0 2 2h2a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-1m-8-8V9a3 3 0 0 1 3-3h1m8 0V5a3 3 0 0 1 3-3h2',
-                        'Settings': 'm12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 0 .07.53c.07.2.38.22.66.43.84.42 1.07.16 1.54.3 2.01a2 2 0 0 0 .45 2.72l.06.13a2 2 0 0 0 .91 2.58c.24.55.65.86 1.2.95 1.63a2 2 0 0 0 .3 1.07v.35a2 2 0 0 0 .42.51 2.54 2 0 0 0 .3 1.3 2 2 0 0 0 .3 1.3 2 2 0 0 0 .42-.51 2-2 0 0 0 .3-1.3 2-2 0 0 0 .3-1.3.42-.51 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3v-.18a2 2 0 0 0-2-2h-.44zM7.78 21a2 2 0 0 1-2-2v-.18a2 2 0 0 0-.07-.53 2 2 0 0 0-.42-.51 2 2 0 0 0-.3-1.07 2 2 0 0 0-.45-2.72l-.06-.13a2 2 0 0 0-.91-2.58 2 2 0 0 0-.95-1.63 2 2 0 0 0-.3-2.01v-.35a2 2 0 0 0-.42-.51 2.54 2 0 0 0-.3-1.3 2-2 0 0 0-.3-1.3 2-2 0 0 0-.42.51 2-.54-.3-.97-.88-1.63a2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-.45-2.72 2 2 0 0 0-.91-2.58c-.24-.55-.65-.86-1.2-.95-1.63a2 2 0 0 0-.3-1.3 2 2 0 0 0-.42.51 2-.54.3-.97.88-1.63 2 2 0 0 0-.3-1.07v-.35a2 2 0 0 0-2-2h-.44z',
-                        'ShoppingCart': 'm9 25a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6v-7a6 6 0 0 1 6-6zm11.666-2h-2.664a4 4 0 0 1-1.768-3.563l-5.052-5.632A4 4 0 0 1 9.635 8h4.57a4 4 0 0 1 3.992 4',
-                    };
-                    return iconMap[iconName] || iconMap['Zap'];
-                };
-
                 return `
                 <div class="feature-card bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group">
                     <div class="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
@@ -1690,6 +1679,7 @@ const COMMON_ICONS = [
     'Plus', 'Minus', 'Check', 'Eye', 'EyeOff', 'Edit', 'Trash', 'Share', 'Link',
     'Globe', 'Shield', 'Award', 'Target', 'TrendingUp', 'TrendingDown',
     'CreditCard', 'DollarSign', 'Lock', 'Unlock',
+    'Facebook', 'Twitter', 'Instagram', 'Youtube', 'Linkedin', 'Github',
     'MessageCircle', 'Bell', 'FileText', 'Image', 'Video', 'Music', 'Headphones', 'Mic',
     'Wifi', 'Bluetooth', 'Cast', 'Copy', 'Scissors',
     'Moon', 'Sun', 'Cloud', 'Umbrella'
@@ -2397,7 +2387,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
     }
 
     return (
-        <div className="flex flex-col border rounded-lg overflow-hidden">
+        <div className="flex flex-col border rounded-lg overflow-hidden h-full">
             {/* Toolbar */}
             <div className="h-14 bg-white border-b flex items-center justify-between shrink-0 px-4">
                 <div className="flex items-center gap-2">
@@ -2418,7 +2408,7 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
                 </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden" style={{ minHeight: '600px' }}>
+            <div className="flex flex-1 overflow-hidden">
                 {/* Left: Block palette */}
                 <aside className="w-56 bg-white border-r shrink-0 flex flex-col">
                     <ScrollArea className="flex-1">
