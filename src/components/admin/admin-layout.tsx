@@ -135,11 +135,11 @@ const navigation: NavItem[] = [
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export default function AdminLayout({ 
-  children, 
-  title, 
-  subtitle, 
-  defaultSidebarCollapsed = false 
+export default function AdminLayout({
+  children,
+  title,
+  subtitle,
+  defaultSidebarCollapsed = false
 }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
