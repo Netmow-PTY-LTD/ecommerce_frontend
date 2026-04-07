@@ -145,6 +145,7 @@ const defaultBlockStyles = {
     paragraphSpacing: 16,
     paragraphPadding: 0,
     listItemSpacing: 0,
+    listStyleType: 'disc',
     h2FontSize: 28,
     h2Color: '#1e293b',
     h2FontWeight: 700,
@@ -199,11 +200,18 @@ function newBlock(type, extra = {}) {
             return {
                 ...base,
                 layoutKey,
+                columnGap: 5,
                 styles: { ...defaultBlockStyles, paddingLeft: 8, paddingRight: 8, paddingTop: 8, paddingBottom: 8, backgroundColor: '#FFFFFF' },
                 columns: ratios.map((ratio) => ({
                     id: Math.random().toString(36).slice(2, 10),
                     ratio,
                     blocks: [],
+                    gap: 5,
+                    padding: 5,
+                    borderWidth: 0,
+                    borderColor: '#e2e8f0',
+                    borderStyle: 'solid',
+                    borderRadius: 0
                 })),
             };
         }
@@ -218,7 +226,7 @@ function newBlock(type, extra = {}) {
                     { question: 'What services do you offer?', answer: 'We offer a wide range of logistics and supply chain solutions.' },
                     { question: 'How can I track my order?', answer: 'You can track your order using the tracking number provided in your email.' }
                 ],
-                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc' }
+                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc', fontSize: 36 }
             };
         case BLOCK_TYPES.FEATURE_SECTION:
             return {
@@ -226,8 +234,28 @@ function newBlock(type, extra = {}) {
                 title: 'Global Express Logistics',
                 subtitle: 'Our Services',
                 description: 'We provide specialized logistics solutions tailored to your business needs.',
+                leftBgType: 'gradient',
+                leftBgColor: '#0a1d56',
                 gradientStart: '#0a1d56',
                 gradientEnd: '#d2152a',
+                leftSubtitleColor: '#ffb300',
+                leftSubtitleSize: 14,
+                leftSubtitleLineHeight: 1.2,
+                leftTitleColor: '#ffffff',
+                leftTitleSize: 42,
+                leftTitleLineHeight: 1.2,
+                leftContentGap: 16,
+                leftDescColor: '#e2e8f0',
+                leftDescSize: 16,
+                leftDescLineHeight: 1.6,
+                itemTitleColor: '#1e293b',
+                itemTitleSize: 14,
+                itemTitleLineHeight: 1.2,
+                itemTitleAlign: 'left',
+                itemSubtitleColor: '#94a3b8',
+                itemSubtitleSize: 10,
+                itemSubtitleLineHeight: 1.2,
+                itemSubtitleAlign: 'left',
                 items: [
                     { icon: 'Truck', title: 'Road Freight', subtitle: 'Fast Delivery' },
                     { icon: 'Ship', title: 'Ocean Freight', subtitle: 'Global Shipping' }
@@ -469,6 +497,7 @@ function BlockRenderer({ block, onUpdateContent }) {
                                 #block-${block.id} li { margin-bottom: ${s.listItemSpacing ?? 0}px !important; }
                                 #block-${block.id} li:last-child { margin-bottom: 0 !important; }
                                 #block-${block.id} ul, #block-${block.id} ol { 
+                                    list-style-type: ${s.listStyleType || 'disc'} !important;
                                     list-style-position: inside !important; 
                                     padding-left: 0 !important; 
                                     margin: 0 !important;
@@ -723,7 +752,7 @@ function blockToHTML(block) {
                 block.type === BLOCK_TYPES.LIST ? `#blk-${block.id} li::marker { color: ${s.bulletColor || s.color || '#00c3c0'}; }` : '',
                 `#blk-${block.id} p { margin-bottom: ${s.paragraphSpacing ?? 16}px; padding: ${s.paragraphPadding ?? 0}px; margin-top: 0; }`,
                 `#blk-${block.id} p:last-child { margin-bottom: 0; }`,
-                `#blk-${block.id} ul, #blk-${block.id} ol { list-style-position: inside; padding-left: 0; margin: 0; text-align: ${s.textAlign || 'left'}; }`,
+                `#blk-${block.id} ul, #blk-${block.id} ol { list-style-type: ${s.listStyleType || 'disc'}; list-style-position: inside; padding-left: 0; margin: 0; text-align: ${s.textAlign || 'left'}; }`,
                 `#blk-${block.id} li { text-align: ${s.textAlign || 'left'}; margin-bottom: ${s.listItemSpacing ?? 0}px !important; }`,
                 `#blk-${block.id} li:last-child { margin-bottom: 0 !important; }`,
                 block.type === BLOCK_TYPES.HEADING ? `
@@ -755,13 +784,29 @@ function blockToHTML(block) {
         case BLOCK_TYPES.SPACER:
             return `<div style="height:${block.height || 40}px;"></div>`;
         case BLOCK_TYPES.COLUMNS: {
-            const totalRatio = block.columns.reduce((a, c) => a + (c.ratio || 1), 0);
             const colHTMLs = block.columns.map((col) => {
-                const pct = Math.round((col.ratio / totalRatio) * 100);
                 const childHTML = col.blocks.map(blockToHTML).join('');
-                return `<td class="col-block" valign="top" style="width:${pct}%;padding:4px;">${childHTML}</td>`;
+                const colGap = col.gap ?? 5;
+                const colPadding = col.padding ?? 5;
+
+                const borderW = `${col.borderWidth || 0}px`;
+                const borderS = col.borderStyle || 'solid';
+                const borderC = col.borderColor || '#e2e8f0';
+                const bStyle = `border-width:${borderW};border-style:${borderS};border-color:${borderC};`;
+
+                const radiusS = `border-radius:${col.borderRadius || 0}px;`;
+                
+                // Mirror the exact structure and classes used in the PageBuilder editor (ColumnCell)
+                const colInnerClass = "min-h-[80px] rounded-xl flex flex-col relative group/col transition-all";
+                const colInnerStyle = `flex:1 1 0%;gap:${colGap}px;padding:${colPadding}px;${bStyle}${radiusS}box-sizing:border-box;overflow:hidden;`;
+                
+                return `<div class="col-block" style="flex:${col.ratio};min-width:0;"><div class="${colInnerClass}" style="${colInnerStyle}">${childHTML}</div></div>`;
             }).join('');
-            return wrap(`<table class="col-row" width="100%" cellpadding="0" cellspacing="0"><tr>${colHTMLs}</tr></table>`);
+
+            const colGapGlobal = block.columnGap ?? 5;
+            const colRowStyleAttr = `style="display:flex;gap:${colGapGlobal}px;flex-wrap:wrap;"`;
+            const colRow = `<div class="col-row" ${colRowStyleAttr}>${colHTMLs}</div>`;
+            return wrap(colRow);
         }
         case BLOCK_TYPES.ICON_BOX:
             return wrap(`
@@ -789,10 +834,10 @@ function blockToHTML(block) {
         case BLOCK_TYPES.FAQ_SECTION: {
             const itemsHTML = (block.items || []).map((item) => `
                 <div class="faq-item" style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
-                    <div class="faq-question" style="padding: 16px; font-weight: 600; color: #334155; cursor: pointer;">
+                    <div class="faq-question" style="padding: 16px; font-weight: 600; color: ${s.qColor || '#334155'}; font-size: ${s.qFontSize ? `${s.qFontSize}px` : '15px'}; line-height: ${s.qLineHeight || 1.4}; cursor: pointer;">
                         ${item.question}
                     </div>
-                    <div class="faq-answer" style="padding: 0 16px 16px; color: #64748b; font-size: 14px;">
+                    <div class="faq-answer" style="padding: 0 16px 16px; color: ${s.aColor || '#64748b'}; font-size: ${s.aFontSize ? `${s.aFontSize}px` : '14px'}; line-height: ${s.aLineHeight || 1.6};">
                         ${item.answer}
                     </div>
                 </div>
@@ -800,7 +845,7 @@ function blockToHTML(block) {
 
             return `
                 <div class="faq-section spacer" style="padding: 40px 0;">
-                    <h2 class="title text-center" style="text-align: center; margin-bottom: 30px;">
+                    <h2 class="title" style="text-align: ${s.textAlign || 'center'}; margin-bottom: 30px; font-size: ${s.fontSize ? `${s.fontSize}px` : 'inherit'}; line-height: ${s.lineHeight || 'inherit'}; color: ${s.color || 'inherit'};">
                         ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
                     </h2>
                     <div class="faq-container" style="display: flex; gap: 40px; align-items: center;">
@@ -815,22 +860,32 @@ function blockToHTML(block) {
             `;
         }
         case BLOCK_TYPES.FEATURE_SECTION: {
-            const featuresHTML = (block.items || []).map((item) => `
-                <div class="feature-card" style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #f8fafc; margin-bottom: 16px;">
-                    <div class="feature-icon" style="width: 40px; height: 40px; margin-bottom: 12px;">
+            const featuresHTML = (block.items || []).map((item) => {
+                const titleStyle = `color:${block.itemTitleColor || '#1e293b'};font-size:${block.itemTitleSize || 14}px;line-height:${block.itemTitleLineHeight || 1.2};text-align:${block.itemTitleAlign || 'left'};`;
+                const subtitleStyle = `color:${block.itemSubtitleColor || '#94a3b8'};font-size:${block.itemSubtitleSize || 10}px;line-height:${block.itemSubtitleLineHeight || 1.2};text-align:${block.itemSubtitleAlign || 'left'};`;
+
+                return `
+                <div class="feature-card" style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #f8fafc; display: flex; align-items: center; gap: 15px;">
+                    <div class="feature-icon" style="width: 40px; height: 40px; shrink-0; border-radius: 12px; background: #f8fafc; display: flex; align-items: center; justify-center; padding: 8px;">
                         Icon: ${item.icon}
                     </div>
-                    <h4 style="margin: 0 0 4px; font-weight: 900; color: #1e293b;">${item.title}</h4>
-                    <span style="font-size: 10px; text-transform: uppercase; color: #94a3b8;">${item.subtitle}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 4px; font-weight: 900; ${titleStyle}">${item.title}</h4>
+                        <span style="text-transform: uppercase; font-weight: 700; tracking-wider; ${subtitleStyle}">${item.subtitle}</span>
+                    </div>
                 </div>
-            `).join('');
+            `;}).join('');
+
+            const leftBgCSS = block.leftBgType === 'solid'
+                ? `background-color:${block.leftBgColor || '#0a1d56'};`
+                : `background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%);`;
 
             return `
-                <div class="feature-section" style="display: flex; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);">
-                    <div class="feature-info" style="width: 50%; padding: 60px; background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%); color: #fff;">
-                        <span style="font-size: 14px; text-transform: uppercase; opacity: 0.8;">${block.subtitle}</span>
-                        <h2 style="font-size: 36px; font-weight: 700; margin: 8px 0 16px;">${block.title}</h2>
-                        <p style="opacity: 0.9; line-height: 1.6;">${block.description}</p>
+                <div class="feature-section" style="display: flex; flex-direction: row; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);">
+                    <div class="feature-info" style="width: 50%; padding: 60px; ${leftBgCSS} color: #fff;">
+                        <span style="display: block; margin-bottom: ${block.leftSubtitleMarginBottom ?? 8}px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: ${block.leftSubtitleColor || '#ffb300'}; font-size: ${block.leftSubtitleSize ? `${block.leftSubtitleSize}px` : '14px'}; line-height: ${block.leftSubtitleLineHeight || 1.2};">${block.subtitle}</span>
+                        <h2 style="font-weight: 900; margin: 0 0 ${block.leftTitleMarginBottom ?? 16}px 0; color: ${block.leftTitleColor || '#ffffff'}; font-size: ${block.leftTitleSize ? `${block.leftTitleSize}px` : '42px'}; line-height: ${block.leftTitleLineHeight || 1.2};">${block.title}</h2>
+                        <p style="margin: 0; color: ${block.leftDescColor || '#e2e8f0'}; font-size: ${block.leftDescSize ? `${block.leftDescSize}px` : '16px'}; line-height: ${block.leftDescLineHeight || 1.6};">${block.description}</p>
                     </div>
                     <div class="feature-grid" style="width: 50%; padding: 40px; background: #f8fafc; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         ${featuresHTML}
@@ -1339,6 +1394,26 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks, templateKey, setTem
 
                                 {block.type === BLOCK_TYPES.LIST && (
                                     <div className="space-y-4 mt-4 text-slate-400">
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-[#00c3c0] flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#00c3c0]" />
+                                                Bullet Style
+                                            </Label>
+                                            <ShadSelect value={s.listStyleType || 'disc'} onValueChange={(val) => set('listStyleType', val)}>
+                                                <ShadSelectTrigger className="h-9 rounded-xl border-slate-200 text-xs">
+                                                    <ShadSelectValue placeholder="Select style" />
+                                                </ShadSelectTrigger>
+                                                <ShadSelectContent>
+                                                    <ShadSelectItem value="disc">Disc (●)</ShadSelectItem>
+                                                    <ShadSelectItem value="circle">Circle (○)</ShadSelectItem>
+                                                    <ShadSelectItem value="square">Square (■)</ShadSelectItem>
+                                                    <ShadSelectItem value="decimal">Numbers (1, 2, 3)</ShadSelectItem>
+                                                    <ShadSelectItem value="lower-alpha">Letters (a, b, c)</ShadSelectItem>
+                                                    <ShadSelectItem value="none">None</ShadSelectItem>
+                                                </ShadSelectContent>
+                                            </ShadSelect>
+                                        </div>
+
                                         <div className="space-y-3">
                                             <Label className="text-[10px] font-bold uppercase tracking-wider text-[#00c3c0] flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-[#00c3c0]" />
