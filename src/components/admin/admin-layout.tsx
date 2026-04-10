@@ -36,7 +36,8 @@ import {
   BarChart3,
   TrendingUp,
   Globe,
-  DollarSign
+  DollarSign,
+  Layers
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -132,6 +133,7 @@ const navigation: NavItem[] = [
     ],
   },
   { name: 'Pages', href: '/admin/pages', icon: FileText },
+  { name: 'Sections', href: '/admin/sections', icon: Layers },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

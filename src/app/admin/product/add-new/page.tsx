@@ -1226,6 +1226,9 @@ export default function AddNewProductPage() {
                     thumb_url: '',
                     gallery_items: [],
                     is_active: true,
+                    meta_title: '',
+                    meta_description: '',
+                    meta_image: '',
                   });
                   setSelectedThumbnail(null);
                   setSelectedGalleryImages([]);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
@@ -33,6 +33,14 @@ interface Order {
 }
 
 export default function OrderStatusPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>}>
+      <OrderStatusContent />
+    </Suspense>
+  );
+}
+
+function OrderStatusContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
   const { formatCurrency } = useCurrency();
