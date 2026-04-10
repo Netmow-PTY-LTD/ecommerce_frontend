@@ -3,7 +3,7 @@
 import { ReactNode, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LucideIcon } from 'lucide-react';
+import { Image, LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -73,6 +73,11 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  {
+    name: 'Media Library',
+    href: '/admin/gallery',
+    icon: Image,
+  },
   {
     name: 'Orders',
     icon: ShoppingCart,
