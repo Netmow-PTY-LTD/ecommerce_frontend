@@ -84,7 +84,7 @@ function CheckoutForm({
             }
             setBogoProductIds(ids);
             setBogoCouponCodes(codes);
-        }).catch(() => {});
+        }).catch(() => { });
     }, []);
 
     const handleApplyCoupon = async () => {
@@ -317,8 +317,8 @@ function CheckoutForm({
 
             // Show detailed error message
             const errorMessage = error.response?.data?.message ||
-                                error.message ||
-                                'Order processing failed';
+                error.message ||
+                'Order processing failed';
             toast.error(errorMessage, { duration: 5000 });
         } finally {
             setIsProcessing(false);
@@ -1016,7 +1016,7 @@ function CheckoutPageContent() {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="bg-secondary/30 border-b border-border">
+            <div className="bg-secondary/30 border-b border-border py-1">
                 <div className="container px-4 py-4">
                     <Link href="/cart" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
                         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -1025,35 +1025,37 @@ function CheckoutPageContent() {
                 </div>
             </div>
 
-            <div className="container px-4 py-8 mx-auto">
-                <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+            <section className='py-10'>
+                <div className="container mx-auto">
+                    <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
-                <CheckoutForm
-                    formData={formData}
-                    setFormData={setFormData}
-                    errors={errors}
-                    setErrors={setErrors}
-                    isProcessing={isProcessing}
-                    setIsProcessing={setIsProcessing}
-                    finalTotal={finalTotal}
-                    clearCart={clearCart}
-                    items={items}
-                    imageErrors={imageErrors}
-                    setImageErrors={setImageErrors}
-                    cartTotals={cartTotals}
-                    paymentMethod={paymentMethod}
-                    setPaymentMethod={setPaymentMethod}
-                    formatCurrency={formatCurrency}
-                    currency={currency}
-                    isAuthenticated={isAuthenticated}
-                    customer={customer}
-                    appliedCoupon={coupon}
-                    discountAmount={discountAmount}
-                    freeShipping={freeShipping}
-                    applyCoupon={applyCoupon}
-                    removeCoupon={removeCoupon}
-                />
-            </div>
+                    <CheckoutForm
+                        formData={formData}
+                        setFormData={setFormData}
+                        errors={errors}
+                        setErrors={setErrors}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                        finalTotal={finalTotal}
+                        clearCart={clearCart}
+                        items={items}
+                        imageErrors={imageErrors}
+                        setImageErrors={setImageErrors}
+                        cartTotals={cartTotals}
+                        paymentMethod={paymentMethod}
+                        setPaymentMethod={setPaymentMethod}
+                        formatCurrency={formatCurrency}
+                        currency={currency}
+                        isAuthenticated={isAuthenticated}
+                        customer={customer}
+                        appliedCoupon={coupon}
+                        discountAmount={discountAmount}
+                        freeShipping={freeShipping}
+                        applyCoupon={applyCoupon}
+                        removeCoupon={removeCoupon}
+                    />
+                </div>
+            </section>
         </div>
     );
 }
