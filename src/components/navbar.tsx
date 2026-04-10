@@ -310,13 +310,13 @@ export function Navbar() {
                             </Link>
                         ))}
                         <div className="pt-4 mt-4 border-t border-border space-y-2">
-                            <Link href={isAuthenticated ? "/account" : "/login"} onClick={() => setIsMenuOpen(false)}>
+                            <Link href={isAuthenticated ? "/account" : "/login"} onClick={() => setIsMenuOpen(false)} className='block'>
                                 <Button variant="outline" className="w-full justify-start gap-2">
                                     <User className="h-4 w-4" />
                                     {isAuthenticated ? `${customer?.name || 'My Account'}` : 'Sign In'}
                                 </Button>
                             </Link>
-                            <Link href="/wishlist" onClick={() => setIsMenuOpen(false)}>
+                            <Link href="/wishlist" onClick={() => setIsMenuOpen(false)} className='block'>
                                 <Button variant="outline" className="w-full justify-start gap-2">
                                     <Heart className="h-4 w-4" /> Wishlist
                                     {wishlistCount > 0 && (
@@ -326,7 +326,7 @@ export function Navbar() {
                                     )}
                                 </Button>
                             </Link>
-                            <Link href="/compare" onClick={() => setIsMenuOpen(false)}>
+                            <Link href="/compare" onClick={() => setIsMenuOpen(false)} className='block'>
                                 <Button variant="outline" className="w-full justify-start gap-2">
                                     <GitCompare className="h-4 w-4" /> Compare
                                     {compareCount > 0 && (

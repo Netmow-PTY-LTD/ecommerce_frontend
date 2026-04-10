@@ -162,7 +162,7 @@ export default function EmailTemplatesPage() {
       variables: Array.isArray(tpl.variables)
         ? (tpl.variables as string[]).join(', ')
         : typeof tpl.variables === 'string'
-          ? (() => { try { return JSON.parse(tpl.variables).join(', '); } catch { return String(tpl.variables); } }()
+          ? (() => { try { return JSON.parse(tpl.variables).join(', '); } catch { return String(tpl.variables); } })()
           : '',
       is_active: !!tpl.is_active,
     });
@@ -482,7 +482,7 @@ export default function EmailTemplatesPage() {
                   <textarea
                     value={form.body_html}
                     onChange={(e) => setForm({ ...form, body_html: e.target.value })}
-                    placeholder={`<h1>Hello {{customer_name}},</h1>\n<p>Thank you for your order #{{order_number}}!</p>\n<p>Total: ${{order_total}}</p>`}
+                    placeholder={`<h1 Hello customer_name,</h1>\n<p>Thank you for your order #order_number!</p>\n<p>Total: $order_total</p>`}
                     rows={12}
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-y"
                   />

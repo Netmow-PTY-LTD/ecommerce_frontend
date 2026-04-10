@@ -1,7 +1,5 @@
 "use client";
 
-import { formatCurrency as formatCurrencyUtil } from './utils';
-
 let currentCurrency: string = '';
 
 export function setGlobalCurrency(currency: string) {
@@ -13,5 +11,9 @@ export function getGlobalCurrency(): string {
 }
 
 export function formatCurrency(amount: number, currency?: string): string {
-    return formatCurrencyUtil(amount, currency || currentCurrency || 'USD');
+    const cur = currency || currentCurrency || 'USD';
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: cur,
+    }).format(amount);
 }

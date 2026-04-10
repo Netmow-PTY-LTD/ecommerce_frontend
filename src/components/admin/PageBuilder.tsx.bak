@@ -618,7 +618,7 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
         case BLOCK_TYPES.IMAGE:
             return { ...base, src: 'https://images.unsplash.com/photo-1579389083078-4e7018379f7e?auto=format&fit=crop&q=80&w=1170', alt: 'Page image', styles: { ...defaultBlockStyles, paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 0 } };
         case BLOCK_TYPES.BUTTON:
-            return { ...base, text: 'Click Here', url: '#', target: '_self', styles: { ...defaultBlockStyles, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, backgroundColor: '#00c3c0', color: '#FFFFFF', textAlign: 'center', borderRadius: 12, widthType: 'auto', customWidth: 100 } };
+            return { ...base, text: 'Click Here', url: '#', target: '_self', styles: { ...defaultBlockStyles, paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0, backgroundColor: '#00c3c0', color: '#FFFFFF', textAlign: 'center', borderRadius: 12 } };
         case BLOCK_TYPES.DIVIDER:
             return { ...base, styles: { ...defaultBlockStyles, paddingTop: 8, paddingBottom: 8 } };
         case BLOCK_TYPES.SPACER:
@@ -639,18 +639,11 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
             return {
                 ...base,
                 layoutKey,
-                columnGap: 5,
                 styles: { ...defaultBlockStyles, paddingLeft: 8, paddingRight: 8, paddingTop: 8, paddingBottom: 8, backgroundColor: '#FFFFFF' },
                 columns: ratios.map((ratio: any) => ({
                     id: Math.random().toString(36).slice(2, 10),
                     ratio,
                     blocks: [],
-                    gap: 5,
-                    padding: 5,
-                    borderWidth: 0,
-                    borderColor: '#e2e8f0',
-                    borderStyle: 'solid',
-                    borderRadius: 0
                 })),
             };
         }
@@ -665,7 +658,7 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
                     { question: 'What services do you offer?', answer: 'We offer a wide range of logistics and supply chain solutions.' },
                     { question: 'How can I track my order?', answer: 'You can track your order using the tracking number provided in your email.' }
                 ],
-                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc', fontSize: 36 }
+                styles: { ...defaultBlockStyles, backgroundColor: '#f8fafc' }
             };
         case BLOCK_TYPES.FEATURE_SECTION:
             return {
@@ -673,28 +666,8 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
                 title: 'Global Express Logistics',
                 subtitle: 'Our Services',
                 description: 'We provide specialized logistics solutions tailored to your business needs.',
-                leftBgType: 'gradient',
-                leftBgColor: '#0a1d56',
                 gradientStart: '#0a1d56',
                 gradientEnd: '#d2152a',
-                leftSubtitleColor: '#ffb300',
-                leftSubtitleSize: 14,
-                leftSubtitleLineHeight: 1.2,
-                leftTitleColor: '#ffffff',
-                leftTitleSize: 42,
-                leftTitleLineHeight: 1.2,
-                leftContentGap: 16,
-                leftDescColor: '#e2e8f0',
-                leftDescSize: 16,
-                leftDescLineHeight: 1.6,
-                itemTitleColor: '#1e293b',
-                itemTitleSize: 14,
-                itemTitleLineHeight: 1.2,
-                itemTitleAlign: 'left',
-                itemSubtitleColor: '#94a3b8',
-                itemSubtitleSize: 10,
-                itemSubtitleLineHeight: 1.2,
-                itemSubtitleAlign: 'left',
                 items: [
                     { icon: 'Truck', title: 'Road Freight', subtitle: 'Fast Delivery' },
                     { icon: 'Ship', title: 'Ocean Freight', subtitle: 'Global Shipping' }
@@ -729,48 +702,6 @@ function newBlock(type: string, extra: Record<string, any> = {}) {
 }
 
 // ─────────────────────────────────────────
-//  Sortable Child Block (for inside columns)
-// ─────────────────────────────────────────
-interface SortableChildBlockProps {
-    block: any;
-    isSelected: boolean;
-    onSelect: (id: string) => void;
-    onDelete: (id: string) => void;
-    onUpdateContent: (id: string, content: any, field: string) => void;
-    viewMode?: string;
-}
-
-function SortableChildBlock({ block, isSelected, onSelect, onDelete, onUpdateContent, viewMode }: SortableChildBlockProps) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
-    const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 };
-
-    return (
-        <div 
-            ref={setNodeRef} 
-            onClick={(e) => { e.stopPropagation(); onSelect(block.id); }} 
-            style={style}
-            className={`group/child relative rounded-lg border-2 transition-all cursor-pointer ${isSelected ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'}`}
-        >
-            <div {...attributes} {...listeners}
-                className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/child:opacity-100 cursor-grab active:cursor-grabbing p-1 text-slate-300 hover:text-slate-500 transition-opacity z-20">
-                <GripVertical className="w-3 h-3" />
-            </div>
-            
-            {isSelected && (
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onDelete(block.id); }}
-                    className="absolute -right-3 -top-3 z-30 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
-                >
-                    <Trash2 className="w-3 h-3" />
-                </button>
-            )}
-            
-            <BlockRenderer block={block} onUpdateContent={onUpdateContent} viewMode={viewMode} />
-        </div>
-    );
-}
-
-// ─────────────────────────────────────────
 //  Column Cell – drop zone for child blocks
 // ─────────────────────────────────────────
 interface ColumnCellProps {
@@ -791,17 +722,8 @@ function ColumnCell({
 }: ColumnCellProps) {
     return (
         <div
-            style={{ 
-                flex: isMobile ? '1 1 100%' : column.ratio,
-                gap: `${column.gap ?? 5}px`,
-                padding: `${column.padding ?? 5}px`,
-                borderWidth: `${column.borderWidth || 0}px`,
-                borderColor: column.borderColor || '#e2e8f0',
-                borderStyle: column.borderStyle || 'solid',
-                borderRadius: `${column.borderRadius || 0}px`,
-                boxSizing: 'border-box'
-            }}
-            className="min-h-[80px] rounded-xl flex flex-col relative group/col transition-all"
+            style={{ flex: isMobile ? '1 1 100%' : column.ratio }}
+            className="min-h-[80px] border-2 border-dashed border-slate-200 rounded-xl p-2 flex flex-col gap-2 relative group/col"
         >
             {column.blocks.length === 0 && (
                 <div className="flex-1 flex items-center justify-center text-[9px] font-bold uppercase tracking-widest text-slate-300 select-none pointer-events-none">
@@ -809,19 +731,23 @@ function ColumnCell({
                 </div>
             )}
 
-            <SortableContext items={column.blocks.map((b: any) => b.id)} strategy={verticalListSortingStrategy}>
-                {column.blocks.map((childBlock: any) => (
-                    <SortableChildBlock
-                        key={childBlock.id}
-                        block={childBlock}
-                        isSelected={selectedId === childBlock.id}
-                        onSelect={onSelect}
-                        onDelete={(id) => onDeleteChild(parentBlockId, colIndex, id)}
-                        onUpdateContent={updateBlockContent}
-                        viewMode={isMobile ? 'mobile' : 'desktop'}
-                    />
-                ))}
-            </SortableContext>
+            {column.blocks.map((childBlock: any) => (
+                <div
+                    key={childBlock.id}
+                    onClick={(e) => { e.stopPropagation(); onSelect(childBlock.id); }}
+                    className={`relative rounded-lg border-2 transition-all cursor-pointer group/child ${selectedId === childBlock.id ? 'border-[#00c3c0] ring-4 ring-[#00c3c0]/10' : 'border-transparent hover:border-slate-200'}`}
+                >
+                    {selectedId === childBlock.id && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDeleteChild(parentBlockId, colIndex, childBlock.id); }}
+                            className="absolute -right-3 -top-3 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg transition-colors"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    )}
+                    <BlockRenderer block={childBlock} onUpdateContent={updateBlockContent} />
+                </div>
+            ))}
 
             <div className="opacity-0 group-hover/col:opacity-100 transition-opacity flex justify-center mt-1">
                 <QuickAddMenu onAdd={(type) => onAddBlockToColumn(parentBlockId, colIndex, type)} />
@@ -878,7 +804,7 @@ function QuickAddMenu({ onAdd }: { onAdd: (type: string) => void }) {
 // Helper to wrap content with parentClass if needed (for editor)
 const wrapWithParentClass = (block: any, content: React.ReactNode, parentStyle: React.CSSProperties, innerStyle: React.CSSProperties) => {
     const id = block.customId || `blk-${block.id}`;
-    const leanTypes = [BLOCK_TYPES.COLUMNS, BLOCK_TYPES.TEXT, BLOCK_TYPES.HEADING, BLOCK_TYPES.LIST, BLOCK_TYPES.BUTTON, BLOCK_TYPES.IMAGE];
+    const leanTypes = [BLOCK_TYPES.COLUMNS, BLOCK_TYPES.TEXT, BLOCK_TYPES.HEADING, BLOCK_TYPES.LIST];
     const isLean = leanTypes.includes(block.type);
 
     const hasParent = !!block.parentClass;
@@ -898,16 +824,11 @@ const wrapWithParentClass = (block: any, content: React.ReactNode, parentStyle: 
     const useDefaultParent = !isLean && !hasParent;
 
     if (hasCustom || useDefaultCustom) {
-        const skipSpacer = [BLOCK_TYPES.COLUMNS, BLOCK_TYPES.IMAGE].includes(block.type);
         result = (
             <div id={id} className={hasCustom ? block.customClass : "container mx-auto"} style={innerStyle}>
-                {skipSpacer ? (
-                    result
-                ) : (
-                    <div className={block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}>
-                        {result}
-                    </div>
-                )}
+                <div className={block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}>
+                    {result}
+                </div>
             </div>
         );
     }
@@ -986,19 +907,10 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 
                 {(() => {
                     // If no wrappers are used, merge parent/inner styles onto col-row
-                    const colGap = block.columnGap ?? 5;
-                    const colRowStyle: React.CSSProperties = { display: 'flex', gap: `${colGap}px`, flexWrap: 'wrap' };
+                    const colRowStyle: React.CSSProperties = { display: 'flex', gap: '8px', flexWrap: 'wrap' };
                     if (!block.parentClass && !block.customClass) {
-                        const isDefault = (val: any) => !val || val === '0px' || val === 0 || val === 'transparent' || val === 'none' || val === 'center center' || val === 'cover' || val === 'no-repeat';
-
-                        Object.entries(parentStyle).forEach(([key, val]) => {
-                            if (!isDefault(val)) (colRowStyle as any)[key] = val;
-                        });
-                        Object.entries(innerStyle).forEach(([key, val]) => {
-                            if (!isDefault(val) && key !== 'borderColor' && key !== 'borderStyle') {
-                                (colRowStyle as any)[key] = val;
-                            }
-                        });
+                        Object.assign(colRowStyle, parentStyle);
+                        Object.assign(colRowStyle, innerStyle);
                     }
 
                     return wrapWithParentClass(
@@ -1046,8 +958,7 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
                 </button>
             )}
             {/* Editor-only global styles for clean focus rings */}
-            <style dangerouslySetInnerHTML={{
-                __html: `
+            <style dangerouslySetInnerHTML={{ __html: `
                 [contenteditable="true"]:focus {
                     outline: 2px solid #00c3c0;
                     outline-offset: 2px;
@@ -1068,16 +979,10 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, selectedId, onDe
 // ─────────────────────────────────────────
 function FAQSectionRenderer({ block, viewMode }: { block: any, viewMode?: string }) {
     const [openIndex, setOpenIndex] = React.useState<number | null>(0);
-    const s = block.styles || {};
 
     return (
         <>
-            <h2 className="title" style={{ 
-                textAlign: (s.textAlign || 'center') as any,
-                fontSize: s.fontSize ? `${s.fontSize}px` : undefined,
-                lineHeight: s.lineHeight,
-                color: s.color
-            }}>
+            <h2 className="title text-center">
                 {block.heading}{' '}
                 <span style={{ color: block.highlightColor || '#ffb300' }}>({block.headingHighlight || 'FAQs'})</span>
             </h2>
@@ -1094,20 +999,11 @@ function FAQSectionRenderer({ block, viewMode }: { block: any, viewMode?: string
                                 className="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors"
                                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
                             >
-                                <span style={{
-                                    fontWeight: 600,
-                                    fontSize: s.qFontSize ? `${s.qFontSize}px` : '15px',
-                                    color: s.qColor || '#334155',
-                                    lineHeight: s.qLineHeight || 1.4
-                                }}>{item.question}</span>
+                                <span className="font-semibold text-slate-700 text-[15px]">{item.question}</span>
                                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
                             </div>
                             {openIndex === idx && (
-                                <div className="px-[18px] pb-4 animate-in slide-in-from-top-2 duration-300" style={{
-                                    fontSize: s.aFontSize ? `${s.aFontSize}px` : '14px',
-                                    color: s.aColor || '#64748b',
-                                    lineHeight: s.aLineHeight || 1.6
-                                }}>
+                                <div className="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed animate-in slide-in-from-top-2 duration-300">
                                     {item.answer}
                                 </div>
                             )}
@@ -1177,12 +1073,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
     const parentStyle = {
         paddingTop: `${s.paddingTop || 0}px`,
         paddingBottom: `${s.paddingBottom || 0}px`,
-        paddingLeft: s.paddingLeft ? `${s.paddingLeft}px` : undefined,
-        paddingRight: s.paddingRight ? `${s.paddingRight}px` : undefined,
         marginTop: `${s.marginTop || 0}px`,
         marginBottom: `${s.marginBottom || 0}px`,
-        marginLeft: s.marginLeft ? `${s.marginLeft}px` : undefined,
-        marginRight: s.marginRight ? `${s.marginRight}px` : undefined,
         backgroundColor: s.backgroundColor || 'transparent',
         backgroundImage: (s.backgroundImages && s.backgroundImages.length > 0)
             ? s.backgroundImages.map((img: string) => `url(${img})`).join(', ')
@@ -1203,6 +1095,13 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
     } as any;
 
     const blockStyle: React.CSSProperties = {
+        paddingLeft: s.paddingLeft, paddingRight: s.paddingRight,
+        marginLeft: s.marginLeft, marginRight: s.marginRight,
+        paddingTop: 0,
+        paddingBottom: 0,
+        marginTop: 0,
+        marginBottom: 0,
+        backgroundColor: 'transparent',
         borderRadius: s.borderRadius,
         borderTopWidth: `${s.borderTopWidth || 0}px`,
         borderBottomWidth: `${s.borderBottomWidth || 0}px`,
@@ -1210,9 +1109,13 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
         borderRightWidth: `${s.borderRightWidth || 0}px`,
         borderColor: s.borderColor || '#e2e8f0',
         borderStyle: s.borderStyle || 'solid',
-        boxSizing: 'border-box' as const,
+        backgroundImage: 'none',
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
         position: 'relative' as const,
         overflow: 'hidden' as const,
+        '--highlight-color': block.highlightColor || '#d2152a',
     } as any;
 
     const textStyle = {
@@ -1288,13 +1191,13 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             // Merge layout/visual styles ONLY if they are not being wrapped, and only if changed
             if (!block.parentClass && !block.customClass) {
                 const isDefault = (val: any) => !val || val === '0px' || val === 0 || val === 'transparent' || val === 'none' || val === 'center center' || val === 'cover' || val === 'no-repeat';
-
+                
                 Object.entries(parentStyle).forEach(([key, val]) => {
                     if (!isDefault(val)) dynamicStyles[key as any] = val as any;
                 });
                 Object.entries(blockStyle).forEach(([key, val]) => {
                     if (!isDefault(val) && key !== 'borderColor' && key !== 'borderStyle') {
-                        dynamicStyles[key as any] = val as any;
+                         dynamicStyles[key as any] = val as any;
                     }
                 });
             }
@@ -1359,100 +1262,55 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
 
             return wrapWithParentClass(block, result, parentStyle, blockStyle);
         }
-        case BLOCK_TYPES.IMAGE: {
-            const justify = s.textAlign === 'center' ? 'center' : (s.textAlign === 'right' ? 'flex-end' : 'flex-start');
+        case BLOCK_TYPES.IMAGE:
             return wrapWithParentClass(
                 block,
-                <div style={{ display: 'flex', justifyContent: justify, width: '100%' }}>
-                    <img 
-                        src={block.src} 
-                        alt={block.alt} 
-                        style={{ 
-                            maxWidth: '100%', 
-                            height: 'auto', 
-                            display: 'block', 
-                            borderRadius: s.borderRadius || 0 
-                        }} 
-                    />
-                </div>,
+                <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />,
                 parentStyle,
                 divStyle
             );
-        }
         case BLOCK_TYPES.BUTTON:
             return wrapWithParentClass(
                 block,
-                (() => {
-                    const widthType = s.widthType || 'auto';
-                    const customWidth = s.customWidth || 100;
-                    const widthUnit = s.widthUnit || '%';
-                    
-                    const btnStyles: any = {
-                        backgroundColor: s.backgroundColor,
-                        color: s.color,
-                        borderRadius: s.borderRadius,
-                        fontSize: s.fontSize,
-                        padding: `${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px`,
-                        display: widthType === 'auto' ? 'inline-block' : 'block',
-                        width: widthType === 'full' ? '100%' : (widthType === 'custom' ? `${customWidth}${widthUnit}` : 'auto'),
-                        textAlign: 'center',
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                        whiteSpace: 'nowrap',
-                        boxSizing: 'border-box',
-                        transition: 'all 0.2s ease',
-                        borderStyle: s.borderStyle || 'none',
-                        borderWidth: s.borderTopWidth || 0,
-                        borderColor: s.borderColor || 'transparent',
-                    };
-
-                    const containerStyles: any = {
-                        display: 'flex',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
-                    };
-
-                    // Only apply spacing/positioning to container, NOT decor
-                    if (!block.parentClass && !block.customClass) {
-                        const isLayoutProp = (k: string) => k.startsWith('margin') || k.startsWith('padding') || k === 'width' || k === 'height';
-                        Object.entries(parentStyle).forEach(([key, val]) => { 
-                            if (isLayoutProp(key)) containerStyles[key] = val; 
-                        });
-                        Object.entries(blockStyle).forEach(([key, val]) => { 
-                            if (isLayoutProp(key) && !key.startsWith('padding')) containerStyles[key] = val; 
-                        });
-                    }
-
-                    return (
-                        <div style={containerStyles}>
-                            <a
-                                href={block.url}
-                                target={block.target || '_self'}
-                                onClick={(e) => e.preventDefault()}
-                                contentEditable
-                                suppressContentEditableWarning
-                                onBlur={(e) => {
-                                    const newText = (e.currentTarget as HTMLElement).innerText;
-                                    if (newText !== block.text) {
-                                        onUpdateContent(block.id, newText, 'text');
-                                    }
-                                }}
-                                onPaste={(e) => {
-                                    e.preventDefault();
-                                    const text = e.clipboardData.getData('text/plain');
-                                    document.execCommand('insertText', false, text);
-                                }}
-                                className="outline-none focus:ring-2 focus:ring-[#00c3c0]/20 rounded transition-all"
-                                style={btnStyles}
-                            >
-                                {block.text}
-                            </a>
-                        </div>
-                    );
-                })(),
+                <div style={{
+                    display: 'flex',
+                    justifyContent: s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start',
+                }}>
+                    <a
+                        href={block.url}
+                        target={block.target || '_self'}
+                        onClick={(e) => e.preventDefault()}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                            const newText = (e.currentTarget as HTMLElement).innerText;
+                            if (newText !== block.text) {
+                                onUpdateContent(block.id, newText, 'text');
+                            }
+                        }}
+                        onPaste={(e) => {
+                            e.preventDefault();
+                            const text = e.clipboardData.getData('text/plain');
+                            document.execCommand('insertText', false, text);
+                        }}
+                        className="outline-none focus:ring-2 focus:ring-white/50 px-1 rounded transition-all"
+                        style={{
+                            backgroundColor: s.backgroundColor,
+                            color: s.color,
+                            borderRadius: s.borderRadius,
+                            fontSize: s.fontSize,
+                            padding: `${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px`,
+                            display: 'inline-block',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {block.text}
+                    </a>
+                </div>,
                 parentStyle,
-                blockStyle
+                divStyle
             );
         case BLOCK_TYPES.DIVIDER:
             return wrapWithParentClass(
@@ -1572,34 +1430,20 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
             );
 
         case BLOCK_TYPES.FEATURE_SECTION:
-            const leftBgStyle = block.leftBgType === 'solid' 
-                ? { backgroundColor: block.leftBgColor || '#0a1d56' }
-                : { background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)` };
-
             return wrapWithParentClass(
                 block,
                 <div className="flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
                     <div
                         className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative"
-                        style={leftBgStyle}
+                        style={{
+                            background: `linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%)`
+                        }}
                     >
                         <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none" />
-                        <div className="spacer flex flex-col" style={{ gap: block.leftContentGap ?? 16 }}>
-                            <h3 className="uppercase font-bold tracking-wider" style={{
-                                color: block.leftSubtitleColor || '#ffb300',
-                                fontSize: block.leftSubtitleSize ? `${block.leftSubtitleSize}px` : '14px',
-                                lineHeight: block.leftSubtitleLineHeight || 1.2
-                            }}>{block.subtitle}</h3>
-                            <h2 className="font-black" style={{
-                                color: block.leftTitleColor || '#ffffff',
-                                fontSize: block.leftTitleSize ? `${block.leftTitleSize}px` : '42px',
-                                lineHeight: block.leftTitleLineHeight || 1.2
-                            }}>{block.title}</h2>
-                            <p style={{
-                                color: block.leftDescColor || '#e2e8f0',
-                                fontSize: block.leftDescSize ? `${block.leftDescSize}px` : '16px',
-                                lineHeight: block.leftDescLineHeight || 1.6
-                            }}>{block.description}</p>
+                        <div className="spacer">
+                            <h3 className="subtitle">{block.subtitle}</h3>
+                            <h2 className="title">{block.title}</h2>
+                            <p className="paragraph">{block.description}</p>
                         </div>
                     </div>
 
@@ -1614,28 +1458,8 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
                                         <IconComponent icon={item.icon || 'Zap'} className="w-6 h-6" />
                                     </div>
                                     <div className="flex flex-col">
-                                        <h4 
-                                            className="font-black mb-0.5"
-                                            style={{ 
-                                                color: block.itemTitleColor || '#1e293b',
-                                                fontSize: block.itemTitleSize ? `${block.itemTitleSize}px` : '14px',
-                                                lineHeight: block.itemTitleLineHeight || 1.2,
-                                                textAlign: (block.itemTitleAlign || 'left') as any
-                                            }}
-                                        >
-                                            {item.title}
-                                        </h4>
-                                        <span 
-                                            className="uppercase font-bold tracking-wider transition-colors"
-                                            style={{ 
-                                                color: block.itemSubtitleColor || '#94a3b8',
-                                                fontSize: block.itemSubtitleSize ? `${block.itemSubtitleSize}px` : '10px',
-                                                lineHeight: block.itemSubtitleLineHeight || 1.2,
-                                                textAlign: (block.itemSubtitleAlign || 'left') as any
-                                            }}
-                                        >
-                                            {item.subtitle}
-                                        </span>
+                                        <h4 className="font-black text-slate-800 text-sm mb-0.5">{item.title}</h4>
+                                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">{item.subtitle}</span>
                                     </div>
                                 </div>
                             ))}
@@ -1681,15 +1505,16 @@ function blockToHTML(block: any): string {
     // Always split styles between parent and inner
     parentStyleProps.push(`padding-top: ${s.paddingTop || 0}px`);
     parentStyleProps.push(`padding-bottom: ${s.paddingBottom || 0}px`);
-    parentStyleProps.push(`padding-left: ${s.paddingLeft || 0}px`);
-    parentStyleProps.push(`padding-right: ${s.paddingRight || 0}px`);
     parentStyleProps.push(`margin-top: ${s.marginTop || 0}px`);
     parentStyleProps.push(`margin-bottom: ${s.marginBottom || 0}px`);
-    parentStyleProps.push(`margin-left: ${s.marginLeft || 0}px`);
-    parentStyleProps.push(`margin-right: ${s.marginRight || 0}px`);
     parentStyleProps.push(`background-color: ${s.backgroundColor || 'transparent'}`);
     if (bgImageCSS) parentStyleProps.push(bgImageCSS);
     parentStyleProps.push(`--highlight-color: ${block.highlightColor || '#d2152a'}`);
+
+    innerStyleProps.push(`padding-left: ${s.paddingLeft || 0}px`);
+    innerStyleProps.push(`padding-right: ${s.paddingRight || 0}px`);
+    innerStyleProps.push(`margin-left: ${s.marginLeft || 0}px`);
+    innerStyleProps.push(`margin-right: ${s.marginRight || 0}px`);
 
     innerStyleProps.push(`border-top-width: ${s.borderTopWidth || 0}px`);
     innerStyleProps.push(`border-bottom-width: ${s.borderBottomWidth || 0}px`);
@@ -1698,6 +1523,9 @@ function blockToHTML(block: any): string {
     innerStyleProps.push(`border-color: ${s.borderColor || '#e2e8f0'}`);
     innerStyleProps.push(`border-style: ${s.borderStyle || 'solid'}`);
     innerStyleProps.push(`border-radius: ${s.borderRadius || 0}px`);
+    innerStyleProps.push(`box-sizing: border-box`);
+    innerStyleProps.push(`position: relative`);
+    innerStyleProps.push(`overflow: hidden`);
 
     const pStyle = parentStyleProps.join('; ');
     const iStyle = innerStyleProps.join('; ');
@@ -1706,7 +1534,7 @@ function blockToHTML(block: any): string {
         const id = block.customId || `blk-${block.id}`;
         const hasParent = !!block.parentClass;
         const hasCustom = !!block.customClass;
-        const leanTypes = [BLOCK_TYPES.COLUMNS, BLOCK_TYPES.TEXT, BLOCK_TYPES.HEADING, BLOCK_TYPES.LIST, BLOCK_TYPES.BUTTON, BLOCK_TYPES.IMAGE];
+        const leanTypes = [BLOCK_TYPES.COLUMNS, BLOCK_TYPES.TEXT, BLOCK_TYPES.HEADING, BLOCK_TYPES.LIST];
         const isLean = leanTypes.includes(block.type);
 
         if (isLean && !hasParent && !hasCustom) {
@@ -1719,11 +1547,7 @@ function blockToHTML(block: any): string {
 
         if (hasCustom || useDefaultCustom) {
             const customClassName = hasCustom ? block.customClass : "container mx-auto";
-            if ([BLOCK_TYPES.COLUMNS, BLOCK_TYPES.IMAGE].includes(block.type)) {
-                res = `<div id="${id}" class="${customClassName}" style="${iStyle}">${res}</div>`;
-            } else {
-                res = `<div id="${id}" class="${customClassName}" style="${iStyle}"><div class="${block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}">${res}</div></div>`;
-            }
+            res = `<div id="${id}" class="${customClassName}" style="${iStyle}"><div class="${block.type === BLOCK_TYPES.ACCORDION ? "w-full" : "spacer"}">${res}</div></div>`;
         }
 
         if (hasParent || useDefaultParent) {
@@ -1777,7 +1601,7 @@ function blockToHTML(block: any): string {
                 // If no wrappers are used, merge parent/inner styles ONLY if they are not default
                 if (!block.parentClass && !block.customClass) {
                     const isDefault = (s: string) => !s || s.includes(':0px') || s.includes(':0') || s.includes(':transparent') || s.includes(':none') || s.includes(':center center') || s.includes(':cover') || s.includes(':no-repeat');
-
+                    
                     pStyle.split(';').forEach(style => {
                         if (style && !isDefault(style)) overrides.push(style);
                     });
@@ -1797,30 +1621,10 @@ function blockToHTML(block: any): string {
             const content = `<style>${extraStyles}</style><${tag} class="${baseClasses}" ${listIdAttr} ${styleAttr}>${innerHTML}</${tag}>`;
             return wrap(content);
         }
-        case BLOCK_TYPES.IMAGE: {
-            const justify = s.textAlign === 'center' ? 'center' : (s.textAlign === 'right' ? 'flex-end' : 'flex-start');
-            return wrap(`<div style="display:flex;justify-content:${justify};width:100%;"><img src="${block.src}" alt="${block.alt}" style="max-width:100%;height:auto;display:block;border-radius:${s.borderRadius || 0}px;" /></div>`);
-        }
-        case BLOCK_TYPES.BUTTON: {
-            const widthType = s.widthType || 'auto';
-            const customWidth = s.customWidth || 100;
-            const widthUnit = s.widthUnit || '%';
-            const btnWidthStyle = widthType === 'full' ? 'width:100%;' : (widthType === 'custom' ? `width:${customWidth}${widthUnit};` : 'width:auto;');
-            const btnDisplay = widthType === 'auto' ? 'inline-block' : 'block';
-            const btnTextAlign = 'text-align:center;';
-
-            const btnBorder = (s.borderStyle && s.borderStyle !== 'none') ? `border:${s.borderTopWidth || 0}px ${s.borderStyle} ${s.borderColor || 'transparent'};` : '';
-
-            const containerOverrides: string[] = [];
-            if (!block.parentClass && !block.customClass) {
-                const isLayout = (s: string) => s.includes('margin') || s.includes('width') || s.includes('height');
-                pStyle.split(';').forEach(style => { if (style && isLayout(style)) containerOverrides.push(style); });
-                iStyle.split(';').forEach(style => { if (style && isLayout(style)) containerOverrides.push(style); });
-            }
-            const overStyle = containerOverrides.length > 0 ? `${containerOverrides.join(';')};` : '';
-            const btnTagStyle = `background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:${btnDisplay};${btnWidthStyle}${btnTextAlign}font-weight:700;text-decoration:none;white-space:nowrap;box-sizing:border-box;${btnBorder}`;
-            return wrap(`<div style="display:flex;width:100%;align-items:center;justify-content:${s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start'};${overStyle}"><a href="${block.url}" target="${block.target || '_self'}" style="${btnTagStyle}">${block.text}</a></div>`);
-        }
+        case BLOCK_TYPES.IMAGE:
+            return wrap(`<img src="${block.src}" alt="${block.alt}" style="width:100%;display:block;border-radius:${s.borderRadius || 0}px;" />`);
+        case BLOCK_TYPES.BUTTON:
+            return wrap(`<div style="display:flex;justify-content:${s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start'};"><a href="${block.url}" target="${block.target || '_self'}" style="background-color:${s.backgroundColor};color:${s.color};border-radius:${s.borderRadius}px;font-size:${s.fontSize}px;padding:${s.buttonPaddingY || 10}px ${s.buttonPaddingX || 28}px;display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;">${block.text}</a></div>`);
         case BLOCK_TYPES.DIVIDER:
             return wrap(`<hr style="border:none;border-top:1px solid ${s.color || '#e2e8f0'};" />`);
         case BLOCK_TYPES.SPACER:
@@ -1828,38 +1632,10 @@ function blockToHTML(block: any): string {
         case BLOCK_TYPES.COLUMNS: {
             const colHTMLs = block.columns.map((col: any) => {
                 const childHTML = col.blocks.map(blockToHTML).join('');
-                const colGap = col.gap ?? 5;
-                const colPadding = col.padding ?? 5;
-
-                const borderW = `${col.borderWidth || 0}px`;
-                const borderS = col.borderStyle || 'solid';
-                const borderC = col.borderColor || '#e2e8f0';
-                const bStyle = `border-width:${borderW};border-style:${borderS};border-color:${borderC};`;
-
-                const radiusS = `border-radius:${col.borderRadius || 0}px;`;
-                
-                // Mirror the exact structure and classes used in the PageBuilder editor (ColumnCell)
-                const colInnerClass = "min-h-[80px] rounded-xl flex flex-col relative group/col transition-all";
-                const colInnerStyle = `flex:1 1 0%;gap:${colGap}px;padding:${colPadding}px;${bStyle}${radiusS}box-sizing:border-box;overflow:hidden;`;
-                
-                return `<div class="col-block" style="flex:${col.ratio};min-width:0;"><div class="${colInnerClass}" style="${colInnerStyle}">${childHTML}</div></div>`;
+                return `<div class="col-block" style="flex:${col.ratio};min-width:0;">${childHTML}</div>`;
             }).join('');
-
-            const colOverrides: string[] = [];
-            if (!block.parentClass && !block.customClass) {
-                const isDefault = (s: string) => !s || s.includes(':0px') || s.includes(':0') || s.includes(':transparent') || s.includes(':none') || s.includes(':center center') || s.includes(':cover') || s.includes(':no-repeat');
-
-                pStyle.split(';').forEach(style => {
-                    if (style && !isDefault(style)) colOverrides.push(style);
-                });
-                iStyle.split(';').forEach(style => {
-                    if (style && !isDefault(style)) colOverrides.push(style);
-                });
-            }
-
-            const colGapGlobal = block.columnGap ?? 5;
-            const colRowStyleAttr = colOverrides.length > 0 ? `style="display:flex;gap:${colGapGlobal}px;flex-wrap:wrap;${colOverrides.filter(Boolean).join(';')}"` : `style="display:flex;gap:${colGapGlobal}px;flex-wrap:wrap;"`;
-            const colRow = `<div class="col-row" ${colRowStyleAttr}>${colHTMLs}</div>`;
+            
+            const colRow = `<div class="col-row" style="display:flex;gap:8px;flex-wrap:wrap;${(!block.parentClass && !block.customClass) ? `${pStyle};${iStyle}` : ''}">${colHTMLs}</div>`;
             return wrap(colRow);
         }
         case BLOCK_TYPES.ICON_BOX: {
@@ -1928,12 +1704,12 @@ function blockToHTML(block: any): string {
                 return `
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all">
                     <div class="p-4 flex justify-between items-center bg-white cursor-pointer hover:bg-slate-50/50 transition-colors" onclick="if(this.nextElementSibling.style.display==='none'){this.nextElementSibling.style.display='block';this.querySelector('svg').style.transform='rotate(180deg)'}else{this.nextElementSibling.style.display='none';this.querySelector('svg').style.transform='rotate(0deg)'}">
-                        <span style="font-weight: 600; font-size: ${s.qFontSize ? `${s.qFontSize}px` : '15px'}; color: ${s.qColor || '#334155'}; line-height: ${s.qLineHeight || 1.4};">${item.question}</span>
+                        <span class="font-semibold text-slate-700 text-[15px]">${item.question}</span>
                         <svg class="w-4 h-4 text-slate-400 transition-transform duration-300" style="transform: ${isFirstItem ? 'rotate(180deg)' : 'rotate(0deg)'}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m6 9 6 6 6-6"></path>
                         </svg>
                     </div>
-                    <div class="px-[18px] pb-4" style="display: ${isFirstItem ? 'block' : 'none'}; font-size: ${s.aFontSize ? `${s.aFontSize}px` : '14px'}; color: ${s.aColor || '#64748b'}; line-height: ${s.aLineHeight || 1.6};">
+                    <div class="px-[18px] pb-4 text-sm text-slate-500 leading-relaxed" style="display: ${isFirstItem ? 'block' : 'none'};">
                         ${item.answer}
                     </div>
                 </div>
@@ -1941,7 +1717,7 @@ function blockToHTML(block: any): string {
 
             const content = `
                 <div class="faq-container relative z-10">
-                    <h2 class="title" style="text-align: ${s.textAlign || 'center'}; font-size: ${s.fontSize ? `${s.fontSize}px` : 'inherit'}; line-height: ${s.lineHeight || 'inherit'}; color: ${s.color || 'inherit'};">
+                    <h2 class="title text-center">
                         ${block.heading} <span style="color: ${block.highlightColor || '#ffb300'}">(${block.headingHighlight || 'FAQs'})</span>
                     </h2>
                     <div class="flex flex-col md:flex-row gap-12 items-center text-left mt-8">
@@ -1960,9 +1736,6 @@ function blockToHTML(block: any): string {
         }
         case BLOCK_TYPES.FEATURE_SECTION: {
             const featuresHTML = (block.items || []).map((item: any) => {
-                const titleStyle = `color:${block.itemTitleColor || '#1e293b'};font-size:${block.itemTitleSize || 14}px;line-height:${block.itemTitleLineHeight || 1.2};text-align:${block.itemTitleAlign || 'left'};`;
-                const subtitleStyle = `color:${block.itemSubtitleColor || '#94a3b8'};font-size:${block.itemSubtitleSize || 10}px;line-height:${block.itemSubtitleLineHeight || 1.2};text-align:${block.itemSubtitleAlign || 'left'};`;
-
                 return `
                 <div class="feature-card bg-white p-5 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-5 transform hover:scale-[1.03] transition-all hover:shadow-2xl group">
                     <div class="w-14 h-14 shrink-0 rounded-2xl bg-slate-50 text-slate-800 flex items-center justify-center p-3 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
@@ -1971,24 +1744,20 @@ function blockToHTML(block: any): string {
                         </svg>
                     </div>
                     <div class="flex flex-col">
-                        <h4 class="font-black mb-0.5" style="${titleStyle}">${item.title}</h4>
-                        <span class="uppercase font-bold tracking-wider transition-colors" style="${subtitleStyle}">${item.subtitle}</span>
+                        <h4 class="font-black text-slate-800 text-sm mb-0.5">${item.title}</h4>
+                        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 group-hover:text-[#00c3c0] transition-colors">${item.subtitle}</span>
                     </div>
                 </div>
             `}).join('');
 
-            const leftBgCSS = block.leftBgType === 'solid'
-                ? `background-color:${block.leftBgColor || '#0a1d56'};`
-                : `background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%);`;
-
             const content = `
                 <div class="flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative" style="${leftBgCSS}">
+                    <div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center text-white relative" style="background: linear-gradient(135deg, ${block.gradientStart || '#0a1d56'} 0%, ${block.gradientEnd || '#d2152a'} 100%);">
                         <div class="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-15deg] translate-x-16 pointer-events-none"></div>
-                        <div class="spacer flex flex-col" style="gap: ${block.leftContentGap ?? 16}px;">
-                            <h3 class="uppercase font-bold tracking-wider" style="color: ${block.leftSubtitleColor || '#ffb300'}; font-size: ${block.leftSubtitleSize ? `${block.leftSubtitleSize}px` : '14px'}; line-height: ${block.leftSubtitleLineHeight || 1.2};">${block.subtitle}</h3>
-                            <h2 class="font-black" style="color: ${block.leftTitleColor || '#ffffff'}; font-size: ${block.leftTitleSize ? `${block.leftTitleSize}px` : '42px'}; line-height: ${block.leftTitleLineHeight || 1.2};">${block.title}</h2>
-                            <p style="color: ${block.leftDescColor || '#e2e8f0'}; font-size: ${block.leftDescSize ? `${block.leftDescSize}px` : '16px'}; line-height: ${block.leftDescLineHeight || 1.6}; margin-bottom: 0;">${block.description}</p>
+                        <div class="spacer">
+                            <h3 class="subtitle">${block.subtitle}</h3>
+                            <h2 class="title">${block.title}</h2>
+                            <p class="paragraph">${block.description}</p>
                         </div>
                     </div>
                     <div class="w-full md:w-1/2 p-6 md:p-10 bg-white md:bg-transparent flex items-center justify-center md:-mt-8 md:mt-0 md:-ml-12 z-10">
@@ -2340,12 +2109,6 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                             id: block.columns[i]?.id || Math.random().toString(36).slice(2, 10),
                                                             ratio,
                                                             blocks: block.columns[i]?.blocks || [],
-                                                            gap: block.columns[i]?.gap || 5,
-                                                            padding: block.columns[i]?.padding || 5,
-                                                            borderWidth: block.columns[i]?.borderWidth || 0,
-                                                            borderColor: block.columns[i]?.borderColor || '#e2e8f0',
-                                                            borderStyle: block.columns[i]?.borderStyle || 'solid',
-                                                            borderRadius: block.columns[i]?.borderRadius || 0,
                                                         })),
                                                     });
                                                 }}
@@ -2354,188 +2117,6 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                                 {label}
                                             </button>
                                         ))}
-                                    </div>
-                                    
-                                    {/* Global Column Spacing */}
-                                    <div className="space-y-4 mt-6 pt-6 border-t border-slate-100">
-                                        <div className="flex justify-between items-center">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Space Between Columns</Label>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                step={1}
-                                                value={block.columnGap ?? 5}
-                                                onChange={(e) => onUpdate(block.id, { columnGap: Number(e.target.value) })}
-                                                className="w-14 text-[10px] font-mono font-bold text-[#6366F1] bg-white border border-slate-200 rounded px-1.5 py-1 focus:outline-none focus:border-[#6366F1] shadow-sm"
-                                            />
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min={0}
-                                            max={100}
-                                            value={block.columnGap ?? 5}
-                                            onChange={(e) => onUpdate(block.id, { columnGap: Number(e.target.value) })}
-                                            className="w-full accent-[#6366F1]"
-                                        />
-                                    </div>
-
-                                    {/* Column Specific Settings */}
-                                    <div className="space-y-4 mt-6 pt-6 border-t border-slate-100">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Column Configuration</Label>
-                                        <div className="space-y-6">
-                                            {block.columns.map((col: any, idx: number) => (
-                                                <div key={col.id || idx} className="space-y-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-[10px] font-black uppercase text-[#6366F1]">Column {idx + 1}</span>
-                                                        <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">Ratio: {col.ratio}</span>
-                                                    </div>
-                                                    
-                                                    <div className="grid grid-cols-1 gap-4">
-                                                        {/* Spacing Controls */}
-                                                        <div className="space-y-4">
-                                                            <div className="space-y-2">
-                                                                <div className="flex justify-between items-center">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Element Gap</Label>
-                                                                    <input
-                                                                        type="number"
-                                                                        min={0}
-                                                                        step={1}
-                                                                        value={col.gap ?? 5}
-                                                                        onChange={(e) => {
-                                                                            const newCols = [...block.columns];
-                                                                            newCols[idx] = { ...newCols[idx], gap: Number(e.target.value) };
-                                                                            onUpdate(block.id, { columns: newCols });
-                                                                        }}
-                                                                        className="w-14 text-[10px] font-mono font-bold text-[#6366F1] bg-white border border-slate-200 rounded px-1.5 py-1 focus:outline-none focus:border-[#6366F1] shadow-sm"
-                                                                    />
-                                                                </div>
-                                                                <input
-                                                                    type="range"
-                                                                    min={0}
-                                                                    max={100}
-                                                                    value={col.gap ?? 5}
-                                                                    onChange={(e) => {
-                                                                        const newCols = [...block.columns];
-                                                                        newCols[idx] = { ...newCols[idx], gap: Number(e.target.value) };
-                                                                        onUpdate(block.id, { columns: newCols });
-                                                                    }}
-                                                                    className="w-full accent-[#6366F1]"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <div className="flex justify-between items-center">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Internal Padding</Label>
-                                                                    <input
-                                                                        type="number"
-                                                                        min={0}
-                                                                        step={1}
-                                                                        value={col.padding ?? 5}
-                                                                        onChange={(e) => {
-                                                                            const newCols = [...block.columns];
-                                                                            newCols[idx] = { ...newCols[idx], padding: Number(e.target.value) };
-                                                                            onUpdate(block.id, { columns: newCols });
-                                                                        }}
-                                                                        className="w-14 text-[10px] font-mono font-bold text-[#6366F1] bg-white border border-slate-200 rounded px-1.5 py-1 focus:outline-none focus:border-[#6366F1] shadow-sm"
-                                                                    />
-                                                                </div>
-                                                                <input
-                                                                    type="range"
-                                                                    min={0}
-                                                                    max={100}
-                                                                    value={col.padding ?? 5}
-                                                                    onChange={(e) => {
-                                                                        const newCols = [...block.columns];
-                                                                        newCols[idx] = { ...newCols[idx], padding: Number(e.target.value) };
-                                                                        onUpdate(block.id, { columns: newCols });
-                                                                    }}
-                                                                    className="w-full accent-[#6366F1]"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Border & Shape */}
-                                                        <div className="pt-4 border-t border-slate-100 space-y-4">
-                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#00c3c0]">Border & Shape</p>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Border Width</Label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        min={0}
-                                                                        step={1}
-                                                                        value={col.borderWidth || 0} 
-                                                                        onChange={(e: any) => {
-                                                                            const newCols = [...block.columns];
-                                                                            newCols[idx] = { ...newCols[idx], borderWidth: Number(e.target.value) };
-                                                                            onUpdate(block.id, { columns: newCols });
-                                                                        }}
-                                                                        className="w-full h-8 px-2 text-[10px] font-mono font-bold bg-white border border-slate-200 rounded-lg outline-none focus:border-[#00c3c0]" 
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Radius</Label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        min={0}
-                                                                        step={1}
-                                                                        value={col.borderRadius || 0} 
-                                                                        onChange={(e: any) => {
-                                                                            const newCols = [...block.columns];
-                                                                            newCols[idx] = { ...newCols[idx], borderRadius: Number(e.target.value) };
-                                                                            onUpdate(block.id, { columns: newCols });
-                                                                        }}
-                                                                        className="w-full h-8 px-2 text-[10px] font-mono font-bold bg-white border border-slate-200 rounded-lg outline-none focus:border-[#00c3c0]" 
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Border Color</Label>
-                                                                    <div className="flex gap-2">
-                                                                        <input 
-                                                                            type="color" 
-                                                                            value={col.borderColor || '#e2e8f0'} 
-                                                                            onChange={(e: any) => {
-                                                                                const newCols = [...block.columns];
-                                                                                newCols[idx] = { ...newCols[idx], borderColor: e.target.value };
-                                                                                onUpdate(block.id, { columns: newCols });
-                                                                            }}
-                                                                            className="h-8 w-8 p-1 rounded-lg cursor-pointer shrink-0 border border-slate-200 bg-white" 
-                                                                        />
-                                                                        <input 
-                                                                            className="h-8 text-[10px] font-mono flex-1 rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-[#00c3c0]"
-                                                                            value={col.borderColor || '#e2e8f0'}
-                                                                            onChange={(e: any) => {
-                                                                                const newCols = [...block.columns];
-                                                                                newCols[idx] = { ...newCols[idx], borderColor: e.target.value };
-                                                                                onUpdate(block.id, { columns: newCols });
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[9px] text-slate-500 font-bold uppercase">Border Style</Label>
-                                                                    <select
-                                                                        className="h-8 text-[10px] font-bold w-full rounded-lg bg-white border border-slate-200 px-2 outline-none focus:ring-2 focus:ring-[#00c3c0]/20"
-                                                                        value={col.borderStyle || 'solid'}
-                                                                        onChange={(e) => {
-                                                                            const newCols = [...block.columns];
-                                                                            newCols[idx] = { ...newCols[idx], borderStyle: e.target.value };
-                                                                            onUpdate(block.id, { columns: newCols });
-                                                                        }}
-                                                                    >
-                                                                        <option value="solid">Solid</option>
-                                                                        <option value="dashed">Dashed</option>
-                                                                        <option value="dotted">Dotted</option>
-                                                                        <option value="none">None</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -2701,174 +2282,6 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         </div>
                                         <textarea className="w-full h-20 p-4 text-xs bg-white border border-slate-100 rounded-2xl resize-none outline-none shadow-sm" placeholder="Intro Description" value={block.description || ''} onChange={(e: any) => setContent({ description: e.target.value })} />
                                     </div>
-
-                                    {/* Background Settings */}
-                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Left Side Background</Label>
-                                            <div className="flex gap-2 p-1 bg-white rounded-xl border border-slate-200">
-                                                <Button 
-                                                    variant={block.leftBgType === 'gradient' ? 'default' : 'ghost'} 
-                                                    size="sm" 
-                                                    className="flex-1 rounded-lg h-7 text-[10px] font-bold cursor-pointer"
-                                                    onClick={() => setContent({ leftBgType: 'gradient' })}
-                                                >Gradient</Button>
-                                                <Button 
-                                                    variant={block.leftBgType === 'solid' ? 'default' : 'ghost'} 
-                                                    size="sm" 
-                                                    className="flex-1 rounded-lg h-7 text-[10px] font-bold cursor-pointer"
-                                                    onClick={() => setContent({ leftBgType: 'solid' })}
-                                                >Solid</Button>
-                                            </div>
-                                            {block.leftBgType === 'solid' ? (
-                                                <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer bg-white" value={block.leftBgColor || '#0a1d56'} onChange={(e: any) => setContent({ leftBgColor: e.target.value })} />
-                                            ) : (
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer bg-white" value={block.gradientStart || '#0a1d56'} onChange={(e: any) => setContent({ gradientStart: e.target.value })} />
-                                                    <Input type="color" className="h-10 p-1 rounded-xl cursor-pointer bg-white" value={block.gradientEnd || '#d2152a'} onChange={(e: any) => setContent({ gradientEnd: e.target.value })} />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Left Content Typography Settings */}
-                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Left Content Typography</p>
-                                        <div className="space-y-5">
-                                            {/* Subtitle */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Subtitle</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Text Size</span>
-                                                    <input type="range" min={8} max={64} value={block.leftSubtitleSize || 14} onChange={(e: any) => setContent({ leftSubtitleSize: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.leftSubtitleSize || 14} onChange={(e: any) => setContent({ leftSubtitleSize: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Line Height</span>
-                                                    <input type="range" min={1} max={3} step={0.1} value={block.leftSubtitleLineHeight || 1.2} onChange={(e: any) => setContent({ leftSubtitleLineHeight: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" step={0.1} value={block.leftSubtitleLineHeight || 1.2} onChange={(e: any) => setContent({ leftSubtitleLineHeight: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Color</span>
-                                                    <Input type="color" className="h-9 flex-1 p-1 rounded-lg cursor-pointer bg-white" value={block.leftSubtitleColor || '#ffb300'} onChange={(e: any) => setContent({ leftSubtitleColor: e.target.value })} />
-                                                </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-200 h-px w-full" />
-
-                                            {/* Title */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Title</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Text Size</span>
-                                                    <input type="range" min={12} max={96} value={block.leftTitleSize || 42} onChange={(e: any) => setContent({ leftTitleSize: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.leftTitleSize || 42} onChange={(e: any) => setContent({ leftTitleSize: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Line Height</span>
-                                                    <input type="range" min={1} max={3} step={0.1} value={block.leftTitleLineHeight || 1.2} onChange={(e: any) => setContent({ leftTitleLineHeight: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" step={0.1} value={block.leftTitleLineHeight || 1.2} onChange={(e: any) => setContent({ leftTitleLineHeight: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Color</span>
-                                                    <Input type="color" className="h-9 flex-1 p-1 rounded-lg cursor-pointer bg-white" value={block.leftTitleColor || '#ffffff'} onChange={(e: any) => setContent({ leftTitleColor: e.target.value })} />
-                                                </div>
-                                            {/* Description */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Description</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Text Size</span>
-                                                    <input type="range" min={8} max={32} value={block.leftDescSize || 16} onChange={(e: any) => setContent({ leftDescSize: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.leftDescSize || 16} onChange={(e: any) => setContent({ leftDescSize: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Line Height</span>
-                                                    <input type="range" min={1} max={3} step={0.1} value={block.leftDescLineHeight || 1.6} onChange={(e: any) => setContent({ leftDescLineHeight: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" step={0.1} value={block.leftDescLineHeight || 1.6} onChange={(e: any) => setContent({ leftDescLineHeight: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Color</span>
-                                                    <Input type="color" className="h-9 flex-1 p-1 rounded-lg cursor-pointer bg-white" value={block.leftDescColor || '#e2e8f0'} onChange={(e: any) => setContent({ leftDescColor: e.target.value })} />
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="bg-slate-200 h-px w-full" />
-
-                                            {/* Spacing */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Spacing</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Content Gap</span>
-                                                    <input type="range" min={0} max={64} value={block.leftContentGap ?? 16} onChange={(e: any) => setContent({ leftContentGap: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.leftContentGap ?? 16} onChange={(e: any) => setContent({ leftContentGap: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Item Typography Settings */}
-                                    <div className="space-y-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Grid Item Typography</p>
-                                        <div className="space-y-5">
-                                            {/* Title */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Title</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Text Size</span>
-                                                    <input type="range" min={8} max={64} value={block.itemTitleSize || 14} onChange={(e: any) => setContent({ itemTitleSize: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.itemTitleSize || 14} onChange={(e: any) => setContent({ itemTitleSize: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Line Height</span>
-                                                    <input type="range" min={1} max={3} step={0.1} value={block.itemTitleLineHeight || 1.2} onChange={(e: any) => setContent({ itemTitleLineHeight: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" step={0.1} value={block.itemTitleLineHeight || 1.2} onChange={(e: any) => setContent({ itemTitleLineHeight: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex gap-1.5">
-                                                    {[{ align: 'left', icon: AlignLeft }, { align: 'center', icon: AlignCenter }, { align: 'right', icon: AlignRight }].map(({ align, icon: Icon }) => (
-                                                        <button key={align} onClick={() => setContent({ itemTitleAlign: align })}
-                                                            className={`flex-1 h-8 flex items-center justify-center rounded-lg border transition-all ${(block.itemTitleAlign || 'left') === align ? 'bg-[#ff8602]/10 border-[#ff8602]/30 text-[#ff8602]' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}>
-                                                            <Icon className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Color</span>
-                                                    <Input type="color" className="h-9 flex-1 p-1 rounded-lg cursor-pointer bg-white" value={block.itemTitleColor || '#1e293b'} onChange={(e: any) => setContent({ itemTitleColor: e.target.value })} />
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-200 h-px w-full" />
-
-                                            {/* Subtitle */}
-                                            <div className="space-y-2">
-                                                <Label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Subtitle</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Text Size</span>
-                                                    <input type="range" min={8} max={32} value={block.itemSubtitleSize || 10} onChange={(e: any) => setContent({ itemSubtitleSize: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" value={block.itemSubtitleSize || 10} onChange={(e: any) => setContent({ itemSubtitleSize: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Line Height</span>
-                                                    <input type="range" min={1} max={3} step={0.1} value={block.itemSubtitleLineHeight || 1.2} onChange={(e: any) => setContent({ itemSubtitleLineHeight: Number(e.target.value) })} className="flex-1 accent-[#ff8602]" />
-                                                    <Input type="number" step={0.1} value={block.itemSubtitleLineHeight || 1.2} onChange={(e: any) => setContent({ itemSubtitleLineHeight: Number(e.target.value) })} className="h-7 w-14 text-right text-xs font-mono font-bold" />
-                                                </div>
-                                                <div className="flex gap-1.5">
-                                                    {[{ align: 'left', icon: AlignLeft }, { align: 'center', icon: AlignCenter }, { align: 'right', icon: AlignRight }].map(({ align, icon: Icon }) => (
-                                                        <button key={align} onClick={() => setContent({ itemSubtitleAlign: align })}
-                                                            className={`flex-1 h-8 flex items-center justify-center rounded-lg border transition-all ${(block.itemSubtitleAlign || 'left') === align ? 'bg-[#ff8602]/10 border-[#ff8602]/30 text-[#ff8602]' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}>
-                                                            <Icon className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-slate-400 w-14 shrink-0">Color</span>
-                                                    <Input type="color" className="h-9 flex-1 p-1 rounded-lg cursor-pointer bg-white" value={block.itemSubtitleColor || '#94a3b8'} onChange={(e: any) => setContent({ itemSubtitleColor: e.target.value })} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <ItemsListEditor
                                         items={block.items || []}
                                         onUpdate={(newItems) => setContent({ items: newItems })}
@@ -2947,11 +2360,9 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                             )}
 
                             {/* Typography */}
-                            {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && block.type !== BLOCK_TYPES.VIDEO && block.type !== BLOCK_TYPES.ACCORDION && block.type !== BLOCK_TYPES.FEATURE_SECTION && (
+                            {block.type !== BLOCK_TYPES.DIVIDER && block.type !== BLOCK_TYPES.SPACER && block.type !== BLOCK_TYPES.IMAGE && block.type !== BLOCK_TYPES.COLUMNS && block.type !== BLOCK_TYPES.VIDEO && block.type !== BLOCK_TYPES.ACCORDION && (
                                 <div className="space-y-4">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">
-                                        {block.heading !== undefined || block.type === BLOCK_TYPES.FAQ_SECTION ? 'Heading Typography' : 'Typography'}
-                                    </p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Typography</p>
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
@@ -3011,103 +2422,32 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                 </div>
                             )}
 
-                            {(block.type === BLOCK_TYPES.ACCORDION || block.type === BLOCK_TYPES.FAQ_SECTION) && (
+                            {block.type === BLOCK_TYPES.ACCORDION && (
                                 <div className="space-y-6">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Question Typography</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Questions Typography</p>
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
-                                            <input type="range" min={10} max={64} value={s.qFontSize || 15} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" value={s.qFontSize || 15} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Line Height</span>
-                                            <input type="range" min={1} max={3} step={0.1} value={s.qLineHeight || 1.4} onChange={(e: any) => set('qLineHeight', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" step={0.1} value={s.qLineHeight || 1.4} onChange={(e: any) => set('qLineHeight', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                            <input type="range" min={10} max={64} value={s.qFontSize || 16} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.qFontSize || 16} onChange={(e: any) => set('qFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Color</span>
-                                            <input type="color" value={s.qColor || '#334155'} onChange={(e: any) => set('qColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
+                                            <input type="color" value={s.qColor || '#1e293b'} onChange={(e: any) => set('qColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
                                         </div>
                                     </div>
 
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Answer Typography</p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Answers Typography</p>
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Size</span>
-                                            <input type="range" min={10} max={64} value={s.aFontSize || 14} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" value={s.aFontSize || 14} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[10px] text-slate-400 w-20 shrink-0">Line Height</span>
-                                            <input type="range" min={1} max={3} step={0.1} value={s.aLineHeight || 1.6} onChange={(e: any) => set('aLineHeight', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
-                                            <Input type="number" step={0.1} value={s.aLineHeight || 1.6} onChange={(e: any) => set('aLineHeight', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
+                                            <input type="range" min={10} max={64} value={s.aFontSize || 15} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="flex-1 accent-[#ff8602]" />
+                                            <Input type="number" value={s.aFontSize || 15} onChange={(e: any) => set('aFontSize', Number(e.target.value))} className="h-8 w-14 text-right text-xs font-mono font-bold" />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-400 w-20 shrink-0">Text Color</span>
-                                            <input type="color" value={s.aColor || '#64748b'} onChange={(e: any) => set('aColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
+                                            <input type="color" value={s.aColor || '#475569'} onChange={(e: any) => set('aColor', e.target.value)} className="w-7 h-7 p-0 rounded border cursor-pointer" />
                                         </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Button Dimensions Settings */}
-                            {block.type === BLOCK_TYPES.BUTTON && (
-                                <div className="space-y-6 pb-6 border-b border-slate-100">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#ff8602]">Button Dimensions</p>
-                                    <div className="space-y-4">
-                                        <div className="space-y-3">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex justify-between">
-                                                <span>Width Mode</span>
-                                                <span className="text-[#ff8602] font-black uppercase tracking-tighter text-[8px]">{s.widthType || 'auto'}</span>
-                                            </Label>
-                                            <div className="grid grid-cols-3 gap-1 bg-slate-50 p-1 rounded-xl">
-                                                {['auto', 'full', 'custom'].map((type) => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => set('widthType', type)}
-                                                        className={`py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${ (s.widthType || 'auto') === type ? 'bg-white shadow-sm text-[#ff8602]' : 'text-slate-400 hover:text-slate-600' }`}
-                                                    >
-                                                        {type}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {(s.widthType === 'custom') && (
-                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex items-center justify-between">
-                                                    <Label className="text-[10px] font-bold text-slate-400">Custom Size</Label>
-                                                    <div className="flex bg-slate-100 p-0.5 rounded-lg">
-                                                        {['%', 'px'].map((u) => (
-                                                            <button
-                                                                key={u}
-                                                                onClick={() => set('widthUnit', u)}
-                                                                className={`px-2 py-0.5 text-[8px] font-black rounded-md transition-all ${ (s.widthUnit || '%') === u ? 'bg-white shadow-xs text-[#ff8602]' : 'text-slate-400' }`}
-                                                            >
-                                                                {u}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <input
-                                                        type="range"
-                                                        min={(s.widthUnit || '%') === '%' ? 10 : 50}
-                                                        max={(s.widthUnit || '%') === '%' ? 100 : 800}
-                                                        value={s.customWidth || ((s.widthUnit || '%') === '%' ? 100 : 200)}
-                                                        onChange={(e: any) => set('customWidth', Number(e.target.value))}
-                                                        className="flex-1 accent-[#ff8602]"
-                                                    />
-                                                    <Input
-                                                        type="number"
-                                                        className="h-8 w-16 text-right text-xs font-mono font-bold rounded-lg"
-                                                        value={s.customWidth || ((s.widthUnit || '%') === '%' ? 100 : 200)}
-                                                        onChange={(e: any) => set('customWidth', Number(e.target.value))}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             )}
@@ -3345,26 +2685,24 @@ function PropertyPanel({ block, onUpdate, blocks, setBlocks }: PropertyPanelProp
                                         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Parent Class</Label>
                                         <Input className="h-9 text-xs rounded-xl" placeholder="e.g. wrapper-dark" value={block.parentClass || ''} onChange={(e: any) => setContent({ parentClass: e.target.value })} />
                                     </div>
-                                    {block.type !== BLOCK_TYPES.BUTTON && (
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    className="h-10 text-xs rounded-xl flex-1"
-                                                    placeholder="https://..."
-                                                    value={s.backgroundImage || ''}
-                                                    onChange={(e: any) => set('backgroundImage', e.target.value)}
-                                                />
-                                                <Button
-                                                    onClick={() => setActiveMediaField('backgroundImage')}
-                                                    variant="outline"
-                                                    className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
-                                                >
-                                                    <ImageIcon className="w-4 h-4 text-[#ff8602]" />
-                                                </Button>
-                                            </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Image</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                className="h-10 text-xs rounded-xl flex-1"
+                                                placeholder="https://..."
+                                                value={s.backgroundImage || ''}
+                                                onChange={(e: any) => set('backgroundImage', e.target.value)}
+                                            />
+                                            <Button
+                                                onClick={() => setActiveMediaField('backgroundImage')}
+                                                variant="outline"
+                                                className="shrink-0 h-10 w-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors p-0"
+                                            >
+                                                <ImageIcon className="w-4 h-4 text-[#ff8602]" />
+                                            </Button>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3464,38 +2802,13 @@ export default function PageBuilder({ initialContent, onChange }: PageBuilderPro
     );
 
     const handleDragEnd = ({ active, over }: any) => {
-        if (!over || active.id === over.id) {
-            setActiveId(null);
-            return;
-        }
-
-        setBlocks(prev => {
-            // 1. Try top-level sort
-            const oi = prev.findIndex((b: any) => b.id === active.id);
-            const ni = prev.findIndex((b: any) => b.id === over.id);
-
-            if (oi !== -1 && ni !== -1) {
+        if (over && active.id !== over.id) {
+            setBlocks(prev => {
+                const oi = prev.findIndex((b: any) => b.id === active.id);
+                const ni = prev.findIndex((b: any) => b.id === over.id);
                 return arrayMove(prev, oi, ni);
-            }
-
-            // 2. Try nested sort (inside columns)
-            return prev.map(block => {
-                if (block.type !== BLOCK_TYPES.COLUMNS) return block;
-
-                const newColumns = block.columns.map((col: any) => {
-                    const coi = col.blocks.findIndex((cb: any) => cb.id === active.id);
-                    const cni = col.blocks.findIndex((cb: any) => cb.id === over.id);
-
-                    if (coi !== -1 && cni !== -1) {
-                        return { ...col, blocks: arrayMove(col.blocks, coi, cni) };
-                    }
-                    return col;
-                });
-
-                return { ...block, columns: newColumns };
             });
-        });
-        
+        }
         setActiveId(null);
     };
 

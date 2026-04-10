@@ -699,6 +699,6 @@ export default function AdminGalleryPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }

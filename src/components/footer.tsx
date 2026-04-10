@@ -107,8 +107,8 @@ export function Footer() {
     };
 
     return (
-        <footer className="bg-background border-t border-border mt-auto">
-            <div className="container mx-auto px-4 py-12 md:py-16">
+        <footer className="bg-background border-t border-border mt-auto py-12 md:py-16">
+            <div className="container mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold tracking-tight text-primary">

@@ -282,7 +282,7 @@ export default function OrderDetailPage() {
         {/* Order Header */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">{order.order_number}</h2>
                 <p className="text-sm text-slate-600 mt-1">Placed on {formatDate(order.created_at)}</p>
@@ -310,16 +310,15 @@ export default function OrderDetailPage() {
                 </h3>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                   {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleUpdateStatus(status)}
-                      className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
-                        order.status === status
-                          ? getStatusColor(status) + ' scale-105 shadow-lg'
-                          : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
-                      }`}
+                      className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${order.status === status
+                        ? getStatusColor(status) + ' scale-105 shadow-lg'
+                        : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
+                        }`}
                     >
                       <div className="flex flex-col items-center">
                         <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
@@ -477,31 +476,29 @@ export default function OrderDetailPage() {
               <div className="p-6 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Payment Method</span>
-                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                    order.payment_method.toLowerCase() === 'cash' || order.payment_method.toLowerCase() === 'cod'
-                      ? 'bg-green-100 text-green-800 border-green-300'
-                      : order.payment_method.toLowerCase().includes('stripe') || order.payment_method.toLowerCase().includes('online') || order.payment_method.toLowerCase().includes('card')
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${order.payment_method.toLowerCase() === 'cash' || order.payment_method.toLowerCase() === 'cod'
+                    ? 'bg-green-100 text-green-800 border-green-300'
+                    : order.payment_method.toLowerCase().includes('stripe') || order.payment_method.toLowerCase().includes('online') || order.payment_method.toLowerCase().includes('card')
                       ? 'bg-purple-100 text-purple-800 border-purple-300'
                       : 'bg-gray-100 text-gray-800 border-gray-300'
-                  }`}>
+                    }`}>
                     {order.payment_method.toLowerCase() === 'cash' || order.payment_method.toLowerCase() === 'cod'
                       ? 'COD'
                       : order.payment_method.toLowerCase().includes('stripe') || order.payment_method.toLowerCase().includes('online')
-                      ? 'Stripe'
-                      : order.payment_method}
+                        ? 'Stripe'
+                        : order.payment_method}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Payment Status</span>
-                  <span className={`px-3 py-1 text-xs font-semibold rounded-full border-2 ${
-                    order.payment_status === 'paid'
-                      ? 'bg-green-100 text-green-800 border-green-300'
-                      : order.payment_status === 'pending'
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full border-2 ${order.payment_status === 'paid'
+                    ? 'bg-green-100 text-green-800 border-green-300'
+                    : order.payment_status === 'pending'
                       ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
                       : order.payment_status === 'failed'
-                      ? 'bg-red-100 text-red-800 border-red-300'
-                      : 'bg-gray-100 text-gray-800 border-gray-300'
-                  }`}>
+                        ? 'bg-red-100 text-red-800 border-red-300'
+                        : 'bg-gray-100 text-gray-800 border-gray-300'
+                    }`}>
                     {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                   </span>
                 </div>
@@ -580,7 +577,7 @@ export default function OrderDetailPage() {
                   New Status
                 </label>
                 <div className={`px-4 py-3 rounded-xl text-sm font-bold border-2 ${getStatusColor(selectedStatus!)}`}>
-                  {selectedStatus?.charAt(0).toUpperCase() + selectedStatus?.slice(1)}
+                  {selectedStatus ? selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1) : ''}
                 </div>
               </div>
 

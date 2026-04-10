@@ -223,7 +223,7 @@ export default function AdminFlashSalesPage() {
       });
       setSuccess('Product added to flash sale');
       setShowItemModal(false);
-      if (expandedSale === itemSaleId) fetchSaleDetails(itemSaleId);
+      if (expandedSale === itemSaleId && itemSaleId !== null) fetchSaleDetails(itemSaleId);
       fetchFlashSales();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -293,7 +293,7 @@ export default function AdminFlashSalesPage() {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Flash Sales</h2>
             <p className="text-sm text-slate-500 mt-1">{pagination.total} total flash sale events</p>
@@ -317,7 +317,7 @@ export default function AdminFlashSalesPage() {
           <div className="space-y-4">
             {flashSales.map((sale) => {
               const status = getStatusBadge(sale);
-              const isExpanded = expandedSale === sale;
+              const isExpanded = expandedSale === sale.id;
 
               return (
                 <div key={sale.id} className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
@@ -326,8 +326,8 @@ export default function AdminFlashSalesPage() {
                     className="px-6 py-5 cursor-pointer hover:bg-slate-50 transition-colors"
                     onClick={() => handleExpand(sale.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap gap-4 items-center justify-between">
+                      <div className="flex flex-wrap items-center gap-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
                           <Zap className="h-6 w-6 text-white" />
                         </div>
