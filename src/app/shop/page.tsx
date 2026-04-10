@@ -88,7 +88,7 @@ function ShopPage() {
     const hasActiveFilters = inStock || searchQuery;
 
     return (
-        <div className="container px-4 py-8 mx-auto">
+        <div className="container px-4 py-8 mx-auto mt-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
@@ -290,7 +290,7 @@ function ShopPage() {
                     )}
 
                     {/* Results Summary */}
-                    <div className="text-center text-sm text-muted-foreground mt-6">
+                    <div className="text-center text-sm text-muted-foreground my-6">
                         Showing page {page} of {totalPages} ({pagination?.total || 0} products total)
                     </div>
                 </>

@@ -20,6 +20,16 @@ interface Category {
   meta_title?: string;
   meta_description?: string;
   meta_image?: string;
+  section_id?: number | null;
+  banner_url?: string;
+}
+
+interface Section {
+  id: number;
+  title: string;
+  slug: string;
+  type: string;
+  status: string;
 }
 
 interface GalleryImage {
@@ -49,6 +59,7 @@ export default function EditCategoryPage() {
   const [gallerySearchTerm, setGallerySearchTerm] = useState('');
   const [selectedGalleryCategory, setSelectedGalleryCategory] = useState('');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [sections, setSections] = useState<Section[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -57,6 +68,7 @@ export default function EditCategoryPage() {
     meta_title: '',
     meta_description: '',
     meta_image: '',
+    section_id: null as number | null,
   });
 
   useEffect(() => {
@@ -69,6 +81,7 @@ export default function EditCategoryPage() {
     if (isAuthenticated && id) {
       fetchCategory();
       fetchGalleryImages();
+      fetchSections();
     }
   }, [isAuthenticated, id]);
 
@@ -99,6 +112,7 @@ export default function EditCategoryPage() {
         meta_title: cat.meta_title || '',
         meta_description: cat.meta_description || '',
         meta_image: cat.meta_image || '',
+        section_id: cat.section_id || null,
       });
     } catch {
       setError('Failed to load category');
@@ -113,6 +127,15 @@ export default function EditCategoryPage() {
       setGalleryImages(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch gallery images:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await api.get('/sections?limit=100');
+      setSections(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch sections:', error);
     }
   };
 
@@ -136,6 +159,7 @@ export default function EditCategoryPage() {
       if (!payload.meta_title) payload.meta_title = null;
       if (!payload.meta_description) payload.meta_description = null;
       if (!payload.meta_image) payload.meta_image = null;
+      if (!payload.section_id) payload.section_id = null;
       await api.put(`/products/categories/${id}`, payload);
       router.push('/admin/products/categories');
     } catch (err: unknown) {
@@ -241,6 +265,29 @@ export default function EditCategoryPage() {
                 className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
               />
               <Label htmlFor="show_on_home" className="cursor-pointer">Show on Home Page</Label>
+            </div>
+          </div>
+
+          {/* Banner */}
+          <div className="bg-card border rounded-lg p-6 space-y-4">
+            <h3 className="font-semibold text-lg">Banner</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="section_id">Link to Section</Label>
+              <select
+                id="section_id"
+                value={formData.section_id ?? ''}
+                onChange={(e) => setFormData({ ...formData, section_id: e.target.value ? Number(e.target.value) : null })}
+                className="w-full px-4 py-2 border rounded-lg bg-background text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="">No section</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.title} ({section.type})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">Select a section to link with this category</p>
             </div>
           </div>
 

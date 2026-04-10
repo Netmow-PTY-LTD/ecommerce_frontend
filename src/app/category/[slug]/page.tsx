@@ -1,16 +1,25 @@
 "use client";
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useProducts, useCategory } from '@/hooks/use-products';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import api from '@/lib/api';
+
+interface Section {
+    id: number;
+    title: string;
+    content: string;
+    status: string;
+}
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
     const [page, setPage] = useState(1);
+    const [bannerSection, setBannerSection] = useState<Section | null>(null);
 
     // Fetch Category Details
     const { category, isLoading: isCategoryLoading, isError: isCategoryError } = useCategory(slug);
@@ -19,6 +28,17 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     const { products, pagination, isLoading: isProductsLoading, isError: isProductsError } = useProducts(page, 12, { category_slug: slug });
 
     const totalPages = pagination?.totalPage || 1;
+
+    // Fetch linked section for banner
+    useEffect(() => {
+        if (category?.section_id) {
+            api.get(`/sections/${category.section_id}`)
+                .then(res => setBannerSection(res.data.data))
+                .catch(() => setBannerSection(null));
+        } else {
+            setBannerSection(null);
+        }
+    }, [category?.section_id]);
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -51,9 +71,13 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
     return (
         <div className="container px-4 py-8 mx-auto">
-            <Link href="/categories" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Categories
-            </Link>
+            {/* Banner from linked section */}
+            {bannerSection?.content && (
+                <div
+                    className="w-full mb-8 rounded-2xl overflow-hidden"
+                    dangerouslySetInnerHTML={{ __html: bannerSection.content }}
+                />
+            )}
 
             <div className="mb-10 text-center max-w-3xl mx-auto">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 capitalize">{category.name}</h1>

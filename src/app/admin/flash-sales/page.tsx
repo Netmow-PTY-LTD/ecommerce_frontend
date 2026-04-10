@@ -223,7 +223,7 @@ export default function AdminFlashSalesPage() {
       });
       setSuccess('Product added to flash sale');
       setShowItemModal(false);
-      if (expandedSale === itemSaleId) fetchSaleDetails(itemSaleId);
+      if (expandedSale === itemSaleId && itemSaleId !== null) fetchSaleDetails(itemSaleId);
       fetchFlashSales();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -317,7 +317,7 @@ export default function AdminFlashSalesPage() {
           <div className="space-y-4">
             {flashSales.map((sale) => {
               const status = getStatusBadge(sale);
-              const isExpanded = expandedSale === sale;
+              const isExpanded = expandedSale === sale.id;
 
               return (
                 <div key={sale.id} className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">

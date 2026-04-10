@@ -38,8 +38,12 @@ export interface Category {
     slug: string;
     name: string;
     description: string;
+    image_url?: string;
     parent_id: number | null;
     is_active: boolean;
+    show_on_home?: boolean;
+    section_id?: number | null;
+    banner_url?: string;
     created_at?: string;
     updated_at?: string;
 }

@@ -580,7 +580,7 @@ export default function OrderDetailPage() {
                   New Status
                 </label>
                 <div className={`px-4 py-3 rounded-xl text-sm font-bold border-2 ${getStatusColor(selectedStatus!)}`}>
-                  {selectedStatus?.charAt(0).toUpperCase() + selectedStatus?.slice(1)}
+                  {selectedStatus ? selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1) : ''}
                 </div>
               </div>
 

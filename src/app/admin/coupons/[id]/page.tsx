@@ -14,7 +14,7 @@ import { ArrowLeft, Loader2, Tag, Plus, X, Search, Package } from 'lucide-react'
 const emptyForm = {
   code: '',
   description: '',
-  type: 'percentage' as const,
+  type: 'percentage' as 'percentage' | 'fixed' | 'free_shipping' | 'bogo',
   value: '',
   min_order_amount: '',
   max_discount_amount: '',

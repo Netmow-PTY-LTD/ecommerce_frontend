@@ -164,7 +164,7 @@ export default function AdminCouponsPage() {
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
                       <span className="font-semibold text-foreground text-sm">{valueLabel(coupon)}</span>
                       {coupon.min_order_amount > 0 && <span>Min: ${coupon.min_order_amount}</span>}
-                      {coupon.max_discount_amount > 0 && <span>Max discount: ${coupon.max_discount_amount}</span>}
+                      {coupon.max_discount_amount && coupon.max_discount_amount > 0 && <span>Max discount: ${coupon.max_discount_amount}</span>}
                       <span>Used: {coupon.usage_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : ''}</span>
                       <span>Per customer: {coupon.per_customer_limit}</span>
                       {coupon.starts_at && <span>Starts: {new Date(coupon.starts_at).toLocaleDateString()}</span>}
