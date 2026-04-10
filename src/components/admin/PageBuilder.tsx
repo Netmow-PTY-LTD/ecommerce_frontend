@@ -1359,13 +1359,26 @@ function BlockRenderer({ block, onUpdateContent, viewMode }: { block: any, onUpd
 
             return wrapWithParentClass(block, result, parentStyle, blockStyle);
         }
-        case BLOCK_TYPES.IMAGE:
+        case BLOCK_TYPES.IMAGE: {
+            const justify = s.textAlign === 'center' ? 'center' : (s.textAlign === 'right' ? 'flex-end' : 'flex-start');
             return wrapWithParentClass(
                 block,
-                <img src={block.src} alt={block.alt} className="w-full object-cover" style={{ borderRadius: s.borderRadius }} />,
+                <div style={{ display: 'flex', justifyContent: justify, width: '100%' }}>
+                    <img 
+                        src={block.src} 
+                        alt={block.alt} 
+                        style={{ 
+                            maxWidth: '100%', 
+                            height: 'auto', 
+                            display: 'block', 
+                            borderRadius: s.borderRadius || 0 
+                        }} 
+                    />
+                </div>,
                 parentStyle,
                 divStyle
             );
+        }
         case BLOCK_TYPES.BUTTON:
             return wrapWithParentClass(
                 block,
@@ -1785,7 +1798,7 @@ function blockToHTML(block: any): string {
             return wrap(content);
         }
         case BLOCK_TYPES.IMAGE: {
-            const justify = s.textAlign === 'center' ? 'center' : s.textAlign === 'right' ? 'flex-end' : 'flex-start';
+            const justify = s.textAlign === 'center' ? 'center' : (s.textAlign === 'right' ? 'flex-end' : 'flex-start');
             return wrap(`<div style="display:flex;justify-content:${justify};width:100%;"><img src="${block.src}" alt="${block.alt}" style="max-width:100%;height:auto;display:block;border-radius:${s.borderRadius || 0}px;" /></div>`);
         }
         case BLOCK_TYPES.BUTTON: {
