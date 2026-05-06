@@ -129,14 +129,7 @@ const navigation: NavItem[] = [
       { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
     ],
   },
-  {
-    name: 'Localization',
-    icon: Globe,
-    subitems: [
-      { name: 'Translations', href: '/admin/i18n/translations', icon: Globe },
-      { name: 'Currencies', href: '/admin/i18n/currencies', icon: DollarSign },
-    ],
-  },
+
 
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
