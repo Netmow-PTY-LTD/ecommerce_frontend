@@ -38,7 +38,7 @@ interface Product {
   max_stock_level: number;
   barcode: string;
   thumb_url: string;
-  is_active: boolean;
+  status: 'active' | 'inactive';
   sort_order?: number;
   category?: { id: number; name: string };
   unit?: { id: number; name: string; symbol: string };
@@ -121,11 +121,11 @@ function SortableProductRow({
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.is_active
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.status === 'active'
           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
           : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
           }`}>
-          {product.is_active ? 'Active' : 'Inactive'}
+          {product.status === 'active' ? 'Active' : 'Inactive'}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

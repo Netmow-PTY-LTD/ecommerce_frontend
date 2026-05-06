@@ -21,7 +21,7 @@ interface Coupon {
   per_customer_limit: number;
   starts_at?: string;
   expires_at?: string;
-  is_active: boolean;
+  status: 'active' | 'inactive';
   applicable_products?: number[];
   applicable_categories?: number[];
   created_at: string;
@@ -81,7 +81,7 @@ export default function AdminCouponsPage() {
   };
 
   const isExpired = (coupon: Coupon) => coupon.expires_at && new Date(coupon.expires_at) < new Date();
-  const isActive = (coupon: Coupon) => coupon.is_active && !isExpired(coupon);
+  const isActive = (coupon: Coupon) => coupon.status === 'active' && !isExpired(coupon);
 
   const valueLabel = (coupon: Coupon) => {
     if (coupon.type === 'percentage') return `${coupon.value}%`;
@@ -151,7 +151,9 @@ export default function AdminCouponsPage() {
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         isActive(coupon)
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                          : coupon.status === 'inactive'
+                            ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                       }`}>
                         {isActive(coupon) ? 'Active' : isExpired(coupon) ? 'Expired' : 'Inactive'}
                       </span>

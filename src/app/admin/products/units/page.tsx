@@ -32,6 +32,7 @@ interface Unit {
   name: string;
   symbol: string;
   description?: string;
+  status: 'active' | 'inactive';
   sort_order?: number;
 }
 
@@ -74,6 +75,13 @@ function SortableUnitItem({
           <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
             {unit.symbol}
           </span>
+          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+            unit.status === 'active'
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+          }`}>
+            {unit.status === 'active' ? 'Active' : 'Inactive'}
+          </span>
         </div>
         {unit.description && (
           <p className="text-sm text-muted-foreground mt-0.5 truncate">{unit.description}</p>
@@ -102,6 +110,7 @@ export default function AdminUnitsPage() {
     name: '',
     symbol: '',
     description: '',
+    status: 'active' as 'active' | 'inactive',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -180,6 +189,7 @@ export default function AdminUnitsPage() {
       name: unit.name,
       symbol: unit.symbol,
       description: unit.description || '',
+      status: unit.status,
     });
     setModalError('');
     setShowModal(true);
@@ -216,7 +226,7 @@ export default function AdminUnitsPage() {
 
       setShowModal(false);
       setEditingUnit(null);
-      setFormData({ name: '', symbol: '', description: '' });
+      setFormData({ name: '', symbol: '', description: '', status: 'active' });
       fetchUnits();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: unknown) {
@@ -230,7 +240,7 @@ export default function AdminUnitsPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingUnit(null);
-    setFormData({ name: '', symbol: '', description: '' });
+    setFormData({ name: '', symbol: '', description: '', status: 'active' });
     setModalError('');
   };
 
@@ -267,7 +277,7 @@ export default function AdminUnitsPage() {
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">Units ({paginationMeta.total})</h2>
-          <Button onClick={() => { setEditingUnit(null); setFormData({ name: '', symbol: '', description: '' }); setModalError(''); setShowModal(true); }} className="gap-2">
+          <Button onClick={() => { setEditingUnit(null); setFormData({ name: '', symbol: '', description: '', status: 'active' }); setModalError(''); setShowModal(true); }} className="gap-2">
             <Plus className="h-4 w-4" />
             Add Unit
           </Button>
@@ -366,6 +376,19 @@ export default function AdminUnitsPage() {
               rows={3}
               placeholder="Brief description of this unit..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <select
+              id="status"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+              className="w-full px-3 py-2 border rounded-md bg-transparent focus:ring-2 focus:ring-primary"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
         </div>
       </FormModal>
