@@ -140,7 +140,6 @@ export function Navbar() {
         { href: '/', label: 'Home' },
         { href: '/shop', label: 'Shop' },
         { href: '/categories', label: 'Categories' },
-        { href: '/page/about-us', label: 'About' },
     ];
 
     return (

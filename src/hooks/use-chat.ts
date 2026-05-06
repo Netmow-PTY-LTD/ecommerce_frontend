@@ -12,7 +12,11 @@ export function useChatMessages(sessionId: string) {
 }
 
 export function useFAQs() {
-  const { data, error, isLoading } = useSWR('/chat/faqs', fetcher);
+  const { data, error, isLoading } = useSWR('/chat/faqs', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000, // cache for 1 minute
+  });
   return { faqs: data?.data || [], isLoading, isError: error };
 }
 

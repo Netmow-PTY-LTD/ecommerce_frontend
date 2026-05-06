@@ -62,8 +62,7 @@ function CheckoutSuccessPageContent() {
                 console.log('💳 Session ID:', sessionId);
 
                 if (!sessionId && !lastOrderId) {
-                    console.log('❌ No session_id and no lastOrderId - showing friendly message');
-                    // Still show loader for at least 1.5 seconds for smooth UX
+                    console.log('❌ No session_id and no lastOrderId');
                     setTimeout(() => {
                         setHasError(true);
                         setIsLoading(false);
@@ -76,7 +75,7 @@ function CheckoutSuccessPageContent() {
 
                 // For COD orders, we already have the order created
                 if (!sessionId && lastOrderId && lastOrderNumber) {
-                    console.log('✅ COD Order loaded:', { lastOrderId, lastOrderNumber });
+                    console.log('✅ COD Order:', { lastOrderId, lastOrderNumber });
                     setOrderNumber(lastOrderNumber);
                     orderId = lastOrderId;
                     localStorage.removeItem('lastOrderId');
@@ -87,11 +86,9 @@ function CheckoutSuccessPageContent() {
                 // For online payments, process the order from session
                 if (sessionId) {
                     console.log('💳 Processing online payment order');
-                    // Get pending order details from localStorage
                     const pendingOrderStr = localStorage.getItem('pendingOrder');
                     if (!pendingOrderStr) {
                         toast.error('Order details not found');
-                        // Show loader for smooth UX before error
                         setTimeout(() => {
                             setHasError(true);
                             setIsLoading(false);
@@ -118,101 +115,95 @@ function CheckoutSuccessPageContent() {
 
                     if (response.data?.data?.order_number) {
                         setOrderNumber(response.data.data.order_number);
-                        orderId = response.data.data.id;
-                        // Clear pending order from localStorage
+                        orderId = String(response.data.data.id);
                         localStorage.removeItem('pendingOrder');
                         setShowLoader(false);
                     } else {
-                        // Fallback to random order number if API doesn't return one
-                        const fallbackOrderNumber = `ORD-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+                        const fallbackOrderNumber = `ORD-${Date.now().toString().slice(-8)}`;
                         setOrderNumber(fallbackOrderNumber);
                         localStorage.removeItem('pendingOrder');
                         setShowLoader(false);
                     }
                 }
 
-                // Fetch full order details if we have an orderId
+                // Fetch full order details — try public endpoint first, fall back to customer endpoint
                 if (orderId) {
                     try {
-                        const orderResponse = await api.get(`/sales/customer/orders/${orderId}`);
-                        const data = orderResponse.data.data;
+                        let data: any = null;
 
-                        // Calculate subtotal from items
-                        const itemsSubtotal = data.items?.reduce((sum: number, item: any) => {
-                            return sum + parseFloat(item.line_total || item.total_price || 0);
-                        }, 0) || 0;
-
-                        const taxAmount = parseFloat(data.tax_amount || 0);
-                        const shippingCost = parseFloat(data.shipping_cost || 0);
-                        const discountAmount = parseFloat(data.discount_amount || 0);
-                        const calculatedTotal = itemsSubtotal + taxAmount + shippingCost - discountAmount;
-
-                        const transformedOrder: Order = {
-                            id: data.id,
-                            order_number: data.order_number,
-                            customer_name: data.customer?.name && data.customer?.name !== 'undefined undefined'
-                                ? data.customer.name
-                                : [data.customer?.first_name, data.customer?.last_name].filter(Boolean).join(' ') || 'Customer',
-                            customer_email: data.customer_email || data.customer?.email || '',
-                            status: data.status,
-                            subtotal: itemsSubtotal,
-                            tax: taxAmount,
-                            shipping_cost: shippingCost,
-                            total: calculatedTotal,
-                            payment_method: data.payment_method || 'N/A',
-                            payment_status: data.payment_status || 'pending',
-                            items: data.items?.map((item: any) => ({
-                                id: item.id,
-                                product_name: item.product?.name || item.name || 'Product',
-                                quantity: item.quantity,
-                                price: parseFloat(item.unit_price || item.price || 0),
-                                total: parseFloat(item.line_total || item.total_price || item.total || 0),
-                            })) || [],
-                            notes: data.notes || '',
-                            created_at: data.created_at || data.order_date || new Date().toISOString(),
-                            shipping_address: data.shipping_address || '',
-                        };
-
-                        setOrder(transformedOrder);
-                        setShowLoader(false);
-
-                        // Show success message and redirect after 2 seconds
-                        toast.success(`Order placed successfully! Order #${data.order_number}. Pay on delivery.`);
-
-                        setTimeout(() => {
-                            router.push(`/order-status?id=${orderId}`);
-                        }, 2000);
-                    } catch (orderError) {
-                        console.error('Failed to fetch order details:', orderError);
-                        setShowLoader(false);
-                        // Still redirect even if we can't fetch details
-                        if (orderId) {
-                            setTimeout(() => {
-                                router.push(`/order-status?id=${orderId}`);
-                            }, 2000);
+                        try {
+                            // Public endpoint — works for guests
+                            const orderResponse = await api.get(`/sales/public/orders/${orderId}`);
+                            data = orderResponse.data?.data || orderResponse.data;
+                        } catch (publicErr: any) {
+                            console.warn('Public order endpoint failed, trying customer endpoint...', publicErr?.response?.status);
+                            // Fallback: customer auth endpoint (works for logged-in users)
+                            const orderResponse = await api.get(`/sales/customer/orders/${orderId}`);
+                            data = orderResponse.data?.data || orderResponse.data;
                         }
+
+                        if (data && data.id) {
+                            const itemsSubtotal = data.items?.reduce((sum: number, item: any) => {
+                                return sum + parseFloat(item.line_total || item.total_price || 0);
+                            }, 0) || 0;
+
+                            const taxAmount = parseFloat(data.tax_amount || 0);
+                            const shippingCost = parseFloat(data.shipping_cost || 0);
+                            const discountAmount = parseFloat(data.discount_amount || 0);
+                            const calculatedTotal = itemsSubtotal + taxAmount + shippingCost - discountAmount;
+
+                            const transformedOrder: Order = {
+                                id: data.id,
+                                order_number: data.order_number,
+                                customer_name: data.customer?.name && data.customer?.name !== 'undefined undefined'
+                                    ? data.customer.name
+                                    : [data.customer?.first_name, data.customer?.last_name].filter(Boolean).join(' ') || 'Customer',
+                                customer_email: data.customer_email || data.customer?.email || '',
+                                status: data.status,
+                                subtotal: itemsSubtotal,
+                                tax: taxAmount,
+                                shipping_cost: shippingCost,
+                                total: calculatedTotal,
+                                payment_method: data.payment_method || 'N/A',
+                                payment_status: data.payment_status || 'pending',
+                                items: data.items?.map((item: any) => ({
+                                    id: item.id,
+                                    product_name: item.product?.name || item.name || 'Product',
+                                    quantity: item.quantity,
+                                    price: parseFloat(item.unit_price || item.price || 0),
+                                    total: parseFloat(item.line_total || item.total_price || item.total || 0),
+                                })) || [],
+                                notes: data.notes || '',
+                                created_at: data.created_at || data.order_date || new Date().toISOString(),
+                                shipping_address: data.shipping_address || '',
+                            };
+
+                            setOrder(transformedOrder);
+                            toast.success(`Order #${data.order_number} confirmed!`);
+                        }
+                    } catch (orderError: any) {
+                        console.warn('Could not fetch order details (non-fatal):', orderError?.response?.status, orderError?.message);
+                        // Non-fatal — we still have the order number, show success anyway
                     }
                 }
 
                 setIsLoading(false);
+                setShowLoader(false);
             } catch (error: any) {
-                console.error('❌ Error loading order:', error);
+                console.error('❌ Error on success page:', error);
                 setShowLoader(false);
                 setHasError(true);
-                // Generate fallback order number
-                const fallbackOrderNumber = `ORD-${Date.now().toString().slice(-8)}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-                setOrderNumber(fallbackOrderNumber);
                 localStorage.removeItem('pendingOrder');
                 localStorage.removeItem('lastOrderId');
                 localStorage.removeItem('lastOrderNumber');
                 toast.error('Order confirmed but failed to load details');
-            } finally {
                 setIsLoading(false);
             }
         };
 
         loadOrderDetails();
     }, [searchParams]);
+
 
     // Show loading state while fetching order details
     if (showLoader) {
@@ -354,32 +345,79 @@ function CheckoutSuccessPageContent() {
                                 Order #{orderNumber}
                             </p>
                         )}
-                        <p className="text-slate-600 mb-6">
-                            Thank you for your purchase. Redirecting to your order status...
+                        <p className="text-slate-600 mb-8">
+                            Thank you for your purchase. Your order has been placed successfully.
                         </p>
 
-                        {/* Redirecting Animation */}
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-                            <span className="text-sm text-slate-600">Redirecting...</span>
-                        </div>
-
-                        {/* Manual Link in case auto-redirect fails */}
-                        {order && (
-                            <div className="mt-8">
+                        {/* Action Buttons — always visible regardless of whether order details loaded */}
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            {order ? (
                                 <Link href={`/order-status?id=${order.id}`}>
-                                    <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                                        View Order Status Now
+                                    <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+                                        <Package className="h-4 w-4 mr-2" />
+                                        View Order Status
                                     </Button>
                                 </Link>
-                            </div>
-                        )}
+                            ) : (
+                                <Link href="/customer/dashboard">
+                                    <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
+                                        <Package className="h-4 w-4 mr-2" />
+                                        View My Orders
+                                    </Button>
+                                </Link>
+                            )}
+                            <Link href="/shop">
+                                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                                    <Home className="h-4 w-4 mr-2" />
+                                    Continue Shopping
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
+
+                    {/* Order Details — only shown when details were successfully fetched */}
+                    {order && (
+                        <div className="px-8 py-6 border-t border-slate-200">
+                            <h2 className="text-lg font-semibold text-slate-800 mb-4">Order Summary</h2>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between text-slate-600">
+                                    <span>Order Number</span>
+                                    <span className="font-medium text-slate-900">#{order.order_number}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-600">
+                                    <span>Status</span>
+                                    <span className="capitalize font-medium text-slate-900">{order.status}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-600">
+                                    <span>Payment Method</span>
+                                    <span className="uppercase font-medium text-slate-900">{order.payment_method}</span>
+                                </div>
+                                {order.items?.length > 0 && (
+                                    <>
+                                        <div className="border-t border-slate-100 pt-3 mt-3">
+                                            <p className="font-medium text-slate-700 mb-2">Items</p>
+                                            {order.items.map((item, idx) => (
+                                                <div key={idx} className="flex justify-between text-slate-600 py-1">
+                                                    <span>{item.product_name} × {item.quantity}</span>
+                                                    <span className="font-medium">{formatCurrency(item.total)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="border-t border-slate-100 pt-2 flex justify-between font-semibold text-slate-900">
+                                            <span>Total</span>
+                                            <span>{formatCurrency(order.total)}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </div>
     );
 }
+
 
 // Wrapper component with Suspense boundary
 export default function CheckoutSuccessPage() {
