@@ -18,9 +18,6 @@ interface Customer {
   state: string | null;
   country: string | null;
   postal_code: string | null;
-  tax_id: string | null;
-  credit_limit: number;
-  outstanding_balance: number;
   customer_type: 'individual' | 'company';
   status: 'active' | 'inactive';
   created_at: string;
@@ -211,8 +208,6 @@ export default function CustomersPage() {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Credit</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Balance</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -220,7 +215,7 @@ export default function CustomersPage() {
               <tbody className="bg-white divide-y divide-slate-200">
                 {customers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                       <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
@@ -259,12 +254,6 @@ export default function CustomersPage() {
                           }`}>
                           {customer.customer_type === 'company' ? 'Business' : 'Individual'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-900">
-                        {formatCurrency(customer.credit_limit || 0)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-900">
-                        {formatCurrency(customer.outstanding_balance || 0)}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.status === 'active'

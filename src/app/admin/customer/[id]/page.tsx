@@ -18,9 +18,6 @@ interface Customer {
   state: string | null;
   country: string | null;
   postal_code: string | null;
-  tax_id: string | null;
-  credit_limit: number;
-  outstanding_balance: number;
   customer_type: 'individual' | 'company';
   status: 'active' | 'inactive';
   created_at: string;
@@ -170,10 +167,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-500 mb-1">Tax ID</label>
-                <p className="text-lg text-slate-900">{customer.tax_id || '-'}</p>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-slate-500 mb-1">Customer Type</label>
                 <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
                   customer.customer_type === 'company'
@@ -197,33 +190,27 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        {/* Financial Info Card */}
+        {/* Metadata Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">Financial Information</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Account Metadata</h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1">Credit Limit</label>
-                <p className="text-2xl font-bold text-slate-900">{formatCurrency(customer.credit_limit || 0)}</p>
-              </div>
-              <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1">Outstanding Balance</label>
-                <p className={`text-2xl font-bold ${customer.outstanding_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {formatCurrency(customer.outstanding_balance || 0)}
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1">Available Credit</label>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency((customer.credit_limit || 0) - (customer.outstanding_balance || 0))}
-                </p>
-              </div>
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1">Created At</label>
                 <p className="text-sm font-semibold text-slate-900">
                   {new Date(customer.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1">Last Updated</label>
+                <p className="text-sm font-semibold text-slate-900">
+                  {new Date(customer.updated_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'

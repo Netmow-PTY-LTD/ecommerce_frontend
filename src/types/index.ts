@@ -55,9 +55,6 @@ export interface Customer {
     state: string | null;
     country: string | null;
     postal_code: string | null;
-    tax_id: string | null;
-    credit_limit: number;
-    outstanding_balance: number;
     customer_type: 'individual' | 'company';
     status: 'active' | 'inactive';
     created_at: string;

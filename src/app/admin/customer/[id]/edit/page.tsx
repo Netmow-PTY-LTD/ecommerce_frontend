@@ -17,9 +17,6 @@ interface Customer {
   state: string | null;
   country: string | null;
   postal_code: string | null;
-  tax_id: string | null;
-  credit_limit: number;
-  outstanding_balance: number;
   customer_type: 'individual' | 'company';
   status: 'active' | 'inactive';
 }
@@ -45,8 +42,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     state: '',
     country: '',
     postal_code: '',
-    tax_id: '',
-    credit_limit: '',
+    postal_code: '',
     customer_type: 'individual' as 'individual' | 'company',
     status: 'active' as 'active' | 'inactive'
   });
@@ -80,8 +76,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         state: customerData.state || '',
         country: customerData.country || '',
         postal_code: customerData.postal_code || '',
-        tax_id: customerData.tax_id || '',
-        credit_limit: customerData.credit_limit?.toString() || '',
         customer_type: customerData.customer_type || 'individual',
         status: customerData.status || 'active'
       });
@@ -112,8 +106,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
       if (formData.state) payload.state = formData.state;
       if (formData.country) payload.country = formData.country;
       if (formData.postal_code) payload.postal_code = formData.postal_code;
-      if (formData.tax_id) payload.tax_id = formData.tax_id;
-      if (formData.credit_limit) payload.credit_limit = parseFloat(formData.credit_limit);
       if (formData.password) payload.password = formData.password;
 
       await api.put(`/customers/${id}`, payload);
@@ -303,42 +295,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          {/* Financial Information */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Financial Information
-              </h2>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Tax ID</label>
-                  <input
-                    type="text"
-                    value={formData.tax_id}
-                    onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="Tax ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Credit Limit</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.credit_limit}
-                    onChange={(e) => setFormData({ ...formData, credit_limit: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Settings */}
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
