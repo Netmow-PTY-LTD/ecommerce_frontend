@@ -42,7 +42,6 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     state: '',
     country: '',
     postal_code: '',
-    postal_code: '',
     customer_type: 'individual' as 'individual' | 'company',
     status: 'active' as 'active' | 'inactive'
   });
