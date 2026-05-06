@@ -10,32 +10,19 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import api from '@/lib/api';
 
-interface Section {
-    id: number;
-    title: string;
-    content: string;
-    status: string;
-}
+
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
     const [page, setPage] = useState(1);
-    const [bannerSection, setBannerSection] = useState<Section | null>(null);
+
 
     const { category, isLoading: isCategoryLoading, isError: isCategoryError } = useCategory(slug);
     const { products, pagination, isLoading: isProductsLoading, isError: isProductsError } = useProducts(page, 12, { category_slug: slug });
 
     const totalPages = pagination?.totalPage || 1;
 
-    useEffect(() => {
-        if (category?.section_id) {
-            api.get(`/sections/${category.section_id}`)
-                .then(res => setBannerSection(res.data.data))
-                .catch(() => setBannerSection(null));
-        } else {
-            setBannerSection(null);
-        }
-    }, [category?.section_id]);
+
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -131,13 +118,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
             {/* Products Section */}
             <section className="py-10 md:py-16">
                 <div className="container px-4 mx-auto">
-                    {/* Banner from linked section */}
-                    {bannerSection?.content && (
-                        <div
-                            className="w-full mb-8 rounded-2xl overflow-hidden"
-                            dangerouslySetInnerHTML={{ __html: bannerSection.content }}
-                        />
-                    )}
+
 
                     {isProductsLoading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 min-h-[50vh]">
