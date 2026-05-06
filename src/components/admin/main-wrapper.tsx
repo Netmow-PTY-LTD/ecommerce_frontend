@@ -8,10 +8,8 @@ interface MainWrapperProps {
 }
 
 export default function MainWrapper({ children }: MainWrapperProps) {
-  const { isAdmin } = useAdminContext();
-
   return (
-    <main className={`flex-1 w-full ${isAdmin ? '' : 'pt-16'}`}>
+    <main className={`flex-1 w-full`}>
       {children}
     </main>
   );
