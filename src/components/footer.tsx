@@ -9,8 +9,8 @@ export function Footer() {
     const pathname = usePathname();
     const { isAdmin } = useAdminContext();
 
-    // Don't render footer on admin routes - check immediately
-    const shouldHide = isAdmin || pathname?.startsWith('/admin');
+    // Don't render footer on admin or customer dashboard routes
+    const shouldHide = isAdmin || pathname?.startsWith('/admin') || pathname?.startsWith('/customer');
     if (shouldHide) {
         return null;
     }
