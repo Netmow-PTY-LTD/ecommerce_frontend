@@ -137,8 +137,7 @@ const navigation: NavItem[] = [
       { name: 'Currencies', href: '/admin/i18n/currencies', icon: DollarSign },
     ],
   },
-  { name: 'Pages', href: '/admin/pages', icon: FileText },
-  { name: 'Sections', href: '/admin/sections', icon: Layers },
+
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
