@@ -12,7 +12,7 @@ import MainWrapper from "@/components/admin/main-wrapper";
 import { cn } from "@/lib/utils";
 import { ChatWidget } from "@/components/chat/chat-widget";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
