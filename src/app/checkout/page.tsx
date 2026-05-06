@@ -92,7 +92,6 @@ function CheckoutForm({
         setCouponLoading(true);
         setCouponError('');
         try {
-            const api = require('@/lib/api').default;
             const cartItemsPayload = items.map(item => ({
                 product_id: item.id,
                 quantity: item.quantity,
@@ -138,8 +137,7 @@ function CheckoutForm({
         if (!formData.lastName) newErrors.lastName = 'Last name is required';
         if (!formData.address) newErrors.address = 'Address is required';
         if (!formData.city) newErrors.city = 'City is required';
-        if (!formData.state) newErrors.state = 'State is required';
-        if (!formData.postalCode) newErrors.postalCode = 'Postal code is required';
+        // state and postalCode are optional
 
         // Password validation if user wants to create account
         if (formData.password && formData.password.length < 6) {
@@ -150,17 +148,25 @@ function CheckoutForm({
             newErrors.confirmPassword = 'Passwords do not match';
         }
 
+        if (Object.keys(newErrors).length > 0) {
+            console.warn('❌ Validation failed:', newErrors);
+            toast.error(`Please fill in: ${Object.keys(newErrors).join(', ')}`, { duration: 5000 });
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('🚀 handleSubmit called, paymentMethod:', paymentMethod);
 
         if (!validateForm()) {
+            console.log('❌ Form validation failed');
             return;
         }
 
+        console.log('✅ Validation passed, processing order...');
         setIsProcessing(true);
 
         try {
@@ -194,9 +200,19 @@ function CheckoutForm({
 
             if (paymentMethod === 'online') {
                 // Online payment with Stripe Checkout
+                // Map items to correct format BEFORE saving to pendingOrder
+                const mappedItems = items.map(item => ({
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    unit_price: item.price,
+                    total_price: item.price * item.quantity,
+                    line_total: item.price * item.quantity,
+                    name: item.name,
+                }));
+
                 // Store order details for later use after payment
                 const orderDetails = {
-                    items: items,
+                    items: mappedItems,
                     subtotal: cartTotals.cartTotal,
                     shipping_cost: cartTotals.shippingCost,
                     tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
@@ -301,9 +317,16 @@ function CheckoutForm({
                     // Order created successfully
                     clearCart();
                     toast.success(`Order placed successfully! Order #${orderData_response.order_number || 'created'}. Pay on delivery.`);
-                    // Store order ID for success page
-                    localStorage.setItem('lastOrderId', orderData_response.id);
-                    localStorage.setItem('lastOrderNumber', orderData_response.order_number);
+                    // Store order ID for success page — convert to string explicitly
+                    const orderId = String(orderData_response.id || orderData_response.order_id || '');
+                    const orderNum = String(orderData_response.order_number || '');
+                    console.log('💾 Storing in localStorage:', { orderId, orderNum });
+                    if (orderId && orderId !== 'undefined') {
+                        localStorage.setItem('lastOrderId', orderId);
+                    }
+                    if (orderNum && orderNum !== 'undefined') {
+                        localStorage.setItem('lastOrderNumber', orderNum);
+                    }
                     router.push('/checkout/success');
                 } else {
                     console.error('❌ Invalid response:', response.data);
@@ -827,6 +850,16 @@ function CheckoutForm({
                             size="lg"
                             className="w-full mt-6 text-base font-semibold h-12"
                             disabled={isProcessing}
+                            onClick={(e) => {
+                                // Fallback: directly call handleSubmit if form onSubmit doesn't fire
+                                const form = e.currentTarget.closest('form');
+                                if (form) {
+                                    // Let the form's onSubmit handle it
+                                } else {
+                                    e.preventDefault();
+                                    handleSubmit(e as any);
+                                }
+                            }}
                         >
                             {isProcessing ? (
                                 <span className="flex items-center">
