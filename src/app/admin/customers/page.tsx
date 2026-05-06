@@ -22,7 +22,7 @@ interface Customer {
   credit_limit: number;
   outstanding_balance: number;
   customer_type: 'individual' | 'company';
-  is_active: boolean;
+  status: 'active' | 'inactive';
   created_at: string;
 }
 
@@ -70,7 +70,7 @@ export default function CustomersPage() {
       });
 
       if (customerTypeFilter) params.append('customer_type', customerTypeFilter);
-      if (activeFilter) params.append('is_active', activeFilter);
+      if (activeFilter) params.append('status', activeFilter);
       if (searchTerm) params.append('search', searchTerm);
 
       const response = await api.get(`/customers?${params.toString()}`);
@@ -100,7 +100,7 @@ export default function CustomersPage() {
 
   const getCustomerStats = () => {
     const total = customers.length;
-    const active = customers.filter(c => c.is_active).length;
+    const active = customers.filter(c => c.status === 'active').length;
     const business = customers.filter(c => c.customer_type === 'company').length;
     const individual = customers.filter(c => c.customer_type === 'individual').length;
 
@@ -194,8 +194,8 @@ export default function CustomersPage() {
                 className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               >
                 <option value="">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
             </div>
           </div>
@@ -267,11 +267,11 @@ export default function CustomersPage() {
                         {formatCurrency(customer.outstanding_balance || 0)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.is_active
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.status === 'active'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
                           }`}>
-                          {customer.is_active ? 'Active' : 'Inactive'}
+                          {customer.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4">

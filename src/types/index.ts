@@ -18,7 +18,7 @@ export interface Product {
     barcode?: string;
     image_url?: string;
     thumb_url?: string;
-    is_active?: boolean;
+    status: 'active' | 'inactive';
     created_at?: string;
     updated_at?: string;
     category?: Category;
@@ -26,6 +26,41 @@ export interface Product {
     gallery_items?: string[];
     attributes?: ProductAttribute[];
     similar_products?: number[];
+}
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role_id?: number;
+    phone?: string;
+    status: 'active' | 'inactive';
+    profile_picture?: string;
+    role?: {
+        id: number;
+        name: string;
+        display_name: string;
+        permissions: string[];
+    };
+}
+
+export interface Customer {
+    id: number;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    company: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    postal_code: string | null;
+    tax_id: string | null;
+    credit_limit: number;
+    outstanding_balance: number;
+    customer_type: 'individual' | 'company';
+    status: 'active' | 'inactive';
+    created_at: string;
 }
 
 export interface ProductAttribute {
@@ -40,7 +75,7 @@ export interface Category {
     description: string;
     image_url?: string;
     parent_id: number | null;
-    is_active: boolean;
+    status: 'active' | 'inactive';
     show_on_home?: boolean;
     section_id?: number | null;
     banner_url?: string;
@@ -52,7 +87,7 @@ export interface Unit {
     id: number;
     name: string;
     symbol: string;
-    is_active?: boolean;
+    status: 'active' | 'inactive';
 }
 
 export interface Pagination {

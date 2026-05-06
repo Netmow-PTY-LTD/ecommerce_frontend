@@ -21,7 +21,7 @@ interface Customer {
   credit_limit: number;
   outstanding_balance: number;
   customer_type: 'individual' | 'company';
-  is_active: boolean;
+  status: 'active' | 'inactive';
 }
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,7 +48,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     tax_id: '',
     credit_limit: '',
     customer_type: 'individual' as 'individual' | 'company',
-    is_active: true
+    status: 'active' as 'active' | 'inactive'
   });
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
         tax_id: customerData.tax_id || '',
         credit_limit: customerData.credit_limit?.toString() || '',
         customer_type: customerData.customer_type || 'individual',
-        is_active: customerData.is_active !== undefined ? customerData.is_active : true
+        status: customerData.status || 'active'
       });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load customer');
@@ -101,7 +101,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
       const payload: any = {
         name: formData.name,
         customer_type: formData.customer_type,
-        is_active: formData.is_active
+        status: formData.status
       };
 
       if (formData.email) payload.email = formData.email;
@@ -364,16 +364,16 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
                     <option value="company">Company</option>
                   </select>
                 </div>
-                <div className="flex items-center">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                    />
-                    <span className="ml-3 text-sm font-medium text-slate-700">Active Customer</span>
-                  </label>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Account Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
                 </div>
               </div>
             </div>

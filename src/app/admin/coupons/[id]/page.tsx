@@ -22,7 +22,7 @@ const emptyForm = {
   per_customer_limit: '1',
   starts_at: '',
   expires_at: '',
-  is_active: true,
+  status: 'active' as 'active' | 'inactive',
   applicable_products: [] as number[],
 };
 
@@ -70,7 +70,7 @@ export default function CouponFormPage() {
         per_customer_limit: String(coupon.per_customer_limit || 1),
         starts_at: coupon.starts_at ? coupon.starts_at.slice(0, 16) : '',
         expires_at: coupon.expires_at ? coupon.expires_at.slice(0, 16) : '',
-        is_active: coupon.is_active,
+        status: coupon.status,
         applicable_products: Array.isArray(coupon.applicable_products)
           ? coupon.applicable_products
           : (typeof coupon.applicable_products === 'string' ? JSON.parse(coupon.applicable_products) : []),
@@ -135,7 +135,7 @@ export default function CouponFormPage() {
         code: formData.code.toUpperCase(),
         type: formData.type,
         value: formData.type === 'bogo' ? 0 : parseFloat(formData.value),
-        is_active: formData.is_active,
+        status: formData.status,
         per_customer_limit: parseInt(formData.per_customer_limit) || 1,
       };
       if (formData.type === 'bogo' && formData.applicable_products.length > 0) {
@@ -447,13 +447,13 @@ export default function CouponFormPage() {
             {/* Active */}
             <div className="flex items-center gap-3">
               <input
-                id="is_active"
+                id="status"
                 type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                checked={formData.status === 'active'}
+                onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'active' : 'inactive' })}
                 className="w-4 h-4 text-primary border-border rounded"
               />
-              <Label htmlFor="is_active" className="cursor-pointer">Active</Label>
+              <Label htmlFor="status" className="cursor-pointer">Active</Label>
             </div>
 
             {/* Actions */}

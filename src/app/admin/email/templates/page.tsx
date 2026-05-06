@@ -33,7 +33,7 @@ interface EmailTemplate {
   body_html: string;
   body_text: string;
   variables: string[];
-  is_active: boolean;
+  status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
 }
@@ -63,7 +63,7 @@ export default function EmailTemplatesPage() {
     body_html: '',
     body_text: '',
     variables: '',
-    is_active: true,
+    status: 'active' as 'active' | 'inactive',
   });
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function EmailTemplatesPage() {
           .split(',')
           .map((v) => v.trim())
           .filter(Boolean),
-        is_active: form.is_active,
+        status: form.status,
       };
       if (editingTemplate) {
         await api.put(`/email/templates/${editingTemplate.id}`, payload);
@@ -164,7 +164,7 @@ export default function EmailTemplatesPage() {
         : typeof tpl.variables === 'string'
           ? (() => { try { return JSON.parse(tpl.variables).join(', '); } catch { return String(tpl.variables); } })()
           : '',
-      is_active: !!tpl.is_active,
+      status: tpl.status,
     });
     setShowModal(true);
   };
@@ -176,7 +176,7 @@ export default function EmailTemplatesPage() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', slug: '', subject: '', body_html: '', body_text: '', variables: '', is_active: true });
+    setForm({ name: '', slug: '', subject: '', body_html: '', body_text: '', variables: '', status: 'active' });
   };
 
   const openPreview = (tpl: EmailTemplate) => {
@@ -205,7 +205,7 @@ export default function EmailTemplatesPage() {
       tpl.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tpl.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tpl.slug.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = !statusFilter || (statusFilter === 'active' ? tpl.is_active : !tpl.is_active);
+    const matchStatus = !statusFilter || tpl.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -219,7 +219,7 @@ export default function EmailTemplatesPage() {
 
   if (!isAuthenticated) return null;
 
-  const activeCount = templates.filter((t) => t.is_active).length;
+  const activeCount = templates.filter((t) => t.status === 'active').length;
   const inactiveCount = templates.length - activeCount;
 
   return (
@@ -385,9 +385,9 @@ export default function EmailTemplatesPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
-                          tpl.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                          tpl.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
                         }`}>
-                          {tpl.is_active ? 'Active' : 'Inactive'}
+                          {tpl.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -516,12 +516,12 @@ export default function EmailTemplatesPage() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
                     <select
-                      value={form.is_active ? 'true' : 'false'}
-                      onChange={(e) => setForm({ ...form, is_active: e.target.value === 'true' })}
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'inactive' })}
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
                     </select>
                   </div>
                 </div>

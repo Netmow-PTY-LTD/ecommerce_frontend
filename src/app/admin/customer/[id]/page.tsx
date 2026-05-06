@@ -22,7 +22,7 @@ interface Customer {
   credit_limit: number;
   outstanding_balance: number;
   customer_type: 'individual' | 'company';
-  is_active: boolean;
+  status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
 }
@@ -186,11 +186,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               <div>
                 <label className="block text-sm font-medium text-slate-500 mb-1">Status</label>
                 <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                  customer.is_active
+                  customer.status === 'active'
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
                 }`}>
-                  {customer.is_active ? 'Active' : 'Inactive'}
+                  {customer.status === 'active' ? 'Active' : 'Inactive'}
                 </span>
               </div>
             </div>

@@ -27,7 +27,7 @@ interface ChatFAQ {
   answer: string;
   keywords: string[];
   category: string;
-  is_active: boolean;
+  status: 'active' | 'inactive';
   created_at: string;
 }
 
@@ -57,7 +57,7 @@ export default function AnswerGuidePage() {
     answer: '',
     keywords: '',
     category: '',
-    is_active: true,
+    status: 'active' as 'active' | 'inactive',
   });
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function AnswerGuidePage() {
           .map((k) => k.trim())
           .filter(Boolean),
         category: faqForm.category.trim(),
-        is_active: faqForm.is_active,
+        status: faqForm.status,
       };
       if (editingFaq) {
         await api.put(`/chat/admin/faqs/${editingFaq.id}`, payload);
@@ -161,13 +161,13 @@ export default function AnswerGuidePage() {
       answer: faq.answer || '',
       keywords: parseKeywords(faq.keywords).join(', '),
       category: faq.category || '',
-      is_active: !!faq.is_active,
+      status: faq.status,
     });
     setShowFaqModal(true);
   };
 
   const resetFaqForm = () => {
-    setFaqForm({ question: '', answer: '', keywords: '', category: '', is_active: true });
+    setFaqForm({ question: '', answer: '', keywords: '', category: '', status: 'active' });
   };
 
   // Derived data
@@ -299,7 +299,7 @@ export default function AnswerGuidePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Active</p>
-                <p className="text-2xl font-bold text-green-600">{faqs.filter((f) => f.is_active).length}</p>
+                <p className="text-2xl font-bold text-green-600">{faqs.filter((f) => f.status === 'active').length}</p>
               </div>
               <div className="bg-green-600 p-3 rounded-xl text-white"><CheckCircle2 size={20} /></div>
             </div>
@@ -419,9 +419,9 @@ export default function AnswerGuidePage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
-                          faq.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                          faq.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
                         }`}>
-                          {faq.is_active ? 'Active' : 'Inactive'}
+                          {faq.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -507,12 +507,12 @@ export default function AnswerGuidePage() {
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
                     <select
-                      value={faqForm.is_active ? 'true' : 'false'}
-                      onChange={(e) => setFaqForm({ ...faqForm, is_active: e.target.value === 'true' })}
+                      value={faqForm.status}
+                      onChange={(e) => setFaqForm({ ...faqForm, status: e.target.value as 'active' | 'inactive' })}
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="true">Active</option>
-                      <option value="false">Inactive</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
                     </select>
                   </div>
                 </div>

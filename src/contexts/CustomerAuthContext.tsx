@@ -16,7 +16,7 @@ interface Customer {
   country: string | null;
   postal_code: string | null;
   customer_type: 'individual' | 'company';
-  is_active: boolean;
+  status: 'active' | 'inactive';
 }
 
 interface CustomerAuthContextType {
