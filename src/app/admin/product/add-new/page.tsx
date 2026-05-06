@@ -81,7 +81,7 @@ export default function AddNewProductPage() {
     image_url: '',
     thumb_url: '',
     gallery_items: [] as string[],
-    is_active: true,
+    status: 'active' as 'active' | 'inactive',
     meta_title: '',
     meta_description: '',
     meta_image: '',
@@ -319,7 +319,7 @@ export default function AddNewProductPage() {
         category_id: parseInt(formData.category_id),
         unit_id: parseInt(formData.unit_id),
         price: parseFloat(formData.price),
-        is_active: formData.is_active,
+        status: formData.status,
       };
 
       if (formData.sku) payload.sku = formData.sku;
@@ -1101,8 +1101,8 @@ export default function AddNewProductPage() {
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  checked={formData.status === 'active'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'active' : 'inactive' })}
                   className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
                 />
                 <span className="text-sm font-medium text-slate-700">Active</span>
@@ -1225,7 +1225,7 @@ export default function AddNewProductPage() {
                     image_url: '',
                     thumb_url: '',
                     gallery_items: [],
-                    is_active: true,
+                    status: 'active',
                     meta_title: '',
                     meta_description: '',
                     meta_image: '',

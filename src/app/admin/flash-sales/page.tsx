@@ -29,7 +29,7 @@ interface FlashSale {
   description?: string;
   starts_at: string;
   ends_at: string;
-  is_active: boolean;
+  status: 'active' | 'inactive';
   banner_image?: string;
   items?: FlashSaleItem[];
   created_at: string;
@@ -41,7 +41,7 @@ const emptyForm = {
   starts_at: '',
   ends_at: '',
   banner_image: '',
-  is_active: true,
+  status: 'active' as 'active' | 'inactive',
 };
 
 export default function AdminFlashSalesPage() {
@@ -132,7 +132,7 @@ export default function AdminFlashSalesPage() {
       starts_at: sale.starts_at ? sale.starts_at.slice(0, 16) : '',
       ends_at: sale.ends_at ? sale.ends_at.slice(0, 16) : '',
       banner_image: sale.banner_image || '',
-      is_active: sale.is_active,
+      status: sale.status,
     });
     setShowModal(true);
   };
@@ -251,7 +251,7 @@ export default function AdminFlashSalesPage() {
     const start = new Date(sale.starts_at);
     const end = new Date(sale.ends_at);
 
-    if (!sale.is_active) return { label: 'Inactive', color: 'bg-gray-100 text-gray-700' };
+    if (sale.status === 'inactive') return { label: 'Inactive', color: 'bg-gray-100 text-gray-700' };
     if (now < start) return { label: 'Scheduled', color: 'bg-blue-100 text-blue-700' };
     if (now >= start && now <= end) return { label: 'Active', color: 'bg-green-100 text-green-700' };
     return { label: 'Expired', color: 'bg-red-100 text-red-700' };
@@ -535,12 +535,12 @@ export default function AdminFlashSalesPage() {
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    id="is_active"
-                    checked={form.is_active}
-                    onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+                    id="status"
+                    checked={form.status === 'active'}
+                    onChange={e => setForm(f => ({ ...f, status: e.target.checked ? 'active' : 'inactive' }))}
                     className="w-4 h-4 rounded border-slate-300"
                   />
-                  <Label htmlFor="is_active" className="cursor-pointer">Active</Label>
+                  <Label htmlFor="status" className="cursor-pointer">Active</Label>
                 </div>
               </div>
 

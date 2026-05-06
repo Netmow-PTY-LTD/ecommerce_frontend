@@ -46,7 +46,7 @@ interface Product {
     barcode: string;
     image_url: string;
     thumb_url?: string;
-    is_active: boolean;
+    status: 'active' | 'inactive';
     created_at: string;
     updated_at: string;
     category?: {
@@ -286,18 +286,18 @@ export default function ProductDetailsPage() {
                                     <div>
                                         <p className="text-sm font-medium text-slate-600">Status</p>
                                         <div className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full mt-1 ${
-                                            product.is_active
+                                            product.status === 'active'
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-red-100 text-red-700'
                                         }`}>
-                                            {product.is_active ? 'Active' : 'Inactive'}
+                                            {product.status === 'active' ? 'Active' : 'Inactive'}
                                         </div>
                                     </div>
                                     <div className={`p-3 rounded-full ${
-                                        product.is_active ? 'bg-green-100' : 'bg-red-100'
+                                        product.status === 'active' ? 'bg-green-100' : 'bg-red-100'
                                     }`}>
                                         <CheckCircle className={`h-6 w-6 ${
-                                            product.is_active ? 'text-green-600' : 'text-red-600'
+                                            product.status === 'active' ? 'text-green-600' : 'text-red-600'
                                         }`} />
                                     </div>
                                 </div>

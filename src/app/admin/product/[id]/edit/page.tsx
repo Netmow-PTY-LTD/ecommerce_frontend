@@ -72,7 +72,7 @@ interface Product {
   image_url: string;
   thumb_url: string;
   gallery_items: string[];
-  is_active: boolean;
+  status: 'active' | 'inactive';
   similar_products?: number[];
 }
 
@@ -114,7 +114,7 @@ export default function EditProductPage() {
     image_url: '',
     thumb_url: '',
     gallery_items: [] as string[],
-    is_active: true,
+    status: 'active' as 'active' | 'inactive',
     meta_title: '',
     meta_description: '',
     meta_image: '',
@@ -248,7 +248,7 @@ export default function EditProductPage() {
         image_url: productData.image_url || '',
         thumb_url: productData.thumb_url || '',
         gallery_items: productData.gallery_items || [],
-        is_active: productData.is_active !== undefined ? productData.is_active : true,
+        status: productData.status || 'active',
         meta_title: productData.meta_title || '',
         meta_description: productData.meta_description || '',
         meta_image: productData.meta_image || '',
@@ -485,7 +485,7 @@ export default function EditProductPage() {
         category_id: parseInt(formData.category_id),
         unit_id: parseInt(formData.unit_id),
         price: parseFloat(formData.price),
-        is_active: formData.is_active,
+        status: formData.status,
       };
 
       if (formData.sku) payload.sku = formData.sku;
@@ -1237,7 +1237,6 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          {/* Status */}
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 py-4 border-b border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
@@ -1252,8 +1251,8 @@ export default function EditProductPage() {
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  checked={formData.status === 'active'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'active' : 'inactive' })}
                   className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
                 />
                 <span className="text-sm font-medium text-slate-700">Active</span>
