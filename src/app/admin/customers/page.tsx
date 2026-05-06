@@ -18,11 +18,8 @@ interface Customer {
   state: string | null;
   country: string | null;
   postal_code: string | null;
-  tax_id: string | null;
-  credit_limit: number;
-  outstanding_balance: number;
   customer_type: 'individual' | 'company';
-  is_active: boolean;
+  status: 'active' | 'inactive';
   created_at: string;
 }
 
@@ -70,7 +67,7 @@ export default function CustomersPage() {
       });
 
       if (customerTypeFilter) params.append('customer_type', customerTypeFilter);
-      if (activeFilter) params.append('is_active', activeFilter);
+      if (activeFilter) params.append('status', activeFilter);
       if (searchTerm) params.append('search', searchTerm);
 
       const response = await api.get(`/customers?${params.toString()}`);
@@ -100,7 +97,7 @@ export default function CustomersPage() {
 
   const getCustomerStats = () => {
     const total = customers.length;
-    const active = customers.filter(c => c.is_active).length;
+    const active = customers.filter(c => c.status === 'active').length;
     const business = customers.filter(c => c.customer_type === 'company').length;
     const individual = customers.filter(c => c.customer_type === 'individual').length;
 
@@ -194,8 +191,8 @@ export default function CustomersPage() {
                 className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               >
                 <option value="">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
             </div>
           </div>
@@ -211,8 +208,6 @@ export default function CustomersPage() {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Credit</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Balance</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -220,7 +215,7 @@ export default function CustomersPage() {
               <tbody className="bg-white divide-y divide-slate-200">
                 {customers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                       <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
@@ -260,18 +255,12 @@ export default function CustomersPage() {
                           {customer.customer_type === 'company' ? 'Business' : 'Individual'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-900">
-                        {formatCurrency(customer.credit_limit || 0)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-900">
-                        {formatCurrency(customer.outstanding_balance || 0)}
-                      </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.is_active
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.status === 'active'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
                           }`}>
-                          {customer.is_active ? 'Active' : 'Inactive'}
+                          {customer.status === 'active' ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-6 py-4">

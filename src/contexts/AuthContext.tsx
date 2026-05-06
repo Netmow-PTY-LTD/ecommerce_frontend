@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   role_id: number;
+  status: 'active' | 'inactive';
   role?: {
     id: number;
     name: string;

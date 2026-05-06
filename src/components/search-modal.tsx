@@ -29,11 +29,18 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     useEffect(() => {
         if (isOpen) {
+            document.body.style.overflow = 'hidden';
             // Focus input when modal opens
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 100);
+        } else {
+            document.body.style.overflow = 'unset';
         }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [isOpen]);
 
     useEffect(() => {

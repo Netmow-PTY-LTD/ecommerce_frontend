@@ -3,16 +3,22 @@
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ShoppingBag, Heart, User, MapPin, LogOut, Package, Clock, CheckCircle } from 'lucide-react';
+import { 
+  ShoppingBag, Heart, User, MapPin, Package, Clock, 
+  CheckCircle, ArrowRight, TrendingUp, DollarSign, Activity, CreditCard,
+  Sparkles, Mail
+} from 'lucide-react';
 import Link from 'next/link';
-import { useCartStore, useWishlistStore } from '@/lib/store';
+import { useWishlistStore } from '@/lib/store';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
+import CustomerLayout from '@/components/customer/customer-layout';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export default function CustomerDashboard() {
-  const { customer, loading, isAuthenticated, logout } = useCustomerAuth();
+  const { customer, loading, isAuthenticated } = useCustomerAuth();
   const router = useRouter();
-  const { items } = useCartStore();
   const wishlistItems = useWishlistStore((state) => state.items);
   const { formatCurrency } = useCurrency();
   const [orderStats, setOrderStats] = useState({
@@ -62,302 +68,229 @@ export default function CustomerDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || !isAuthenticated || !customer) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600"></div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !customer) {
-    return null;
-  }
-
-  const handleLogout = () => {
-    logout();
-  };
+  const stats = [
+    {
+      label: 'Total Orders',
+      value: orderStats.totalOrders,
+      icon: Package,
+      color: 'from-blue-500 to-blue-600',
+      description: 'Orders placed so far'
+    },
+    {
+      label: 'Total Spent',
+      value: formatCurrency(orderStats.totalSpent),
+      icon: DollarSign,
+      color: 'from-green-500 to-green-600',
+      description: 'Lifetime expenditure'
+    },
+    {
+      label: 'Wishlist',
+      value: wishlistItems.length,
+      icon: Heart,
+      color: 'from-rose-500 to-rose-600',
+      description: 'Items you love'
+    },
+    {
+      label: 'Delivered',
+      value: orderStats.deliveredOrders,
+      icon: CheckCircle,
+      color: 'from-indigo-500 to-indigo-600',
+      description: 'Successful deliveries'
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Account</h1>
-              <p className="text-gray-600">Welcome back, {customer.name}!</p>
+    <>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {stats.map((stat, idx) => (
+          <div key={idx} className={cn(
+            "bg-gradient-to-br shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-100",
+            stat.color
+          )}>
+            <div className="p-6 text-white relative overflow-hidden group">
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-xs font-bold uppercase tracking-wider mb-1">{stat.label}</p>
+                  <h3 className="text-2xl font-black">{loadingStats ? '...' : stat.value}</h3>
+                  <p className="text-white/60 text-[10px] mt-1 font-medium italic">{stat.description}</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm group-hover:scale-110 transition-transform">
+                  <stat.icon className="h-6 w-6" />
+                </div>
+              </div>
+              {/* Decorative circle */}
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
-              >
-                <ShoppingBag className="h-5 w-5" />
-                <span>Continue Shopping</span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activity / Profile */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Quick Links / Actions */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+             <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <Activity className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Quick Actions</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/customer/orders" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <Package className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Track Orders</h3>
+                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Check your order status</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </Link>
+
+                  <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <User className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Edit Profile</h3>
+                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Update your information</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </Link>
+
+                  <Link href="/wishlist" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <Heart className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Your Wishlist</h3>
+                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">See what you've saved</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </Link>
+
+                  <Link href="/customer/addresses" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <MapPin className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Saved Addresses</h3>
+                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Manage delivery locations</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </Link>
+                </div>
+             </div>
+          </div>
+
+          {/* Account Details Summary */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <TrendingUp className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Account Summary</h2>
+                </div>
+                <Link href="/customer/orders" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                    View All Orders
+                </Link>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</p>
+                    <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-bold text-slate-700">Active</span>
+                    </div>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Orders</p>
+                    <p className="text-sm font-bold text-slate-700">{orderStats.totalOrders}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending</p>
+                    <p className="text-sm font-bold text-slate-700">{orderStats.pendingOrders}</p>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Customer since</p>
+                    <p className="text-sm font-bold text-slate-700">2024</p>
+                </div>
             </div>
           </div>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - Account Navigation */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 space-y-2">
-              <Link
-                href="/customer/dashboard"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-50 text-indigo-700 font-medium"
-              >
-                <User className="h-5 w-5" />
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                href="/customer/orders"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
-              >
-                <Package className="h-5 w-5" />
-                <span>My Orders</span>
-              </Link>
-              <Link
-                href="/wishlist"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
-              >
-                <Heart className="h-5 w-5" />
-                <span>Wishlist</span>
-                {items.length > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                    {items.length}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href="/customer/addresses"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
-              >
-                <MapPin className="h-5 w-5" />
-                <span>Addresses</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Account Overview */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Account Overview</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total Orders */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <Package className="h-8 w-8 text-blue-600" />
-                    <span className="text-3xl font-bold text-gray-900">
-                      {loadingStats ? '...' : orderStats.totalOrders}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Total Orders</p>
-                  <Link href="/customer/orders" className="text-sm text-blue-600 hover:text-blue-700 mt-2 inline-block">
-                    View Orders →
-                  </Link>
-                </div>
-
-                {/* Wishlist Items */}
-                <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-6 border border-pink-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <Heart className="h-8 w-8 text-pink-600" />
-                    <span className="text-3xl font-bold text-gray-900">{wishlistItems.length}</span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Wishlist Items</p>
-                  <Link href="/wishlist" className="text-sm text-pink-600 hover:text-pink-700 mt-2 inline-block">
-                    View Wishlist →
-                  </Link>
-                </div>
-
-                {/* Total Spent */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                    <span className="text-xl font-bold text-green-700">
-                      {loadingStats ? '...' : formatCurrency(orderStats.totalSpent)}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Total Spent</p>
-                  <p className="text-sm text-green-600 mt-2">
-                    {orderStats.totalOrders} {orderStats.totalOrders === 1 ? 'order' : 'orders'} placed
-                  </p>
-                </div>
-              </div>
-
-              {/* Additional Stats Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                {/* Pending Orders */}
-                <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <Clock className="h-8 w-8 text-yellow-600" />
-                    <span className="text-3xl font-bold text-gray-900">
-                      {loadingStats ? '...' : orderStats.pendingOrders}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Pending Orders</p>
-                  <p className="text-sm text-yellow-600 mt-2">
-                    {orderStats.pendingOrders > 0 ? 'Being processed' : 'No pending orders'}
-                  </p>
-                </div>
-
-                {/* Delivered Orders */}
-                <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 border border-purple-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <CheckCircle className="h-8 w-8 text-purple-600" />
-                    <span className="text-3xl font-bold text-gray-900">
-                      {loadingStats ? '...' : orderStats.deliveredOrders}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Delivered Orders</p>
-                  <p className="text-sm text-purple-600 mt-2">
-                    {orderStats.deliveredOrders > 0 ? 'Successfully delivered' : 'No deliveries yet'}
-                  </p>
-                </div>
-
-                {/* Account Status */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
-                    <span className="text-lg font-bold text-green-700">Active</span>
-                  </div>
-                  <p className="text-gray-600 font-medium">Account Status</p>
-                  <p className="text-sm text-green-600 mt-2">
-                    {customer.customer_type === 'individual' ? 'Individual' : 'Business'} Account
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Profile Information */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Profile Information</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="text-gray-900 font-medium mt-1">{customer.name}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p className="text-gray-900 font-medium mt-1">{customer.email || 'Not provided'}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Phone</label>
-                  <p className="text-gray-900 font-medium mt-1">{customer.phone || 'Not provided'}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Customer Type</label>
-                  <p className="text-gray-900 font-medium mt-1 capitalize">{customer.customer_type}</p>
-                </div>
-
-                {(customer.address || customer.city || customer.state) && (
-                  <>
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Address</label>
-                      <p className="text-gray-900 font-medium mt-1">
-                        {customer.address && `${customer.address}, `}
-                        {customer.city && `${customer.city}, `}
-                        {customer.state && customer.state}
-                        {customer.postal_code && ` ${customer.postal_code}`}
-                      </p>
+        {/* Profile Card Sidebar Style */}
+        <div className="space-y-8">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+                <div className="text-center">
+                    <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-slate-50 shadow-lg shadow-slate-100">
+                        <AvatarFallback className="bg-indigo-600 text-white text-2xl font-black">
+                            {customer.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{customer.name}</h3>
+                    <p className="text-sm text-slate-500 font-medium">{customer.email}</p>
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                        {customer.customer_type} account
                     </div>
-                  </>
-                )}
-              </div>
+                </div>
 
-              <div className="mt-6 pt-6 border-t">
-                <button className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
-                  Edit Profile
+                <div className="mt-8 space-y-4">
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Email</p>
+                            <p className="text-xs font-bold text-slate-700 truncate">{customer.email || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Phone</p>
+                            <p className="text-xs font-bold text-slate-700 truncate">{customer.phone || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button className="w-full mt-6 py-3 rounded-2xl text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-all uppercase tracking-widest cursor-pointer">
+                    Manage Account
                 </button>
-              </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-
-              {loadingStats ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading your orders...</p>
+            {/* Support / Help Card */}
+            <div className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white relative overflow-hidden group">
+                <div className="relative z-10">
+                    <h3 className="text-lg font-bold mb-2">Need help?</h3>
+                    <p className="text-indigo-100 text-xs mb-6 font-medium leading-relaxed">Our support team is available 24/7 to assist you with your orders.</p>
+                    <button className="px-5 py-2.5 bg-white text-indigo-600 text-xs font-bold rounded-xl shadow-lg hover:scale-105 transition-transform active:scale-95 cursor-pointer">
+                        Contact Support
+                    </button>
                 </div>
-              ) : orderStats.totalOrders > 0 ? (
-                <div className="space-y-4">
-                  {/* Show recent orders - would need to pass order data here */}
-                  <div className="text-center py-8">
-                    <Package className="h-12 w-12 mx-auto text-indigo-400 mb-3" />
-                    <p className="text-gray-600 mb-2">You have {orderStats.totalOrders} {orderStats.totalOrders === 1 ? 'order' : 'orders'}</p>
-                    <Link
-                      href="/customer/orders"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-                    >
-                      <Package className="h-5 w-5" />
-                      View All Orders
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Clock className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 mb-2">No recent activity</p>
-                  <p className="text-gray-400 text-sm mb-6">Start shopping to see your orders here</p>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-                  >
-                    <ShoppingBag className="h-5 w-5" />
-                    Start Shopping
-                  </Link>
-                </div>
-              )}
+                <Sparkles className="absolute -top-6 -right-6 h-24 w-24 text-white/10 rotate-12 group-hover:scale-125 transition-transform duration-500" />
             </div>
-
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-sm p-8 text-white">
-              <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link
-                  href="/"
-                  className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-colors"
-                >
-                  <ShoppingBag className="h-6 w-6" />
-                  <span className="font-medium">Shop Now</span>
-                </Link>
-                <Link
-                  href="/wishlist"
-                  className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-colors"
-                >
-                  <Heart className="h-6 w-6" />
-                  <span className="font-medium">View Wishlist</span>
-                </Link>
-                <Link
-                  href="/customer/orders"
-                  className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-lg p-4 transition-colors"
-                >
-                  <Package className="h-6 w-6" />
-                  <span className="font-medium">Track Orders</span>
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

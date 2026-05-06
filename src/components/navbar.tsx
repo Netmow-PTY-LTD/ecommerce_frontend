@@ -12,31 +12,47 @@ import { useSettings } from '@/hooks/use-settings';
 import Image from 'next/image';
 import { useAdminContext } from '@/components/admin/admin-navbar-provider';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal } from '@/components/auth/login-modal';
 
 export function Navbar() {
     const pathname = usePathname();
-    const { isAdmin } = useAdminContext();
-    const { isAuthenticated, customer } = useCustomerAuth();
-
-    // Don't render navbar on admin routes - check immediately
-    const shouldHide = isAdmin || pathname?.startsWith('/admin');
-    if (shouldHide) {
-        return null;
-    }
+    const { isAdmin: isAdminRoute } = useAdminContext();
+    const { isAuthenticated: isCustomerAuthenticated, customer, logout: customerLogout } = useCustomerAuth();
+    const { isAuthenticated: isAdminAuthenticated, user, logout: adminLogout } = useAuth();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const cartItems = useCartStore((state) => state.items);
     const wishlistItems = useWishlistStore((state) => state.items);
     const compareItems = useCompareStore((state) => state.items);
     const router = useRouter();
     const { settings } = useSettings();
 
+    const isAuthenticated = isCustomerAuthenticated || isAdminAuthenticated;
+    const currentUser = customer || user;
+
     const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const wishlistCount = wishlistItems.length;
     const compareCount = compareItems.length;
+
+    useEffect(() => {
+        setMounted(true);
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 0);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Don't render navbar on admin or customer dashboard routes
+    const shouldHide = isAdminRoute || pathname?.startsWith('/admin') || pathname?.startsWith('/customer');
+    if (shouldHide) {
+        return null;
+    }
 
     const getCurrencySymbol = (currency: string) => {
         const symbols: Record<string, string> = {
@@ -127,14 +143,24 @@ export function Navbar() {
         return symbols[currency] || currency || '$';
     };
 
-    useEffect(() => {
-        setMounted(true);
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 0);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    const getInitials = (name: string | undefined) => {
+        if (!name) return '';
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    const getDashboardLink = () => {
+        const role = user?.role || customer?.role;
+        if (role) {
+            if (role.name === 'Superadmin') return '/admin/dashboard';
+            if (role.name === 'Admin') return '/customer/dashboard';
+        }
+        return '/customer/dashboard';
+    };
 
     const navLinks = [
         { href: '/', label: 'Home' },
@@ -145,8 +171,7 @@ export function Navbar() {
     return (
         <header
             className={cn(
-                'fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent',
-                isScrolled || isMenuOpen ? 'bg-background/80 backdrop-blur-md border-border shadow-sm' : 'bg-transparent'
+                'fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-white'
             )}
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -230,14 +255,22 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        <Link href={isAuthenticated ? "/account" : "/login"}>
-                            <Button variant="ghost" size="icon" className="relative">
-                                <User className="h-5 w-5" />
-                                {isAuthenticated && customer && (
-                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
-                                )}
-                            </Button>
-                        </Link>
+                        <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
+                            <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
+                                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
+                                    {isAuthenticated && currentUser ? (
+                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                            {getInitials(currentUser.name)}
+                                        </div>
+                                    ) : (
+                                        <User className="h-5 w-5" />
+                                    )}
+                                    {isAuthenticated && (
+                                        <span className="absolute bottom-0.5 right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
+                                    )}
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -272,14 +305,22 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        <Link href={isAuthenticated ? "/account" : "/login"}>
-                            <Button variant="ghost" size="icon" className="relative">
-                                <User className="h-5 w-5" />
-                                {isAuthenticated && customer && (
-                                    <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
-                                )}
-                            </Button>
-                        </Link>
+                        <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
+                            <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
+                                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
+                                    {isAuthenticated && currentUser ? (
+                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                            {getInitials(currentUser.name)}
+                                        </div>
+                                    ) : (
+                                        <User className="h-5 w-5" />
+                                    )}
+                                    {isAuthenticated && (
+                                        <span className="absolute bottom-0.5 right-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-green-500 border-2 border-background" />
+                                    )}
+                                </Button>
+                            </Link>
+                        </div>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -309,12 +350,29 @@ export function Navbar() {
                             </Link>
                         ))}
                         <div className="pt-4 mt-4 border-t border-border space-y-2">
-                            <Link href={isAuthenticated ? "/account" : "/login"} onClick={() => setIsMenuOpen(false)} className='block'>
-                                <Button variant="outline" className="w-full justify-start gap-2">
-                                    <User className="h-4 w-4" />
-                                    {isAuthenticated ? `${customer?.name || 'My Account'}` : 'Sign In'}
+                            <div
+                                onClick={() => {
+                                    if (!isAuthenticated) {
+                                        setIsMenuOpen(false);
+                                        setIsLoginModalOpen(true);
+                                    } else {
+                                        setIsMenuOpen(false);
+                                        router.push(getDashboardLink());
+                                    }
+                                }}
+                                className='block'
+                            >
+                                <Button variant="outline" className="w-full justify-start gap-2 rounded-xl overflow-hidden">
+                                    {isAuthenticated && currentUser ? (
+                                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
+                                            {getInitials(currentUser.name)}
+                                        </div>
+                                    ) : (
+                                        <User className="h-4 w-4" />
+                                    )}
+                                    {isAuthenticated ? `${currentUser?.name || 'My Account'}` : 'Sign In'}
                                 </Button>
-                            </Link>
+                            </div>
                             <Link href="/wishlist" onClick={() => setIsMenuOpen(false)} className='block'>
                                 <Button variant="outline" className="w-full justify-start gap-2">
                                     <Heart className="h-4 w-4" /> Wishlist
@@ -352,6 +410,9 @@ export function Navbar() {
 
             {/* Search Modal */}
             <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+            {/* Login Modal */}
+            <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
         </header>
     );
 }
