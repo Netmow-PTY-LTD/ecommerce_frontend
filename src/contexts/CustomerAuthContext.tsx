@@ -17,7 +17,7 @@ interface Customer {
   postal_code: string | null;
   customer_type: 'individual' | 'company';
   status: 'active' | 'inactive';
-  thumb_url: string | null;
+  image_url: string | null;
   role?: {
     id: number;
     name: string;
