@@ -1,7 +1,7 @@
 'use client';
 
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Building2, Globe, Hash, Save, 
   ShieldCheck, ArrowLeft, Camera, Loader2, CheckCircle2
@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function CustomerProfilePage() {
-  const { customer, loading: authLoading, isAuthenticated } = useCustomerAuth();
+  const { customer, loading: authLoading, isAuthenticated, updateCustomer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,16 +52,62 @@ export default function CustomerProfilePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setUploading(true);
+    try {
+      const response = await api.post(`/customers/${customer?.id}/profile-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.status) {
+        toast.success('Profile image updated successfully!');
+        // Update both local state and global context
+        if (response.data.data.image_url) {
+          updateCustomer({ image_url: response.data.data.image_url });
+        }
+      }
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       // In a real app, you would have a PATCH endpoint for profile update
-      const response = await api.patch(`/customers/profile/${customer?.id}`, formData);
-      if (response.data.success) {
+      const response = await api.put(`/customers/${customer?.id}`, formData);
+
+      if (response.data.status) {
         toast.success('Profile updated successfully!');
-        // Update local storage if needed or wait for re-fetch
-        localStorage.setItem('customer_data', JSON.stringify({ ...customer, ...formData }));
+        updateCustomer(formData as any);
       }
     } catch (error: any) {
       console.error('Update failed:', error);
@@ -105,12 +153,34 @@ export default function CustomerProfilePage() {
             <div className="relative z-10 pt-4">
               <div className="relative inline-block mx-auto mb-6">
                 <Avatar className="h-32 w-32 border-4 border-white shadow-xl shadow-slate-200">
+                  {customer.image_url && (
+                    <AvatarImage 
+                      src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                      className="object-cover" 
+                    />
+                  )}
                   <AvatarFallback className="bg-slate-100 text-slate-400 text-4xl font-black">
                     {customer.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <button type="button" className="absolute bottom-1 right-1 h-10 w-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all cursor-pointer">
-                  <Camera className="h-5 w-5" />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button 
+                  type="button" 
+                  onClick={handleImageClick}
+                  disabled={uploading}
+                  className="absolute bottom-1 right-1 h-10 w-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all cursor-pointer disabled:opacity-50 disabled:scale-100"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                  ) : (
+                    <Camera className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               

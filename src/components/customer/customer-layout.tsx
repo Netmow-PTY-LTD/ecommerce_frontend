@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -142,6 +142,12 @@ export default function CustomerLayout({
             sidebarCollapsed ? 'justify-center' : 'justify-start'
           )}>
             <Avatar className="h-10 w-10 shrink-0 border-2 border-slate-50 shadow-sm">
+              {customer?.image_url && (
+                <AvatarImage 
+                  src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                  className="object-cover" 
+                />
+              )}
               <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
                 {getInitials(customer?.name)}
               </AvatarFallback>
@@ -201,6 +207,12 @@ export default function CustomerLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-xl p-0 overflow-hidden border border-slate-100">
                   <Avatar className="h-10 w-10 rounded-xl">
+                    {customer?.image_url && (
+                      <AvatarImage 
+                        src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                        className="object-cover" 
+                      />
+                    )}
                     <AvatarFallback className="bg-slate-100 text-slate-700 text-sm font-bold">
                       {getInitials(customer?.name)}
                     </AvatarFallback>
