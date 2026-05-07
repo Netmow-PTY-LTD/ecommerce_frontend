@@ -388,8 +388,89 @@ export default function CustomerProfilePage() {
             </div>
           </div>
 
+          {/* Change Password Section */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Security & Password</h3>
+            </div>
+
+            <div className="space-y-6">
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                To update your password, please fill in the fields below. If you don't want to change your password, leave these fields empty.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Current Password</label>
+                  <div className="relative group">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">New Password</label>
+                  <div className="relative group">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <input
+                      type="password"
+                      name="newPassword"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-start">
+                <Button 
+                  type="button"
+                  onClick={async () => {
+                    const oldPass = (document.querySelector('input[name="oldPassword"]') as HTMLInputElement)?.value;
+                    const newPass = (document.querySelector('input[name="newPassword"]') as HTMLInputElement)?.value;
+                    
+                    if (!oldPass || !newPass) {
+                      toast.error('Please fill in both current and new password');
+                      return;
+                    }
+
+                    try {
+                      setLoading(true);
+                      const response = await api.post('/customers/change-password', {
+                        oldPassword: oldPass,
+                        newPassword: newPass
+                      });
+                      
+                      if (response.data.status) {
+                        toast.success('Password changed successfully!');
+                        (document.querySelector('input[name="oldPassword"]') as HTMLInputElement).value = '';
+                        (document.querySelector('input[name="newPassword"]') as HTMLInputElement).value = '';
+                      }
+                    } catch (error: any) {
+                      toast.error(error.response?.data?.message || 'Failed to change password');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="px-6 py-2 rounded-xl text-xs font-black text-white bg-slate-900 hover:bg-black transition-all uppercase tracking-widest cursor-pointer"
+                >
+                  Update Password
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-4 pt-4">
+
             <button
               type="button"
               className="px-8 py-3.5 rounded-2xl text-sm font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all uppercase tracking-widest cursor-pointer"
