@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export default function CustomerProfilePage() {
-  const { customer, loading: authLoading, isAuthenticated } = useCustomerAuth();
+  const { customer, loading: authLoading, isAuthenticated, updateCustomer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -55,11 +55,11 @@ export default function CustomerProfilePage() {
     setLoading(true);
     try {
       // In a real app, you would have a PATCH endpoint for profile update
-      const response = await api.patch(`/customers/profile/${customer?.id}`, formData);
-      if (response.data.success) {
+      const response = await api.put(`/customers/${customer?.id}`, formData);
+
+      if (response.data.status) {
         toast.success('Profile updated successfully!');
-        // Update local storage if needed or wait for re-fetch
-        localStorage.setItem('customer_data', JSON.stringify({ ...customer, ...formData }));
+        updateCustomer(formData as any);
       }
     } catch (error: any) {
       console.error('Update failed:', error);

@@ -29,6 +29,7 @@ interface CustomerAuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateCustomer: (data: Partial<Customer>) => void;
   loading: boolean;
   isAuthenticated: boolean;
 }
@@ -80,11 +81,20 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     router.push('/login');
   };
 
+  const updateCustomer = (data: Partial<Customer>) => {
+    if (customer) {
+      const updatedCustomer = { ...customer, ...data };
+      setCustomer(updatedCustomer);
+      localStorage.setItem('customer_data', JSON.stringify(updatedCustomer));
+    }
+  };
+
   const value = {
     customer,
     token,
     login,
     logout,
+    updateCustomer,
     loading,
     isAuthenticated: !!customer && !!token,
   };
