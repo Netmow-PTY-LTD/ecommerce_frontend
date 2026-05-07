@@ -186,7 +186,7 @@ export default function CustomerDashboard() {
                     <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
                   </Link>
 
-                  <Link href="/customer/addresses" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                  <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                         <MapPin className="h-6 w-6 text-indigo-600" />
