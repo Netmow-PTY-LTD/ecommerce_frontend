@@ -17,6 +17,11 @@ interface Customer {
   postal_code: string | null;
   customer_type: 'individual' | 'company';
   status: 'active' | 'inactive';
+  role?: {
+    id: number;
+    name: string;
+    display_name: string;
+  };
 }
 
 interface CustomerAuthContextType {
