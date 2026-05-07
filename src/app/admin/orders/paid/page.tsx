@@ -6,13 +6,21 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
-import { CheckCircle2, Download, Filter, ArrowUpDown, TrendingUp } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
+import {
+  Eye, Search as SearchIcon, Package, User,
+  ShoppingCart, Printer, PlusCircle, Truck,
+  Clock, CheckCircle2, Mail, Phone, MapPin,
+  Calendar, CreditCard, Receipt,
+  TrendingUp
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ReactNode } from 'react';
 
 interface Order {
   id: number;
@@ -25,6 +33,7 @@ interface Order {
   subtotal: number;
   tax: number;
   shipping_cost: number;
+  discount_amount: number;
   total: number;
   payment_method: string;
   payment_status: 'pending' | 'paid' | 'failed';
@@ -55,6 +64,7 @@ export default function PaidOrdersPage() {
   const { formatCurrency } = useCurrency();
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: '1',
@@ -65,13 +75,35 @@ export default function PaidOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    delivered: 0,
+    revenue: 0,
+    avgValue: 0,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setColumnVisibility({
+        order_number: true,
+        customer: width >= 640,
+        status: width >= 1600,
+        total: width >= 1024,
+        payment: width >= 1440,
+        items: width >= 1440,
+        created_at: width >= 1600,
+        actions: width >= 1600,
+      });
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -79,54 +111,74 @@ export default function PaidOrdersPage() {
     }
   }, [isAuthenticated, loading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchPaidOrders();
-    }
-  }, [isAuthenticated, currentPage, selectedStatus, selectedPaymentMethod, sortBy, sortOrder, appliedSearch]);
-
   const fetchPaidOrders = async () => {
     try {
+      setLoadingOrders(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
         payment_status: 'paid',
       });
-      if (selectedStatus) params.append('status', selectedStatus);
-      if (selectedPaymentMethod) params.append('payment_method', selectedPaymentMethod);
+      if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
-      params.append('sort', sortBy);
-      params.append('order', sortOrder);
 
       const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
 
-      // Transform API response to match our interface
-      const transformedOrders: Order[] = data.data.map((order: any) => ({
-        id: order.id,
-        order_number: order.order_number,
-        customer_name: order.customer?.name || 'N/A',
-        customer_email: order.customer_email || order.customer?.email || 'N/A',
-        customer_phone: order.customer_phone || order.customer?.phone || 'N/A',
-        shipping_address: order.shipping_address || 'N/A',
-        status: order.status,
-        subtotal: parseFloat(order.subtotal || order.total_amount * 0.9),
-        tax: parseFloat(order.tax_amount || 0),
-        shipping_cost: parseFloat(order.shipping_cost || 0),
-        total: parseFloat(order.total_amount || 0),
-        payment_method: order.payment_method || 'N/A',
-        payment_status: order.payment_status || 'pending',
-        items: order.items?.map((item: any) => ({
-          id: item.id,
-          product_name: item.product?.name || item.name || 'Product',
-          quantity: item.quantity,
-          price: parseFloat(item.unit_price || item.price || 0),
-          total: parseFloat(item.total_price || item.total || 0),
-        })) || [],
-        notes: order.notes || '',
-        created_at: order.created_at || order.order_date || new Date().toISOString(),
-        updated_at: order.updated_at || new Date().toISOString(),
-      }));
+      const transformedOrders: Order[] = data.data.map((order: any) => {
+        let shippingAddress = 'N/A';
+        try {
+          if (order.shipping_address) {
+            const addr = typeof order.shipping_address === 'string'
+              ? JSON.parse(order.shipping_address)
+              : order.shipping_address;
+
+            if (addr && typeof addr === 'object') {
+              const parts = [
+                addr.firstName && addr.lastName ? `${addr.firstName} ${addr.lastName}` : null,
+                addr.address,
+                addr.apartment ? `Apt/Suite ${addr.apartment}` : null,
+                addr.city,
+                addr.state,
+                addr.postalCode,
+                addr.country
+              ].filter(Boolean);
+              shippingAddress = parts.join(', ');
+            } else {
+              shippingAddress = order.shipping_address;
+            }
+          }
+        } catch (e) {
+          shippingAddress = order.shipping_address || 'N/A';
+        }
+
+        return {
+          id: order.id,
+          order_number: order.order_number,
+          customer_name: order.customer?.name || 'N/A',
+          customer_email: order.customer_email || order.customer?.email || 'N/A',
+          customer_phone: order.customer_phone || order.customer?.phone || 'N/A',
+          shipping_address: shippingAddress,
+          status: order.status,
+          subtotal: parseFloat(order.subtotal || order.total_amount * 0.9),
+          tax: parseFloat(order.tax_amount || 0),
+          shipping_cost: parseFloat(order.shipping_cost || 0),
+          discount_amount: parseFloat(order.discount_amount || 0),
+          total: parseFloat(order.total_amount || 0),
+          payment_method: order.payment_method || 'N/A',
+          payment_status: order.payment_status || 'pending',
+          items: order.items?.map((item: any) => ({
+            id: item.id,
+            product_name: item.product?.name || item.name || 'Product',
+            quantity: item.quantity,
+            price: parseFloat(item.unit_price || item.price || 0),
+            total: parseFloat(item.total_price || item.total || 0),
+          })) || [],
+          notes: order.notes || '',
+          created_at: order.created_at || order.order_date || new Date().toISOString(),
+          updated_at: order.updated_at || new Date().toISOString(),
+        };
+      });
 
       setOrders(transformedOrders);
       setPagination({
@@ -135,12 +187,39 @@ export default function PaidOrdersPage() {
         limit: data.pagination?.limit || '10',
         totalPage: data.pagination?.totalPage || 1,
       });
-    } catch (err: unknown) {
-      console.error('Failed to fetch paid orders:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError('Failed to load paid orders: ' + errorMessage);
+
+      // Update stats if available or calculate from current data
+      if (data.stats) {
+        setStats({
+          pending: data.stats.pending || 0,
+          delivered: data.stats.delivered || 0,
+          revenue: data.stats.total_revenue || 0,
+          avgValue: data.stats.avg_order_value || 0,
+        });
+      } else if (data.data) {
+        const totalRev = transformedOrders.reduce((sum, order) => sum + order.total, 0);
+        const pendingDel = transformedOrders.filter(o => o.status === 'processing' || o.status === 'shipped').length;
+        const deliveredCount = transformedOrders.filter(o => o.status === 'delivered').length;
+
+        setStats({
+          pending: pendingDel,
+          delivered: deliveredCount,
+          revenue: totalRev,
+          avgValue: transformedOrders.length > 0 ? totalRev / transformedOrders.length : 0,
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch paid orders:', error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPaidOrders();
+    }
+  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,366 +230,333 @@ export default function PaidOrdersPage() {
   const handleClearSearch = () => {
     setSearchTerm('');
     setAppliedSearch('');
+    setSelectedStatus('');
     setCurrentPage(1);
   };
-
-  const handleSort = (field: 'date' | 'amount') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
-  };
-
-  const exportPaidOrders = () => {
-    // Export functionality placeholder
-    const csv = [
-      ['Order Number', 'Customer', 'Email', 'Total', 'Payment Method', 'Status', 'Date'].join(','),
-      ...orders.map(o => [
-        o.order_number,
-        o.customer_name,
-        o.customer_email,
-        o.total.toString(),
-        o.payment_method,
-        o.status,
-        new Date(o.created_at).toLocaleDateString()
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `paid-orders-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    setSuccess('Paid orders exported successfully!');
-    setTimeout(() => setSuccess(''), 3000);
-  };
-
-  const getStatusColor = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'delivered':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
-  const getPaymentMethodLabel = (method: string) => {
-    const methodLower = method.toLowerCase();
-    if (methodLower === 'cash' || methodLower === 'cod') {
-      return { label: 'COD', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' };
-    } else if (methodLower.includes('stripe') || methodLower.includes('online') || methodLower.includes('card')) {
-      return { label: 'Stripe', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' };
-    } else if (methodLower.includes('bank')) {
-      return { label: 'Bank Transfer', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' };
-    } else {
-      return { label: method, color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' };
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  // Calculate stats
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
-    <AdminLayout
-      title="Paid Orders"
-      subtitle="Manage and track all paid customer orders"
-    >
-      <div className="space-y-6">
-        {/* Alert Messages */}
-        {success && (
-          <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-6 py-4 rounded-xl shadow-sm flex items-center">
-            <CheckCircle2 className="w-5 h-5 mr-3 flex-shrink-0" />
-            {success}
+    <AdminLayout>
+      <div className="space-y-5 overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Paid Orders</h1>
+            <p className="text-slate-500 mt-1 text-sm">Manage and track all successfully paid orders.</p>
           </div>
-        )}
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-xl shadow-sm flex items-center">
-            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        )}
+        </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <Card className="shadow-lg border-l-4 border-l-green-500">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Paid Orders</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{orders.length}</p>
+                  <p className="text-indigo-100 text-sm font-medium">Paid Orders</p>
+                  <h3 className="text-2xl font-bold mt-1">{pagination.total}</h3>
                 </div>
-                <div className="h-12 w-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <Package className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-blue-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalRevenue)}</p>
+                  <p className="text-emerald-100 text-sm font-medium">Total Revenue</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(stats.revenue)}</h3>
                 </div>
-                <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <TrendingUp className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-purple-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(avgOrderValue)}</p>
+                  <p className="text-blue-100 text-sm font-medium">Avg Order Value</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(stats.avgValue)}</h3>
                 </div>
-                <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                  <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <Receipt className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-orange-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Delivery</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
-                    {orders.filter(o => o.status === 'processing' || o.status === 'shipped').length}
-                  </p>
+                  <p className="text-yellow-100 text-sm font-medium">Pending Delivery</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.pending}</h3>
                 </div>
-                <div className="h-12 w-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-                  <svg className="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                  </svg>
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Delivered</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.delivered}</h3>
+                </div>
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <CheckCircle2 className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filter */}
-        <Card className="shadow-xl">
-          <CardContent className="p-6">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex-1 min-w-64">
-                  <Input
-                    type="text"
-                    placeholder="Search by order number, customer name, email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-10"
-                  />
-                </div>
-                <div>
-                  <Select
-                    value={selectedStatus}
-                    onChange={(e) => {
-                      setSelectedStatus(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="h-10 w-40"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                  </Select>
-                </div>
-                <div>
-                  <Select
-                    value={selectedPaymentMethod}
-                    onChange={(e) => {
-                      setSelectedPaymentMethod(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="h-10 w-40"
-                  >
-                    <option value="">All Payment Methods</option>
-                    <option value="stripe">Stripe</option>
-                    <option value="cod">Cash on Delivery</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                  </Select>
-                </div>
-                <Button type="submit" className="h-10">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
+        {/* Filters Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <div className="p-4 md:p-6 bg-white border-b border-slate-100">
+            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search by order #, name..."
+                  className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full sm:w-[180px] h-11 bg-slate-50 border-slate-200"
+              >
+                <option value="all">All Delivery Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+              </Select>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button type="submit" className="flex-1 sm:flex-none h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                  Apply
                 </Button>
-                {appliedSearch && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleClearSearch}
-                    className="h-10"
-                  >
-                    Clear
-                  </Button>
-                )}
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={exportPaidOrders}
-                  className="h-10"
+                  className="h-11 px-4 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  onClick={handleClearSearch}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
+                  Reset
                 </Button>
               </div>
             </form>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Orders Table */}
-        <Card className="shadow-xl">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Order Info</TableHead>
-                  <TableHead className="font-semibold">Customer</TableHead>
-                  <TableHead className="font-semibold cursor-pointer hover:bg-muted" onClick={() => handleSort('amount')}>
-                    <div className="flex items-center gap-1">
-                      Total
-                      <ArrowUpDown className="h-3 w-3" />
+        <Card className="border-none shadow-sm overflow-hidden p-0 sm:p-4 md:p-6">
+          <DataTable<Order>
+            data={orders}
+            columns={[
+              {
+                key: 'order_number',
+                title: 'Order Info',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col">
+                    <span className="font-bold text-slate-900">#{order.order_number}</span>
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5" /> {format(new Date(order.created_at), 'MMM dd, HH:mm')}
+                    </span>
+                  </div>
+                )
+              },
+              {
+                key: 'customer',
+                title: 'Customer',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-900">{order.customer_name}</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[150px]">{order.customer_email}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'status',
+                title: 'Delivery',
+                render: (status): ReactNode => {
+                  const s = status as string;
+                  const config: Record<string, string> = {
+                    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+                    processing: 'bg-blue-50 text-blue-700 border-blue-200',
+                    shipped: 'bg-purple-50 text-purple-700 border-purple-200',
+                    delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+                  };
+                  return (
+                    <Badge className={`${config[s] || 'bg-slate-50'} shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
+                      {s}
+                    </Badge>
+                  );
+                }
+              },
+              {
+                key: 'total',
+                title: 'Total Amount',
+                render: (total): ReactNode => (
+                  <span className="font-bold text-slate-900">{formatCurrency(Number(total))}</span>
+                )
+              },
+              {
+                key: 'payment',
+                title: 'Payment',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col gap-1">
+                    <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider w-fit" variant="outline">
+                      {order.payment_method}
+                    </Badge>
+                    <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 uppercase">
+                      <CheckCircle2 className="h-2.5 w-2.5" /> {order.payment_status}
+                    </span>
+                  </div>
+                )
+              },
+              {
+                key: 'items',
+                title: 'Items',
+                render: (_, order): ReactNode => (
+                  <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-none font-medium text-xs">
+                    {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                  </Badge>
+                )
+              },
+              {
+                key: 'actions',
+                title: 'Actions',
+                className: 'text-right',
+                headerClassName: 'text-right',
+                render: (_, order): ReactNode => (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => router.push(`/admin/order/${order.id}`)}
+                      title="View Order"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => window.print()}
+                      title="Print Invoice"
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )
+              }
+            ]}
+            expandable
+            renderExpandedRow={(order) => (
+              <div className="py-2 space-y-3 text-sm animate-in fade-in slide-in-from-top-1 duration-200 px-4 md:px-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <User className="h-3 w-3" /> Customer Info
+                    </p>
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="font-semibold text-slate-900">{order.customer_name}</p>
+                      <p className="text-slate-500 text-xs">{order.customer_email}</p>
+                      <p className="text-slate-500 text-xs">{order.customer_phone}</p>
                     </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">Payment</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold cursor-pointer hover:bg-muted" onClick={() => handleSort('date')}>
-                    <div className="flex items-center gap-1">
-                      Date
-                      <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3" /> Shipping Address
+                    </p>
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="text-slate-700 leading-snug">{order.shipping_address}</p>
                     </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No paid orders found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  orders.map((order) => (
-                    <TableRow key={order.id} className="hover:bg-muted/50">
-                      <TableCell className="font-semibold text-primary">#{order.order_number}</TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium">{order.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{order.customer_email}</div>
-                      </TableCell>
-                      <TableCell className="font-bold">{formatCurrency(order.total)}</TableCell>
-                      <TableCell>
-                        <Badge className={`${getPaymentMethodLabel(order.payment_method).color}`} variant="secondary">
-                          {getPaymentMethodLabel(order.payment_method).label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`${getStatusColor(order.status)}`} variant="secondary">
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{formatDateTime(order.created_at)}</TableCell>
-                      <TableCell>
-                        <a
-                          href={`/admin/orders/${order.id}`}
-                          className="text-primary hover:underline font-medium text-sm"
-                        >
-                          View Details
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          {pagination.totalPage > 1 && (
-            <div className="bg-muted/30 px-6 py-4 border-t">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{(currentPage - 1) * 10 + 1}</span> to{' '}
-                  <span className="font-semibold text-foreground">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
-                  <span className="font-semibold text-foreground">{pagination.total}</span> results
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    variant="outline"
-                    size="sm"
-                    className="disabled:opacity-50"
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    disabled={currentPage >= pagination.totalPage}
-                    variant="outline"
-                    size="sm"
-                    className="disabled:opacity-50"
-                  >
-                    Next
-                  </Button>
+
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShoppingCart className="h-3 w-3" /> Order Items
+                  </p>
+                  <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50/80 border-b border-slate-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-bold text-slate-500 uppercase tracking-tighter">Product</th>
+                          <th className="px-3 py-2 text-center font-bold text-slate-500 uppercase tracking-tighter w-16">Qty</th>
+                          <th className="px-3 py-2 text-right font-bold text-slate-500 uppercase tracking-tighter w-24">Price</th>
+                          <th className="px-3 py-2 text-right font-bold text-slate-500 uppercase tracking-tighter w-24">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {order.items.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
+                            <td className="px-3 py-2 font-medium text-slate-900 truncate max-w-[200px]">{item.product_name}</td>
+                            <td className="px-3 py-2 text-center text-slate-600 font-bold">{item.quantity}</td>
+                            <td className="px-3 py-2 text-right text-slate-600">{formatCurrency(item.price)}</td>
+                            <td className="px-3 py-2 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-slate-100">
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Subtotal</p>
+                    <p className="font-bold text-slate-700">{formatCurrency(order.subtotal)}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Tax & Shipping</p>
+                    <p className="font-bold text-slate-700">{formatCurrency(order.tax + order.shipping_cost)}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Discount</p>
+                    <p className="font-bold text-rose-500">-{formatCurrency(order.discount_amount)}</p>
+                  </div>
+                  <div className="space-y-0.5 text-right">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Amount</p>
+                    <p className="text-lg font-black text-indigo-600">{formatCurrency(order.total)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            searchable={false}
+            serverPagination
+            paginationMeta={{
+              total: pagination.total,
+              page: currentPage,
+              limit: parseInt(pagination.limit),
+              totalPage: pagination.totalPage
+            }}
+            onPageChange={(page) => setCurrentPage(page)}
+            loading={loadingOrders}
+            emptyMessage="No paid orders found."
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+          />
         </Card>
       </div>
     </AdminLayout>

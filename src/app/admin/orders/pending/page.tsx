@@ -6,13 +6,21 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
-import { Clock, Download, Filter, ArrowUpDown, TrendingUp, Package, CheckCircle2 } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
+import {
+  Eye, Search as SearchIcon, Package, User,
+  ShoppingCart, Printer, MapPin,
+  Clock, CheckCircle2, TrendingUp,
+  CreditCard,
+  Truck
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ReactNode } from 'react';
 
 interface Order {
   id: number;
@@ -25,6 +33,7 @@ interface Order {
   subtotal: number;
   tax: number;
   shipping_cost: number;
+  discount_amount: number;
   total: number;
   payment_method: string;
   payment_status: 'pending' | 'paid' | 'failed';
@@ -55,6 +64,7 @@ export default function PendingOrdersPage() {
   const { formatCurrency } = useCurrency();
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: '1',
@@ -63,13 +73,36 @@ export default function PendingOrdersPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [stats, setStats] = useState({
+    pending: 0,
+    value: 0,
+    paidUnshipped: 0,
+    totalItems: 0,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setColumnVisibility({
+        order_number: true,
+        customer: width >= 640,
+        items: width >= 1024,
+        total: width >= 1024,
+        payment: width >= 1440,
+        created_at: width >= 1280,
+        time_ago: width >= 1600,
+        actions: true,
+      });
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -77,54 +110,73 @@ export default function PendingOrdersPage() {
     }
   }, [isAuthenticated, loading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchPendingOrders();
-    }
-  }, [isAuthenticated, currentPage, selectedPaymentMethod, sortBy, sortOrder]);
-
   const fetchPendingOrders = async () => {
     try {
+      setLoadingOrders(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
         status: 'pending',
       });
-
-      if (selectedPaymentMethod) params.append('payment_method', selectedPaymentMethod);
-      if (searchTerm) params.append('search', searchTerm);
-      params.append('sort', sortBy);
-      params.append('order', sortOrder);
+      if (appliedSearch) params.append('search', appliedSearch);
 
       const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
 
-      // Transform API response to match our interface
-      const transformedOrders: Order[] = data.data.map((order: any) => ({
-        id: order.id,
-        order_number: order.order_number,
-        customer_name: order.customer?.name || 'N/A',
-        customer_email: order.customer_email || order.customer?.email || 'N/A',
-        customer_phone: order.customer_phone || order.customer?.phone || 'N/A',
-        shipping_address: order.shipping_address || 'N/A',
-        status: order.status,
-        subtotal: parseFloat(order.subtotal || order.total_amount * 0.9),
-        tax: parseFloat(order.tax_amount || 0),
-        shipping_cost: parseFloat(order.shipping_cost || 0),
-        total: parseFloat(order.total_amount || 0),
-        payment_method: order.payment_method || 'N/A',
-        payment_status: order.payment_status || 'pending',
-        items: order.items?.map((item: any) => ({
-          id: item.id,
-          product_name: item.product?.name || item.name || 'Product',
-          quantity: item.quantity,
-          price: parseFloat(item.unit_price || item.price || 0),
-          total: parseFloat(item.total_price || item.total || 0),
-        })) || [],
-        notes: order.notes || '',
-        created_at: order.created_at || order.order_date || new Date().toISOString(),
-        updated_at: order.updated_at || new Date().toISOString(),
-      }));
+      const transformedOrders: Order[] = data.data.map((order: any) => {
+        let shippingAddress = 'N/A';
+        try {
+          if (order.shipping_address) {
+            const addr = typeof order.shipping_address === 'string'
+              ? JSON.parse(order.shipping_address)
+              : order.shipping_address;
+
+            if (addr && typeof addr === 'object') {
+              const parts = [
+                addr.firstName && addr.lastName ? `${addr.firstName} ${addr.lastName}` : null,
+                addr.address,
+                addr.apartment ? `Apt/Suite ${addr.apartment}` : null,
+                addr.city,
+                addr.state,
+                addr.postalCode,
+                addr.country
+              ].filter(Boolean);
+              shippingAddress = parts.join(', ');
+            } else {
+              shippingAddress = order.shipping_address;
+            }
+          }
+        } catch (e) {
+          shippingAddress = order.shipping_address || 'N/A';
+        }
+
+        return {
+          id: order.id,
+          order_number: order.order_number,
+          customer_name: order.customer?.name || 'N/A',
+          customer_email: order.customer_email || order.customer?.email || 'N/A',
+          customer_phone: order.customer_phone || order.customer?.phone || 'N/A',
+          shipping_address: shippingAddress,
+          status: order.status,
+          subtotal: parseFloat(order.subtotal || order.total_amount * 0.9),
+          tax: parseFloat(order.tax_amount || 0),
+          shipping_cost: parseFloat(order.shipping_cost || 0),
+          discount_amount: parseFloat(order.discount_amount || 0),
+          total: parseFloat(order.total_amount || 0),
+          payment_method: order.payment_method || 'N/A',
+          payment_status: order.payment_status || 'pending',
+          items: order.items?.map((item: any) => ({
+            id: item.id,
+            product_name: item.product?.name || item.name || 'Product',
+            quantity: item.quantity,
+            price: parseFloat(item.unit_price || item.price || 0),
+            total: parseFloat(item.total_price || item.total || 0),
+          })) || [],
+          notes: order.notes || '',
+          created_at: order.created_at || order.order_date || new Date().toISOString(),
+          updated_at: order.updated_at || new Date().toISOString(),
+        };
+      });
 
       setOrders(transformedOrders);
       setPagination({
@@ -133,89 +185,41 @@ export default function PendingOrdersPage() {
         limit: data.pagination?.limit || '10',
         totalPage: data.pagination?.totalPage || 1,
       });
-    } catch (err: unknown) {
-      console.error('Failed to fetch pending orders:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError('Failed to load pending orders: ' + errorMessage);
+
+      // Stats calculation
+      const val = transformedOrders.reduce((sum, order) => sum + order.total, 0);
+      const paidUn = transformedOrders.filter(o => o.payment_status === 'paid').length;
+      const totalIt = transformedOrders.reduce((sum, order) => sum + order.items.length, 0);
+
+      setStats({
+        pending: data.pagination?.total || transformedOrders.length,
+        value: val,
+        paidUnshipped: paidUn,
+        totalItems: totalIt,
+      });
+    } catch (error: any) {
+      console.error('Failed to fetch pending orders:', error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPendingOrders();
+    }
+  }, [isAuthenticated, currentPage, appliedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchPendingOrders();
+    setAppliedSearch(searchTerm);
   };
 
-  const handleSort = (field: 'date' | 'amount') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
-  };
-
-  const exportPendingOrders = () => {
-    const csv = [
-      ['Order Number', 'Customer', 'Email', 'Phone', 'Total', 'Payment Method', 'Payment Status', 'Items', 'Date'].join(','),
-      ...orders.map(o => [
-        o.order_number,
-        o.customer_name,
-        o.customer_email,
-        o.customer_phone,
-        o.total.toString(),
-        o.payment_method,
-        o.payment_status,
-        o.items.length.toString(),
-        new Date(o.created_at).toLocaleDateString()
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pending-orders-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    setSuccess('Pending orders exported successfully!');
-    setTimeout(() => setSuccess(''), 3000);
-  };
-
-  const getPaymentMethodLabel = (method: string) => {
-    const methodLower = method.toLowerCase();
-    if (methodLower === 'cash' || methodLower === 'cod') {
-      return { label: 'COD', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' };
-    } else if (methodLower.includes('stripe') || methodLower.includes('online') || methodLower.includes('card')) {
-      return { label: 'Stripe', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' };
-    } else if (methodLower.includes('bank')) {
-      return { label: 'Bank Transfer', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' };
-    } else {
-      return { label: method, color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' };
-    }
-  };
-
-  const getPaymentStatusColor = (status: Order['payment_status']) => {
-    switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'failed':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+    setCurrentPage(1);
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -226,104 +230,82 @@ export default function PendingOrdersPage() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins} minutes ago`;
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    return `${diffDays} days ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
   };
-
-  // Calculate stats
-  const totalPendingAmount = orders.reduce((sum, order) => sum + order.total, 0);
-  const paidPendingOrders = orders.filter(o => o.payment_status === 'paid').length;
-  const unpaidPendingOrders = orders.filter(o => o.payment_status === 'pending').length;
-  const totalItems = orders.reduce((sum, order) => sum + order.items.length, 0);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
-    <AdminLayout
-      title="Pending Orders"
-      subtitle="Manage and process orders awaiting action"
-    >
-      <div className="space-y-6">
-        {/* Alert Messages */}
-        {success && (
-          <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-6 py-4 rounded-xl shadow-sm flex items-center">
-            <CheckCircle2 className="w-5 h-5 mr-3 flex-shrink-0" />
-            {success}
+    <AdminLayout>
+      <div className="space-y-5 overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pending Orders</h1>
+            <p className="text-slate-500 mt-1 text-sm">Manage and process orders awaiting action.</p>
           </div>
-        )}
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-6 py-4 rounded-xl shadow-sm flex items-center">
-            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        )}
+        </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <Card className="shadow-lg border-l-4 border-l-yellow-500">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Orders</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{orders.length}</p>
+                  <p className="text-indigo-100 text-sm font-medium">Pending Orders</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.pending}</h3>
                 </div>
-                <div className="h-12 w-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <Clock className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-blue-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(totalPendingAmount)}</p>
+                  <p className="text-blue-100 text-sm font-medium">Total Value</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(stats.value)}</h3>
                 </div>
-                <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <TrendingUp className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-green-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Paid (Unshipped)</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{paidPendingOrders}</p>
+                  <p className="text-emerald-100 text-sm font-medium">Paid (Unshipped)</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.paidUnshipped}</h3>
                 </div>
-                <div className="h-12 w-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <CheckCircle2 className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-l-4 border-l-purple-500">
-            <CardContent className="p-6">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{totalItems}</p>
+                  <p className="text-purple-100 text-sm font-medium">Total Items</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.totalItems}</h3>
                 </div>
-                <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                  <Package className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                  <Package className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
@@ -331,191 +313,232 @@ export default function PendingOrdersPage() {
         </div>
 
         {/* Quick Actions */}
-        <Card className="shadow-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-                <p className="text-sm text-muted-foreground">Process pending orders efficiently</p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (paidPendingOrders > 0) {
-                      setSuccess(`${paidPendingOrders} paid orders ready for shipping!`);
-                      setTimeout(() => setSuccess(''), 3000);
-                    }
-                  }}
-                  className="bg-white dark:bg-background"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Process Paid Orders
-                </Button>
-              </div>
+        <Card className="border-none shadow-sm bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-slate-900 dark:to-slate-900 border-l-4 border-l-indigo-500">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-slate-900">Quick Processing</h3>
+              <p className="text-xs text-slate-500">There are {stats.paidUnshipped} paid orders ready for fulfillment.</p>
             </div>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 gap-2 h-10 px-6">
+              <Truck className="h-4 w-4" />
+              Process Paid Orders
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Search and Filter */}
-        <Card className="shadow-xl">
-          <CardContent className="p-6">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex-1 min-w-64">
-                  <Input
-                    type="text"
-                    placeholder="Search by order number, customer name, email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-10"
-                  />
-                </div>
-                <div>
-                  <Select
-                    value={selectedPaymentMethod}
-                    onChange={(e) => {
-                      setSelectedPaymentMethod(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="h-10 w-40"
-                  >
-                    <option value="">All Payment Methods</option>
-                    <option value="stripe">Stripe</option>
-                    <option value="cod">Cash on Delivery</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                  </Select>
-                </div>
-                <Button type="submit" className="h-10">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
+        {/* Filters Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <div className="p-4 md:p-6 bg-white border-b border-slate-100">
+            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search by order #, customer..."
+                  className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button type="submit" className="flex-1 sm:flex-none h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                  Apply
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={exportPendingOrders}
-                  className="h-10"
+                  className="h-11 px-4 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  onClick={handleClearSearch}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
+                  Reset
                 </Button>
               </div>
             </form>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Orders Table */}
-        <Card className="shadow-xl">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Order Info</TableHead>
-                  <TableHead className="font-semibold">Customer</TableHead>
-                  <TableHead className="font-semibold">Items</TableHead>
-                  <TableHead className="font-semibold cursor-pointer hover:bg-muted" onClick={() => handleSort('amount')}>
-                    <div className="flex items-center gap-1">
-                      Total
-                      <ArrowUpDown className="h-3 w-3" />
+        <Card className="border-none shadow-sm overflow-hidden p-0 sm:p-4 md:p-6">
+          <DataTable<Order>
+            data={orders}
+            columns={[
+              {
+                key: 'order_number',
+                title: 'Order Info',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col">
+                    <span className="font-bold text-slate-900">#{order.order_number}</span>
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1 uppercase tracking-tighter">
+                      <Clock className="h-2.5 w-2.5" /> Received {format(new Date(order.created_at), 'HH:mm')}
+                    </span>
+                  </div>
+                )
+              },
+              {
+                key: 'customer',
+                title: 'Customer',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-900">{order.customer_name}</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[150px]">{order.customer_email}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'items',
+                title: 'Order Content',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</span>
+                    <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                      {order.items.slice(0, 1).map(i => i.product_name).join(', ')}
+                      {order.items.length > 1 && ` +${order.items.length - 1} more`}
+                    </span>
+                  </div>
+                )
+              },
+              {
+                key: 'total',
+                title: 'Amount Due',
+                render: (total): ReactNode => (
+                  <span className="font-bold text-slate-900">{formatCurrency(Number(total))}</span>
+                )
+              },
+              {
+                key: 'payment',
+                title: 'Payment',
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col gap-1">
+                    <Badge className={`${order.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'} shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider w-fit`} variant="outline">
+                      {order.payment_status}
+                    </Badge>
+                    <span className="text-[10px] text-slate-400 font-medium italic">via {order.payment_method}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'time_ago',
+                title: 'Wait Time',
+                render: (_, order): ReactNode => (
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    <span className="text-xs text-slate-600 font-medium">{getTimeAgo(order.created_at)}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'actions',
+                title: 'Actions',
+                className: 'text-right',
+                headerClassName: 'text-right',
+                render: (_, order): ReactNode => (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => router.push(`/admin/order/${order.id}`)}
+                      title="View Order"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => window.print()}
+                      title="Print Slip"
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )
+              }
+            ]}
+            expandable
+            renderExpandedRow={(order) => (
+              <div className="py-2 space-y-3 text-sm animate-in fade-in slide-in-from-top-1 duration-200 px-4 md:px-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <User className="h-3 w-3" /> Delivery Contact
+                    </p>
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="font-semibold text-slate-900">{order.customer_name}</p>
+                      <p className="text-slate-500 text-xs">{order.customer_email}</p>
+                      <p className="text-slate-500 text-xs">{order.customer_phone}</p>
                     </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">Payment</TableHead>
-                  <TableHead className="font-semibold cursor-pointer hover:bg-muted" onClick={() => handleSort('date')}>
-                    <div className="flex items-center gap-1">
-                      Date
-                      <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3" /> Shipping Destination
+                    </p>
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="text-slate-700 leading-snug">{order.shipping_address}</p>
                     </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">Time Ago</TableHead>
-                  <TableHead className="font-semibold">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No pending orders found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  orders.map((order) => (
-                    <TableRow key={order.id} className="hover:bg-muted/50">
-                      <TableCell className="font-semibold text-primary">#{order.order_number}</TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium">{order.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{order.customer_email}</div>
-                        <div className="text-xs text-muted-foreground">{order.customer_phone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium">{order.items.length} item{order.items.length > 1 ? 's' : ''}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {order.items.slice(0, 2).map(item => item.product_name).join(', ')}
-                          {order.items.length > 2 && '...'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-bold">{formatCurrency(order.total)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge className={`${getPaymentMethodLabel(order.payment_method).color} whitespace-nowrap`} variant="secondary">
-                            {getPaymentMethodLabel(order.payment_method).label}
-                          </Badge>
-                          <Badge className={`${getPaymentStatusColor(order.payment_status)} whitespace-nowrap`} variant="secondary">
-                            {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{formatDateTime(order.created_at)}</TableCell>
-                      <TableCell>
-                        <span className="text-xs text-muted-foreground">{getTimeAgo(order.created_at)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <a
-                          href={`/admin/orders/${order.id}`}
-                          className="text-primary hover:underline font-medium text-sm"
-                        >
-                          Process
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          {pagination.totalPage > 1 && (
-            <div className="bg-muted/30 px-6 py-4 border-t">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{(currentPage - 1) * 10 + 1}</span> to{' '}
-                  <span className="font-semibold text-foreground">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
-                  <span className="font-semibold text-foreground">{pagination.total}</span> results
+                  </div>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShoppingCart className="h-3 w-3" /> Pending Items
+                  </p>
+                  <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50/80 border-b border-slate-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-bold text-slate-500 uppercase tracking-tighter">Product</th>
+                          <th className="px-3 py-2 text-center font-bold text-slate-500 uppercase tracking-tighter w-16">Qty</th>
+                          <th className="px-3 py-2 text-right font-bold text-slate-500 uppercase tracking-tighter w-24">Price</th>
+                          <th className="px-3 py-2 text-right font-bold text-slate-500 uppercase tracking-tighter w-24">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {order.items.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
+                            <td className="px-3 py-2 font-medium text-slate-900 truncate max-w-[200px]">{item.product_name}</td>
+                            <td className="px-3 py-2 text-center text-slate-600 font-bold">{item.quantity}</td>
+                            <td className="px-3 py-2 text-right text-slate-600">{formatCurrency(item.price)}</td>
+                            <td className="px-3 py-2 text-right font-bold text-slate-900">{formatCurrency(item.total)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
                   <Button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    variant="outline"
                     size="sm"
-                    className="disabled:opacity-50"
+                    className="h-9 px-4 text-xs gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                    onClick={() => router.push(`/admin/order/${order.id}`)}
                   >
-                    Previous
+                    <Package className="h-3.5 w-3.5" /> Start Processing
                   </Button>
                   <Button
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    disabled={currentPage >= pagination.totalPage}
-                    variant="outline"
                     size="sm"
-                    className="disabled:opacity-50"
+                    variant="outline"
+                    className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200"
+                    onClick={() => window.print()}
                   >
-                    Next
+                    <Printer className="h-3.5 w-3.5" /> Print Packing Slip
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            searchable={false}
+            serverPagination
+            paginationMeta={{
+              total: pagination.total,
+              page: currentPage,
+              limit: parseInt(pagination.limit),
+              totalPage: pagination.totalPage
+            }}
+            onPageChange={(page) => setCurrentPage(page)}
+            loading={loadingOrders}
+            emptyMessage="No pending orders found."
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+          />
         </Card>
       </div>
     </AdminLayout>

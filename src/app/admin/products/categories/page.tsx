@@ -155,7 +155,7 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get(`/products/categories?page=${page}&limit=100`);
+      const response = await api.get(`/ecommerce/categories?page=${page}&limit=100`);
       setCategories(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
         total: 0,
@@ -183,7 +183,7 @@ export default function AdminCategoriesPage() {
 
     try {
       const orders = reordered.map((c, i) => ({ id: c.id, sort_order: i }));
-      await api.put('/products/categories/reorder', { orders });
+      await api.put('/ecommerce/categories/reorder', { orders });
     } catch {
       setCategories(categories);
       setError('Failed to save order');
@@ -199,7 +199,7 @@ export default function AdminCategoriesPage() {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
-      await api.delete(`/products/categories/${id}`);
+      await api.delete(`/ecommerce/categories/${id}`);
       setSuccess('Category deleted successfully');
       fetchCategories();
       setTimeout(() => setSuccess(''), 3000);

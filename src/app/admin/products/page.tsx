@@ -212,7 +212,7 @@ export default function AdminProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/products/categories');
+      const response = await api.get('/ecommerce/categories?page=1&limit=100');
       setCategories(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
