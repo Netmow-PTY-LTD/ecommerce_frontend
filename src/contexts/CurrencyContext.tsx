@@ -15,7 +15,7 @@ const CurrencyContext = createContext<CurrencyContextType>({
     currencySymbol: '$'
 });
 
-const currencySymbols: Record<string, string> = {
+export const currencySymbols: Record<string, string> = {
     // Major Currencies
     USD: '$',
     EUR: '€',
@@ -99,6 +99,10 @@ const currencySymbols: Record<string, string> = {
     WST: 'WS$',
     VUV: 'Vt',
     TOP: 'T$'
+};
+
+export const getCurrencySymbol = (currency: string) => {
+    return currencySymbols[currency] || currency || '$';
 };
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {

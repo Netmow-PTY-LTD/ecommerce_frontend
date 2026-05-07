@@ -53,9 +53,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Check if the request specifically asked to skip the redirect
+      if (error.config?.skipAuthRedirect) {
+        return Promise.reject(error);
+      }
+
       // Clear token and redirect to appropriate login
       if (typeof window !== 'undefined') {
         const pathname = window.location.pathname;
+
+        // NEVER redirect from the success page - we want users to see their confirmation
+        if (pathname === '/checkout/success') {
+          return Promise.reject(error);
+        }
 
         // Check if we're on a customer-related route
         const isCustomerRoute = pathname.startsWith('/customer') ||

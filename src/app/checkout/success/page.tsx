@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ function CheckoutSuccessPageContent() {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [showLoader, setShowLoader] = useState(true);
+    const processingStarted = useRef(false);
 
     useEffect(() => {
         const loadOrderDetails = async () => {
@@ -62,14 +63,24 @@ function CheckoutSuccessPageContent() {
                 console.log('💳 Session ID:', sessionId);
 
                 if (!sessionId && !lastOrderId) {
-                    console.log('❌ No session_id and no lastOrderId');
-                    setTimeout(() => {
-                        setHasError(true);
-                        setIsLoading(false);
-                        setShowLoader(false);
-                    }, 1500);
+                    // Only show error if we haven't already loaded an order
+                    if (!order && !orderNumber) {
+                        console.log('❌ No session_id and no lastOrderId');
+                        setTimeout(() => {
+                            // Final check: if we started processing in ANY run, don't show error
+                            if (!processingStarted.current) {
+                                setHasError(true);
+                                setIsLoading(false);
+                                setShowLoader(false);
+                            }
+                        }, 1500);
+                    }
                     return;
                 }
+
+                // Mark as processing to prevent re-runs
+                if (processingStarted.current) return;
+                processingStarted.current = true;
 
                 let orderId: string | null = null;
 
@@ -111,7 +122,7 @@ function CheckoutSuccessPageContent() {
                         shipping_cost: pendingOrder.shipping_cost,
                         tax_amount: pendingOrder.tax_amount,
                         total_amount: pendingOrder.total_amount
-                    });
+                    }, { skipAuthRedirect: true } as any);
 
                     if (response.data?.data?.order_number) {
                         setOrderNumber(response.data.data.order_number);
@@ -133,12 +144,12 @@ function CheckoutSuccessPageContent() {
 
                         try {
                             // Public endpoint — works for guests
-                            const orderResponse = await api.get(`/sales/public/orders/${orderId}`);
+                            const orderResponse = await api.get(`/sales/public/orders/${orderId}`, { skipAuthRedirect: true } as any);
                             data = orderResponse.data?.data || orderResponse.data;
                         } catch (publicErr: any) {
                             console.warn('Public order endpoint failed, trying customer endpoint...', publicErr?.response?.status);
                             // Fallback: customer auth endpoint (works for logged-in users)
-                            const orderResponse = await api.get(`/sales/customer/orders/${orderId}`);
+                            const orderResponse = await api.get(`/sales/customer/orders/${orderId}`, { skipAuthRedirect: true } as any);
                             data = orderResponse.data?.data || orderResponse.data;
                         }
 
