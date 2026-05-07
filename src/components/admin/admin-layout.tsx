@@ -54,7 +54,7 @@ import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
   children: ReactNode;
-  title: string;
+  title?: string;
   subtitle?: string;
   defaultSidebarCollapsed?: boolean;
 }
@@ -435,7 +435,7 @@ export default function AdminLayout({
 
               {/* Breadcrumb / Title */}
               <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
+                {title && <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>}
                 {subtitle && (
                   <p className="text-xs sm:text-sm text-muted-foreground truncate hidden md:block">{subtitle}</p>
                 )}
