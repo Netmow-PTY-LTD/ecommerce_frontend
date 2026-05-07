@@ -14,6 +14,8 @@ import { useAdminContext } from '@/components/admin/admin-navbar-provider';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal } from '@/components/auth/login-modal';
+import { useCurrency, getCurrencySymbol } from '@/contexts/CurrencyContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -30,7 +32,7 @@ export function Navbar() {
     const wishlistItems = useWishlistStore((state) => state.items);
     const compareItems = useCompareStore((state) => state.items);
     const router = useRouter();
-    const { settings } = useSettings();
+    const { settings, isLoading } = useSettings();
 
     const isAuthenticated = isCustomerAuthenticated || isAdminAuthenticated;
     const currentUser = customer || user;
@@ -54,94 +56,7 @@ export function Navbar() {
         return null;
     }
 
-    const getCurrencySymbol = (currency: string) => {
-        const symbols: Record<string, string> = {
-            // Major Currencies
-            USD: '$',
-            EUR: '€',
-            GBP: '£',
-            JPY: '¥',
-            CNY: '¥',
-            INR: '₹',
-            AUD: 'A$',
-            CAD: 'C$',
-            CHF: 'Fr',
-            HKD: 'HK$',
-            SGD: 'S$',
-            NZD: 'NZ$',
-            KRW: '₩',
-            ZAR: 'R',
-            BRL: 'R$',
-            MXN: '$',
 
-            // European Currencies
-            SEK: 'kr',
-            NOK: 'kr',
-            DKK: 'kr',
-            PLN: 'zł',
-            CZK: 'Kč',
-            HUF: 'Ft',
-            RON: 'lei',
-            BGN: 'лв',
-            HRK: 'kn',
-            RUB: '₽',
-            TRY: '₺',
-
-            // Middle Eastern Currencies
-            ILS: '₪',
-            SAR: '﷼',
-            AED: 'د.إ',
-            QAR: '﷼',
-            KWD: 'د.ك',
-            BHD: 'BD',
-            OMR: '﷼',
-            JOD: 'د.ا',
-            LBP: 'ل.ل',
-
-            // Asian Currencies
-            THB: '฿',
-            MYR: 'RM',
-            IDR: 'Rp',
-            PHP: '₱',
-            VND: '₫',
-            PKR: '₨',
-            BDT: '৳',
-            LKR: 'Rs',
-            NPR: '₨',
-            MMK: 'K',
-
-            // Americas Currencies
-            ARS: '$',
-            CLP: '$',
-            COP: '$',
-            PEN: 'S/.',
-            BOB: 'Bs.',
-            UYU: '$',
-            PYG: '₲',
-            CRC: '₡',
-            DOP: '$',
-            CUP: '$',
-
-            // African Currencies
-            EGP: 'E£',
-            NGN: '₦',
-            KES: 'Sh',
-            GHS: '₵',
-            ETB: 'Br',
-            TZS: 'TSh',
-            UGX: 'Sh',
-            XOF: 'CFA',
-            XAF: 'FCFA',
-
-            // Oceanian Currencies
-            FJD: '$',
-            PGK: 'K',
-            WST: 'WS$',
-            VUV: 'Vt',
-            TOP: 'T$'
-        };
-        return symbols[currency] || currency || '$';
-    };
 
     const getInitials = (name: string | undefined) => {
         if (!name) return '';
@@ -179,29 +94,23 @@ export function Navbar() {
                     {/* Logo */}
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/" className="flex items-center gap-3">
-                            {settings.logo_url ? (
+                            {isLoading ? (
+                                <div className="h-8 w-24 bg-slate-100 animate-pulse rounded-lg hidden sm:block" />
+                            ) : settings.logo_url ? (
                                 <Image
                                     src={settings.logo_url}
                                     alt={settings.company_name || 'LuxeStore'}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-lg"
-                                    unoptimized
+                                    width={100}
+                                    height={100}
+                                    className="rounded-lg w-20 h-auto"
+                                    priority
                                 />
                             ) : (
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                                    <Building2 className="w-5 h-5 text-white" />
-                                </div>
+                                <span className="font-bold text-2xl tracking-tighter text-primary hidden sm:inline">
+                                    {settings?.company_name || 'LuxeStore'}
+                                </span>
                             )}
-                            <span className="font-bold text-2xl tracking-tighter text-primary hidden sm:inline">
-                                {settings.company_name || 'LuxeStore'}
-                            </span>
                         </Link>
-                        {settings.currency && (
-                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full hidden lg:inline-block">
-                                {getCurrencySymbol(settings.currency)}
-                            </span>
-                        )}
                     </div>
 
                     {/* Desktop Navigation */}
@@ -259,9 +168,17 @@ export function Navbar() {
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="w-full h-full rounded-full">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-5 w-5" />
                                     )}
@@ -309,9 +226,17 @@ export function Navbar() {
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="w-full h-full rounded-full">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-5 w-5" />
                                     )}
@@ -362,11 +287,19 @@ export function Navbar() {
                                 }}
                                 className='block'
                             >
-                                <Button variant="outline" className="w-full justify-start gap-2 rounded-xl overflow-hidden">
+                                <Button variant="outline" className="w-full justify-start gap-2 rounded-xl overflow-hidden p-2">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="h-6 w-6 rounded-lg overflow-hidden">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-[10px] font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-4 w-4" />
                                     )}

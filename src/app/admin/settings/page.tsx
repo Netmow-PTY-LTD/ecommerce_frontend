@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSWRConfig } from 'swr';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -46,6 +47,7 @@ interface GalleryImage {
 
 export default function SettingsPage() {
     const { isAuthenticated, loading } = useAuth();
+    const { mutate } = useSWRConfig();
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [loadingProfile, setLoadingProfile] = useState(true);
@@ -108,9 +110,18 @@ export default function SettingsPage() {
             setLoadingProfile(true);
             const response = await api.get('/settings/company/profile');
             if (response.data && response.data.data) {
-                setCompanyProfile(response.data.data);
-                if (response.data.data.logo_url) {
-                    setLogoPreview(response.data.data.logo_url);
+                // Sanitize null values to empty strings
+                const rawData = response.data.data;
+                const sanitizedData: CompanyProfile = { ...rawData };
+                (Object.keys(sanitizedData) as Array<keyof CompanyProfile>).forEach(key => {
+                    if (sanitizedData[key] === null) {
+                        (sanitizedData[key] as any) = '';
+                    }
+                });
+                
+                setCompanyProfile(sanitizedData);
+                if (sanitizedData.logo_url) {
+                    setLogoPreview(sanitizedData.logo_url);
                 }
             }
         } catch (error: any) {
@@ -146,7 +157,16 @@ export default function SettingsPage() {
         setSaving(true);
 
         try {
-            await api.put('/settings/company/profile', companyProfile);
+            // Final sanitization before sending to backend
+            const payload = { ...companyProfile };
+            (Object.keys(payload) as Array<keyof CompanyProfile>).forEach(key => {
+                if (payload[key] === null) {
+                    (payload[key] as any) = '';
+                }
+            });
+
+            await api.put('/settings/company/profile', payload);
+            await mutate('/settings/company/profile');
             toast.success('Settings saved successfully!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to save settings');

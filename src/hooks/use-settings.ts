@@ -22,9 +22,9 @@ export function useSettings() {
         '/settings/company/profile',
         fetcher,
         {
-            revalidateOnFocus: false,
+            revalidateOnFocus: true,
             revalidateOnReconnect: false,
-            dedupingInterval: 3600000 // Cache for 1 hour
+            dedupingInterval: 60000 // Cache for 1 minute
         }
     );
 

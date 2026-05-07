@@ -14,7 +14,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import CustomerLayout from '@/components/customer/customer-layout';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function CustomerDashboard() {
   const { customer, loading, isAuthenticated } = useCustomerAuth();
@@ -186,7 +186,7 @@ export default function CustomerDashboard() {
                     <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
                   </Link>
 
-                  <Link href="/customer/addresses" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                  <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                         <MapPin className="h-6 w-6 text-indigo-600" />
@@ -245,6 +245,12 @@ export default function CustomerDashboard() {
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                 <div className="text-center">
                     <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-slate-50 shadow-lg shadow-slate-100">
+                        {customer?.image_url && (
+                          <AvatarImage 
+                            src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                            className="object-cover" 
+                          />
+                        )}
                         <AvatarFallback className="bg-indigo-600 text-white text-2xl font-black">
                             {customer.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
