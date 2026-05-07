@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, Eye, EyeOff, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -129,7 +130,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between items-center ml-1">
                                         <label className="text-xs font-semibold text-slate-700">Password</label>
-                                        <button type="button" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer">Forgot?</button>
+                                        <Link href="/forgot-password" type="button" onClick={onClose} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer">Forgot?</Link>
                                     </div>
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />

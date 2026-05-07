@@ -126,6 +126,12 @@ export default function AdminLoginPage() {
                 </button>
               </div>
             </div>
+
+            <div className="flex items-center justify-end">
+              <Link href="/admin/forgot-password" title="Forgot Password? Request a reset link" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                Forgot your password?
+              </Link>
+            </div>
           </div>
 
           {/* Submit */}
