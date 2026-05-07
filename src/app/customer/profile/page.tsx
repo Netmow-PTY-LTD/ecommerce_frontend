@@ -1,7 +1,7 @@
 'use client';
 
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Building2, Globe, Hash, Save, 
   ShieldCheck, ArrowLeft, Camera, Loader2, CheckCircle2
@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function CustomerProfilePage() {
-  const { customer, loading: authLoading, isAuthenticated } = useCustomerAuth();
+  const { customer, loading: authLoading, isAuthenticated, updateCustomer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,16 +52,62 @@ export default function CustomerProfilePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setUploading(true);
+    try {
+      const response = await api.post(`/customers/${customer?.id}/profile-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.status) {
+        toast.success('Profile image updated successfully!');
+        // Update both local state and global context
+        if (response.data.data.image_url) {
+          updateCustomer({ image_url: response.data.data.image_url });
+        }
+      }
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       // In a real app, you would have a PATCH endpoint for profile update
-      const response = await api.patch(`/customers/profile/${customer?.id}`, formData);
-      if (response.data.success) {
+      const response = await api.put(`/customers/${customer?.id}`, formData);
+
+      if (response.data.status) {
         toast.success('Profile updated successfully!');
-        // Update local storage if needed or wait for re-fetch
-        localStorage.setItem('customer_data', JSON.stringify({ ...customer, ...formData }));
+        updateCustomer(formData as any);
       }
     } catch (error: any) {
       console.error('Update failed:', error);
@@ -105,12 +153,34 @@ export default function CustomerProfilePage() {
             <div className="relative z-10 pt-4">
               <div className="relative inline-block mx-auto mb-6">
                 <Avatar className="h-32 w-32 border-4 border-white shadow-xl shadow-slate-200">
+                  {customer.image_url && (
+                    <AvatarImage 
+                      src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                      className="object-cover" 
+                    />
+                  )}
                   <AvatarFallback className="bg-slate-100 text-slate-400 text-4xl font-black">
                     {customer.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <button type="button" className="absolute bottom-1 right-1 h-10 w-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all cursor-pointer">
-                  <Camera className="h-5 w-5" />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button 
+                  type="button" 
+                  onClick={handleImageClick}
+                  disabled={uploading}
+                  className="absolute bottom-1 right-1 h-10 w-10 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:scale-110 transition-all cursor-pointer disabled:opacity-50 disabled:scale-100"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                  ) : (
+                    <Camera className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               
@@ -318,8 +388,89 @@ export default function CustomerProfilePage() {
             </div>
           </div>
 
+          {/* Change Password Section */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Security & Password</h3>
+            </div>
+
+            <div className="space-y-6">
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                To update your password, please fill in the fields below. If you don't want to change your password, leave these fields empty.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Current Password</label>
+                  <div className="relative group">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">New Password</label>
+                  <div className="relative group">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                    <input
+                      type="password"
+                      name="newPassword"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-start">
+                <Button 
+                  type="button"
+                  onClick={async () => {
+                    const oldPass = (document.querySelector('input[name="oldPassword"]') as HTMLInputElement)?.value;
+                    const newPass = (document.querySelector('input[name="newPassword"]') as HTMLInputElement)?.value;
+                    
+                    if (!oldPass || !newPass) {
+                      toast.error('Please fill in both current and new password');
+                      return;
+                    }
+
+                    try {
+                      setLoading(true);
+                      const response = await api.post('/customers/change-password', {
+                        oldPassword: oldPass,
+                        newPassword: newPass
+                      });
+                      
+                      if (response.data.status) {
+                        toast.success('Password changed successfully!');
+                        (document.querySelector('input[name="oldPassword"]') as HTMLInputElement).value = '';
+                        (document.querySelector('input[name="newPassword"]') as HTMLInputElement).value = '';
+                      }
+                    } catch (error: any) {
+                      toast.error(error.response?.data?.message || 'Failed to change password');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="px-6 py-2 rounded-xl text-xs font-black text-white bg-slate-900 hover:bg-black transition-all uppercase tracking-widest cursor-pointer"
+                >
+                  Update Password
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-4 pt-4">
+
             <button
               type="button"
               className="px-8 py-3.5 rounded-2xl text-sm font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all uppercase tracking-widest cursor-pointer"

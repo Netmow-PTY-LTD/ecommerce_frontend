@@ -505,6 +505,10 @@ export default function AdminLayout({
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push('/admin/profile')}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
                     <Settings className="h-4 w-4 mr-2" />
                     Settings

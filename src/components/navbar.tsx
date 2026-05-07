@@ -15,6 +15,7 @@ import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal } from '@/components/auth/login-modal';
 import { useCurrency, getCurrencySymbol } from '@/contexts/CurrencyContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -167,9 +168,17 @@ export function Navbar() {
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="w-full h-full rounded-full">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-5 w-5" />
                                     )}
@@ -217,9 +226,17 @@ export function Navbar() {
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="w-full h-full rounded-full">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-5 w-5" />
                                     )}
@@ -270,11 +287,19 @@ export function Navbar() {
                                 }}
                                 className='block'
                             >
-                                <Button variant="outline" className="w-full justify-start gap-2 rounded-xl overflow-hidden">
+                                <Button variant="outline" className="w-full justify-start gap-2 rounded-xl overflow-hidden p-2">
                                     {isAuthenticated && currentUser ? (
-                                        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
-                                            {getInitials(currentUser.name)}
-                                        </div>
+                                        <Avatar className="h-6 w-6 rounded-lg overflow-hidden">
+                                            {(currentUser as any).image_url && (
+                                                <AvatarImage
+                                                    src={(currentUser as any).image_url.startsWith('http') ? (currentUser as any).image_url : `${process.env.NEXT_PUBLIC_API_URL}${(currentUser as any).image_url}`}
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-indigo-600 text-white text-[10px] font-bold">
+                                                {getInitials(currentUser.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     ) : (
                                         <User className="h-4 w-4" />
                                     )}
