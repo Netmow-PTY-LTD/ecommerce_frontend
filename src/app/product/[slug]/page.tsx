@@ -336,7 +336,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <div className="space-y-3 pt-4 border-t border-border">
                                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                     <Truck className="w-4 h-4 text-primary" />
-                                    <span>Free shipping over $100</span>
+                                    <span>Free shipping over {formatCurrency(100)}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                     <ShieldCheck className="w-4 h-4 text-primary" />
