@@ -1,50 +1,106 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import api from '@/lib/api';
+import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
+import { DataTable } from '@/components/ui/data-table';
+import {
+  User, Mail, Phone, MapPin,
+  History, Edit, Trash2, Eye,
+  Users, UserPlus, Building, Search,
+  CheckCircle2
+} from 'lucide-react';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Customer {
   id: number;
   name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  postal_code: string | null;
+  email: string;
+  phone: string;
   customer_type: 'individual' | 'company';
+  company: string;
+  address: string;
+  city: string;
+  country: string;
   status: 'active' | 'inactive';
+  total_orders: number;
+  total_spent: number;
   created_at: string;
 }
 
-interface PaginationData {
+interface Pagination {
   total: number;
-  page: number;
-  limit: number;
-  totalPage?: number;
+  page: string;
+  limit: string;
+  totalPage: number;
 }
 
-export default function CustomersPage() {
+export default function AdminCustomersPage() {
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const { formatCurrency } = useCurrency();
-  const { isAuthenticated, loading } = useAuth();
+
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [pagination, setPagination] = useState<PaginationData>({
+  const [pagination, setPagination] = useState<Pagination>({
     total: 0,
-    page: 1,
-    limit: 10,
-    totalPage: 1
+    page: '1',
+    limit: '10',
+    totalPage: 0,
   });
-  const [loadingCustomers, setLoadingCustomers] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [customerTypeFilter, setCustomerTypeFilter] = useState('');
-  const [activeFilter, setActiveFilter] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [error, setError] = useState('');
+
+  // Delete Confirmation State
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+
+  const [stats, setStats] = useState({
+    active: 0,
+    individual: 0,
+    company: 0,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setColumnVisibility({
+        customer: true,
+        status: width >= 1600,
+        customer_type: width >= 768,
+        location: width >= 1024,
+        contact: width >= 1280,
+        orders: width >= 1440,
+        actions: width >= 500,
+      });
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -52,64 +108,95 @@ export default function CustomersPage() {
     }
   }, [isAuthenticated, loading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCustomers();
-    }
-  }, [isAuthenticated, pagination.page, customerTypeFilter, activeFilter]);
-
   const fetchCustomers = async () => {
     try {
       setLoadingCustomers(true);
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString()
+        page: currentPage.toString(),
+        limit: '10',
+      });
+      if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
+      if (appliedSearch) params.append('search', appliedSearch);
+
+      const response = await api.get(`/customers?${params}`);
+      const data = response.data;
+
+      setCustomers(data.data || []);
+      setPagination({
+        total: data.pagination?.total || 0,
+        page: data.pagination?.page || currentPage.toString(),
+        limit: data.pagination?.limit || '10',
+        totalPage: data.pagination?.totalPage || 1,
       });
 
-      if (customerTypeFilter) params.append('customer_type', customerTypeFilter);
-      if (activeFilter) params.append('status', activeFilter);
-      if (searchTerm) params.append('search', searchTerm);
+      // Update stats if available in response or calculate from data
+      if (data.stats) {
+        setStats({
+          active: data.stats.active || 0,
+          individual: data.stats.individual || 0,
+          company: data.stats.company || 0,
+        });
+      } else if (data.data) {
+        // Fallback calculation for current page if stats not provided by API
+        const currentStats = data.data.reduce((acc: any, curr: Customer) => {
+          if (curr.status === 'active') acc.active++;
+          if (curr.customer_type === 'individual') acc.individual++;
+          if (curr.customer_type === 'company') acc.company++;
+          return acc;
+        }, { active: 0, individual: 0, company: 0 });
 
-      const response = await api.get(`/customers?${params.toString()}`);
-      setCustomers(response.data.data || []);
-
-      // Ensure pagination has totalPage calculated if not provided
-      const paginationData = response.data.pagination || pagination;
-      const totalPage = paginationData.totalPage || Math.ceil(paginationData.total / paginationData.limit);
-      setPagination({ ...paginationData, totalPage });
-    } catch (error) {
+        // Note: These will only reflect the current page if not provided by API
+        setStats(currentStats);
+      }
+    } catch (error: any) {
       console.error('Failed to fetch customers:', error);
+      setError('Failed to load customers');
     } finally {
       setLoadingCustomers(false);
     }
   };
 
-  const handleSearch = () => {
-    setPagination({ ...pagination, page: 1 });
-    fetchCustomers();
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCustomers();
+    }
+  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    setAppliedSearch(searchTerm);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
+    setSelectedStatus('');
+    setCurrentPage(1);
+  };
+
+  const initiateDelete = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await api.delete(`/customers/${customerToDelete.id}`);
+      setIsDeleteDialogOpen(false);
+      setCustomerToDelete(null);
+      fetchCustomers();
+    } catch (error) {
+      alert('Failed to delete customer');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const getCustomerStats = () => {
-    const total = customers.length;
-    const active = customers.filter(c => c.status === 'active').length;
-    const business = customers.filter(c => c.customer_type === 'company').length;
-    const individual = customers.filter(c => c.customer_type === 'individual').length;
-
-    return [
-      { label: 'Total Customers', value: pagination.total, color: 'bg-blue-600', icon: '👥' },
-      { label: 'Active Customers', value: active, color: 'bg-green-600', icon: '✅' },
-      { label: 'Business', value: business, color: 'bg-purple-600', icon: '🏢' },
-      { label: 'Individual', value: individual, color: 'bg-orange-600', icon: '👤' }
-    ];
-  };
-
-  if (loading || loadingCustomers) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -117,209 +204,332 @@ export default function CustomersPage() {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  const stats = getCustomerStats();
-
   return (
-    <AdminLayout
-      title="Customers"
-      subtitle="Manage customer information and accounts"
-    >
-      <div className="w-full">
+    <AdminLayout>
+      <div className="space-y-5 overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customers</h1>
+            <p className="text-slate-500 mt-1 text-sm">Manage your customer relationships and history.</p>
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 hover:shadow-2xl transition-all duration-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                  <p className="text-indigo-100 text-sm font-medium">Total Customers</p>
+                  <h3 className="text-2xl font-bold mt-1">{pagination.total}</h3>
                 </div>
-                <div className={`${stat.color} p-3 rounded-xl`}>
-                  <span className="text-2xl">{stat.icon}</span>
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <Users className="h-5 w-5 text-white" />
                 </div>
               </div>
-            </div>
-          ))}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100 text-sm font-medium">Active Customers</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.active || pagination.total}</h3>
+                </div>
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <CheckCircle2 className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Business / Company</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.company}</h3>
+                </div>
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <Building className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Individual</p>
+                  <h3 className="text-2xl font-bold mt-1">{stats.individual}</h3>
+                </div>
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Search</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by name, email, phone, or company..."
+        {/* Filters Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <div className="p-4 md:p-6 bg-white border-b border-slate-100">
+            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search..."
+                  className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-2 pl-10 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
-                <svg className="w-5 h-5 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Customer Type</label>
-              <select
-                value={customerTypeFilter}
-                onChange={(e) => {
-                  setCustomerTypeFilter(e.target.value);
-                  setPagination({ ...pagination, page: 1 });
-                }}
-                className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              <Select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full sm:w-[180px] h-11 bg-slate-50 border-slate-200"
               >
-                <option value="">All Types</option>
-                <option value="individual">Individual</option>
-                <option value="company">Company</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-              <select
-                value={activeFilter}
-                onChange={(e) => {
-                  setActiveFilter(e.target.value);
-                  setPagination({ ...pagination, page: 1 });
-                }}
-                className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              >
-                <option value="">All Status</option>
+                <option value="all">All Statuses</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
-            </div>
+              </Select>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button type="submit" className="flex-1 sm:flex-none h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                  Filter
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 px-4 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  onClick={handleClearSearch}
+                >
+                  Reset
+                </Button>
+              </div>
+            </form>
           </div>
-        </div>
+        </Card>
 
         {/* Customers Table */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-gradient-to-r from-indigo-50 to-purple-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {customers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                      <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <p className="text-lg font-medium mb-1">No customers found</p>
-                      <p className="text-sm">Add your first customer to get started</p>
-                    </td>
-                  </tr>
-                ) : (
-                  customers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {customer.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-slate-900">{customer.name}</div>
-                            {customer.company && (
-                              <div className="text-xs text-slate-500">{customer.company}</div>
-                            )}
-                          </div>
+        <Card className="border-none shadow-sm overflow-hidden p-0 sm:p-4 md:p-6">
+          <DataTable<Customer>
+            data={customers}
+            columns={[
+              {
+                key: 'customer',
+                title: 'Customer',
+                render: (_, customer): ReactNode => (
+                  <div className="flex items-center gap-3 min-w-[150px]">
+                    <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                      <User className="w-5 h-5 text-slate-500" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-sm text-slate-900 truncate">
+                        {customer.name}
+                      </span>
+                      {customer.company && (
+                        <div className="flex items-center text-[10px] text-slate-500 mt-0.5">
+                          <Building className="h-3 w-3 mr-1 text-slate-400" />
+                          {customer.company}
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900">{customer.email || '-'}</div>
-                        <div className="text-xs text-slate-500">{customer.phone || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-900">{customer.city || '-'}</div>
-                        <div className="text-xs text-slate-500">{customer.state || ''} {customer.country || ''}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.customer_type === 'company'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-orange-100 text-orange-700'
-                          }`}>
-                          {customer.customer_type === 'company' ? 'Business' : 'Individual'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${customer.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                          }`}>
-                          {customer.status === 'active' ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-2">
-                          <a
-                            href={`/admin/customer/${customer.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 font-medium text-sm"
-                          >
-                            View
-                          </a>
-                          <span className="text-slate-300">|</span>
-                          <a
-                            href={`/admin/customer/${customer.id}/edit`}
-                            className="text-green-600 hover:text-green-900 font-medium text-sm"
-                          >
-                            Edit
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {(pagination.totalPage || 1) > 1 && (
-            <div className="bg-slate-50 px-6 py-4 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-700">
-                  Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                  {pagination.total} customers
+                      )}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                key: 'contact',
+                title: 'Contact',
+                render: (_, customer): ReactNode => (
+                  <div className="flex flex-col gap-1 min-w-[180px]">
+                    <div className="flex items-center text-xs text-slate-600">
+                      <Mail className="h-3 w-3 mr-2 text-slate-400 shrink-0" />
+                      <span className="truncate">{customer.email || '-'}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-slate-600">
+                      <Phone className="h-3 w-3 mr-2 text-slate-400 shrink-0" />
+                      <span>{customer.phone || '-'}</span>
+                    </div>
+                  </div>
+                )
+              },
+              {
+                key: 'location',
+                title: 'Location',
+                render: (_, customer): ReactNode => (
+                  <div className="flex flex-col gap-1 min-w-[120px]">
+                    <div className="flex items-center text-sm text-slate-700">
+                      <MapPin className="h-3 w-3 mr-1.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{customer.city || '-'}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 ml-4.5">{customer.country || ''}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'customer_type',
+                title: 'Type',
+                render: (type): ReactNode => (
+                  <Badge className={`${type === 'company'
+                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                    : 'bg-orange-50 text-orange-700 border-orange-200'
+                    } shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
+                    {type === 'company' ? 'Bus' : 'Ind'}
+                  </Badge>
+                )
+              },
+              {
+                key: 'status',
+                title: 'Status',
+                render: (status): ReactNode => (
+                  <Badge className={`${status === 'active'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                    } shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
+                    {status as string}
+                  </Badge>
+                )
+              },
+              {
+                key: 'actions',
+                title: 'Actions',
+                className: 'text-right',
+                headerClassName: 'text-right',
+                render: (_, customer): ReactNode => (
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => router.push(`/admin/customer/${customer.id}`)}
+                      title="View Customer"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => router.push(`/admin/customer/${customer.id}/edit`)}
+                      title="Edit Customer"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      onClick={() => initiateDelete(customer)}
+                      title="Delete Customer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )
+              }
+            ]}
+            expandable
+            renderExpandedRow={(customer) => (
+              <div className="py-2 space-y-3 text-sm animate-in fade-in slide-in-from-top-1 duration-200 px-4 md:px-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Mail className="h-3 w-3" /> Contact & Company
+                    </p>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-slate-900">{customer.email || 'No Email'}</p>
+                      <p className="text-slate-600">{customer.phone || 'No Phone'}</p>
+                      {customer.company && <p className="text-indigo-600 text-xs font-medium">@{customer.company}</p>}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <MapPin className="h-3 w-3" /> Address Details
+                    </p>
+                    <div className="space-y-1">
+                      <p className="text-slate-900 leading-relaxed">{customer.address || 'No Address'}</p>
+                      <p className="text-slate-600 font-medium">{customer.city}, {customer.country}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
-                    disabled={pagination.page === 1}
-                    className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 border-t border-slate-200/60">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Orders</p>
+                    <p className="font-bold text-slate-900">{customer.total_orders || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Spent</p>
+                    <p className="font-bold text-indigo-600">{formatCurrency(Number(customer.total_spent || 0))}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200"
+                    onClick={() => router.push(`/admin/customer/${customer.id}/edit`)}
                   >
-                    Previous
-                  </button>
-                  <span className="px-4 py-2 text-sm text-slate-700">
-                    Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit)}
-                  </span>
-                  <button
-                    onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
-                    disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
-                    className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    <Edit className="h-3.5 w-3.5" /> Edit Profile
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200"
+                    onClick={() => router.push(`/admin/customer/${customer.id}`)}
                   >
-                    Next
-                  </button>
+                    <History className="h-3.5 w-3.5" /> View Orders
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 px-4 text-xs gap-2 rounded-lg border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-all"
+                    onClick={() => initiateDelete(customer)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete Customer
+                  </Button>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+            searchable={false}
+            serverPagination
+            paginationMeta={{
+              total: pagination.total,
+              page: currentPage,
+              limit: parseInt(pagination.limit),
+              totalPage: pagination.totalPage
+            }}
+            onPageChange={(page) => setCurrentPage(page)}
+            loading={loadingCustomers}
+            emptyMessage="No customers found."
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+          />
+        </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <span className="font-bold text-slate-900">{customerToDelete?.name}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete Customer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

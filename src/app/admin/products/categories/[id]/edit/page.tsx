@@ -96,7 +96,7 @@ export default function EditCategoryPage() {
 
   const fetchCategory = async () => {
     try {
-      const response = await api.get(`/products/categories/${id}`);
+      const response = await api.get(`/ecommerce/categories/${id}`);
       const cat: Category = response.data.data;
       setFormData({
         name: cat.name,

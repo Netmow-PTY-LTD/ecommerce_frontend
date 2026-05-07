@@ -101,7 +101,7 @@ export default function AddCategoryPage() {
       if (!payload.meta_title) payload.meta_title = null;
       if (!payload.meta_description) payload.meta_description = null;
       if (!payload.meta_image) payload.meta_image = null;
-      await api.post('/products/categories', payload);
+      await api.post('/ecommerce/categories', payload);
       router.push('/admin/products/categories');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
