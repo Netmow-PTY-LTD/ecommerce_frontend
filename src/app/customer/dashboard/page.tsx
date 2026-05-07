@@ -14,7 +14,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import CustomerLayout from '@/components/customer/customer-layout';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function CustomerDashboard() {
   const { customer, loading, isAuthenticated } = useCustomerAuth();
@@ -245,6 +245,12 @@ export default function CustomerDashboard() {
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                 <div className="text-center">
                     <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-slate-50 shadow-lg shadow-slate-100">
+                        {customer?.image_url && (
+                          <AvatarImage 
+                            src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
+                            className="object-cover" 
+                          />
+                        )}
                         <AvatarFallback className="bg-indigo-600 text-white text-2xl font-black">
                             {customer.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
