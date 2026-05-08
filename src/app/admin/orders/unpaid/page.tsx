@@ -33,7 +33,7 @@ interface Order {
   discount_amount: number;
   total: number;
   payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
   items: OrderItem[];
   notes: string;
   created_at: string;
@@ -110,8 +110,16 @@ export default function UnpaidOrdersPage() {
   const fetchUnpaidOrders = async () => {
     try {
       setLoadingOrders(true);
-      // Fetch a larger batch since the backend doesn't support specific payment_status filtering
-      const response = await api.get('/sales/orders?limit=1000');
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10',
+        payment_status: 'unpaid,partially_paid'
+      });
+
+      if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
+      if (appliedSearch) params.append('search', appliedSearch);
+
+      const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
 
       let transformedOrders: Order[] = (data.data || []).map((order: any) => {
@@ -178,7 +186,7 @@ export default function UnpaidOrdersPage() {
       }
       if (appliedSearch) {
         const search = appliedSearch.toLowerCase();
-        transformedOrders = transformedOrders.filter(order => 
+        transformedOrders = transformedOrders.filter(order =>
           order.order_number.toLowerCase().includes(search) ||
           order.customer_name.toLowerCase().includes(search) ||
           order.customer_email.toLowerCase().includes(search)
@@ -404,13 +412,14 @@ export default function UnpaidOrdersPage() {
                 render: (status): ReactNode => {
                   const s = status as string;
                   const config: Record<string, string> = {
-                    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-                    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+                    unpaid: 'bg-amber-50 text-amber-700 border-amber-200',
+                    partially_paid: 'bg-blue-50 text-blue-700 border-blue-200',
                     paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    refunded: 'bg-slate-50 text-slate-700 border-slate-200',
                   };
                   return (
                     <Badge className={`${config[s] || 'bg-slate-50'} shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
-                      {s}
+                      {s.replace('_', ' ')}
                     </Badge>
                   );
                 }
@@ -423,7 +432,7 @@ export default function UnpaidOrdersPage() {
                   let color = 'text-slate-500';
                   if (days > 7) color = 'text-rose-600 font-bold';
                   else if (days > 3) color = 'text-orange-600 font-bold';
-                  
+
                   return (
                     <div className="flex flex-col">
                       <span className={`text-xs ${color}`}>{days} days</span>

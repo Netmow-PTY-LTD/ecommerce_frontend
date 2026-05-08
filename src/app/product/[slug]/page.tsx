@@ -3,10 +3,11 @@
 import { use, useState, useEffect, useMemo } from 'react';
 import useSWR from 'swr';
 import { useProduct } from '@/hooks/use-products';
+import { useProductFlashSalePrice } from '@/hooks/use-pricing';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/lib/store';
-import { ShoppingCart, Heart, Minus, Plus, Loader2, ArrowLeft, Truck, ShieldCheck, Star, MessageSquare, Package, Gift } from 'lucide-react';
+import { ShoppingCart, Heart, Minus, Plus, Loader2, ArrowLeft, Truck, ShieldCheck, Star, MessageSquare, Package, Gift, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -54,6 +55,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     const { summary, isLoading: summaryLoading } = useReviewSummary(productId || 0);
     const { reviews, pagination: reviewPagination, isLoading: reviewsLoading, mutate: mutateReviews } = useProductReviews(productId || 0, reviewPage, reviewSort);
 
+    // Flash sale pricing
+    const { flashSalePrice, flashSale, isLoading: flashSaleLoading } = useProductFlashSalePrice(productId);
+
     // Check if product has BOGO deal
     const [isBogoDeal, setIsBogoDeal] = useState(false);
     const [bogoCouponCode, setBogoCouponCode] = useState('');
@@ -70,6 +74,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             }
         }).catch(() => { });
     }, [productId]);
+
+    // Calculate best price (flash sale takes priority)
+    const bestPrice = flashSalePrice && flashSalePrice < (product?.sale_price || product?.price || 0)
+        ? flashSalePrice
+        : (product?.sale_price && product.sale_price < product.price ? product.sale_price : product?.price || 0);
+    const originalPrice = product?.price || 0;
+    const hasDiscount = bestPrice < originalPrice;
+    const discountPercentage = hasDiscount ? Math.round(((originalPrice - bestPrice) / originalPrice) * 100) : 0;
 
     // Compute initial selections from product attributes
     const initialSelections = useMemo(() => {
@@ -134,7 +146,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
 
     const handleAddToCart = () => {
-        addItem(product, quantity, selectedAttributes);
+        // Add product with the best price (flash sale price takes priority)
+        const productWithBestPrice = {
+            ...product,
+            price: bestPrice, // Use the best price for cart
+            originalPrice: originalPrice // Keep original for reference
+        };
+        addItem(productWithBestPrice, quantity, selectedAttributes);
         toast.success('Added to cart!', {
             description: `${quantity} ${quantity > 1 ? 'items' : 'item'} added to your cart`
         });
@@ -272,15 +290,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                             <div className="space-y-1">
                                 <div className="flex items-center gap-3">
                                     <div className="flex flex-col">
-                                        {product.sale_price && product.sale_price < product.price ? (
+                                        {hasDiscount ? (
                                             <>
-                                                <div className="text-3xl font-bold text-primary">{formatCurrency(product.sale_price)}</div>
-                                                <div className="text-sm text-muted-foreground line-through">{formatCurrency(product.price)}</div>
+                                                <div className="text-3xl font-bold text-primary">{formatCurrency(bestPrice)}</div>
+                                                <div className="text-sm text-muted-foreground line-through">{formatCurrency(originalPrice)}</div>
                                             </>
                                         ) : (
-                                            <div className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</div>
+                                            <div className="text-3xl font-bold text-primary">{formatCurrency(originalPrice)}</div>
                                         )}
                                     </div>
+                                    {flashSalePrice && flashSalePrice < bestPrice && (
+                                        <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md animate-pulse">
+                                            <Zap className="h-3.5 w-3.5" />
+                                            Flash Sale
+                                        </span>
+                                    )}
                                     {isBogoDeal && (
                                         <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
                                             <Gift className="h-3.5 w-3.5" />
@@ -288,6 +312,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                                         </span>
                                     )}
                                 </div>
+                                {flashSale && (
+                                    <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                        <Zap className="h-3 w-3" />
+                                        Flash sale ends: {new Date(flashSale.ends_at).toLocaleString()}
+                                    </p>
+                                )}
                                 {isBogoDeal && bogoCouponCode && (
                                     <p className="text-xs text-orange-600 font-medium">
                                         Use code <span className="font-mono bg-orange-100 px-1.5 py-0.5 rounded">{bogoCouponCode}</span> at checkout

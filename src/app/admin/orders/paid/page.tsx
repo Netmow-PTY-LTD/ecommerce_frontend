@@ -29,14 +29,14 @@ interface Order {
   customer_email: string;
   customer_phone: string;
   shipping_address: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
   subtotal: number;
   tax: number;
   shipping_cost: number;
   discount_amount: number;
   total: number;
   payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   items: OrderItem[];
   notes: string;
   created_at: string;

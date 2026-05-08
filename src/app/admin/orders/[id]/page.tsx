@@ -10,6 +10,7 @@ import OrderTimeline from '@/components/admin/order-timeline';
 import PaymentHistory from '@/components/admin/payment-history';
 import AddPaymentModal from '@/components/admin/add-payment-modal';
 import AdminLayout from '@/components/admin/admin-layout';
+import { RotateCcw, DollarSign } from 'lucide-react';
 
 interface OrderItem {
   id: number;
@@ -26,14 +27,14 @@ interface Order {
   customer_email: string;
   customer_phone: string;
   shipping_address: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
   subtotal: number;
   tax: number;
   shipping_cost: number;
   discount_amount: number;
   total: number;
   payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   items: OrderItem[];
   notes: string;
   created_at: string;
@@ -85,6 +86,11 @@ export default function OrderDetailPage() {
   const [statusDate, setStatusDate] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Refund modal state
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [isProcessingRefund, setIsProcessingRefund] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -175,6 +181,14 @@ export default function OrderDetailPage() {
         status_note: statusNote
       });
 
+      // If status is being changed to "returned", restore stock
+      if (selectedStatus === 'returned') {
+        await api.post('/products/stock/order-return', {
+          orderId: order.id,
+          reason: statusNote || 'Order returned by customer'
+        });
+      }
+
       setSuccess(`Order status updated to ${selectedStatus}`);
       setShowStatusModal(false);
       setSelectedStatus(null);
@@ -204,6 +218,45 @@ export default function OrderDetailPage() {
     setStatusNote('');
   };
 
+  const handleRefundSubmit = async () => {
+    if (!order) return;
+
+    try {
+      setIsProcessingRefund(true);
+
+      // Process refund and restore stock
+      await api.post('/products/stock/refund', {
+        orderId: order.id,
+        reason: refundReason || 'Payment refunded'
+      });
+
+      // Update payment status to refunded
+      await api.put(`/sales/orders/${order.id}`, {
+        payment_status: 'refunded'
+      });
+
+      setSuccess('Refund processed successfully and stock restored');
+      setShowRefundModal(false);
+      setRefundReason('');
+
+      // Refetch order data
+      await fetchOrder();
+
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: any) {
+      console.error('Failed to process refund:', error);
+      setError('Failed to process refund: ' + (error.response?.data?.message || error.message));
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsProcessingRefund(false);
+    }
+  };
+
+  const handleRefundModalClose = () => {
+    setShowRefundModal(false);
+    setRefundReason('');
+  };
+
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'pending':
@@ -216,6 +269,8 @@ export default function OrderDetailPage() {
         return 'bg-green-100 text-green-800 border-green-300';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-300';
+      case 'returned':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
@@ -229,6 +284,8 @@ export default function OrderDetailPage() {
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'failed':
         return 'bg-red-100 text-red-800 border-red-300';
+      case 'refunded':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
@@ -327,8 +384,8 @@ export default function OrderDetailPage() {
                 </h3>
               </div>
               <div className="px-4 py-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
+                  {(['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'] as const).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleUpdateStatus(status)}
@@ -540,13 +597,32 @@ export default function OrderDetailPage() {
                   order.payment_method.toLowerCase().includes('online') ||
                   order.payment_method.toLowerCase().includes('card')) &&
                   order.payment_status === 'paid' ? (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                    <svg className="mx-auto h-10 w-10 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-sm font-semibold text-green-800">Order fully paid via Stripe</p>
-                    <p className="text-xs text-green-600 mt-1">No additional payment needed</p>
-                  </div>
+                  <>
+                    {order.payment_status !== 'refunded' && (
+                      <button
+                        onClick={() => setShowRefundModal(true)}
+                        className="w-full px-6 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 transition-all flex items-center justify-center"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Process Refund
+                      </button>
+                    )}
+                    {order.payment_status === 'refunded' ? (
+                      <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                        <DollarSign className="mx-auto h-10 w-10 text-orange-600 mb-2" />
+                        <p className="text-sm font-semibold text-orange-800">Payment Refunded</p>
+                        <p className="text-xs text-orange-600 mt-1">Stock has been restored</p>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                        <svg className="mx-auto h-10 w-10 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm font-semibold text-green-800">Order fully paid via Stripe</p>
+                        <p className="text-xs text-green-600 mt-1">No additional payment needed</p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <button
                     onClick={() => setShowPaymentModal(true)}
@@ -660,6 +736,77 @@ export default function OrderDetailPage() {
                   </>
                 ) : (
                   'Update Status'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Modal */}
+      {showRefundModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-md max-w-md w-full">
+            {/* Modal Header */}
+            <div className="px-4 py-3 border-b border-slate-100 rounded-t-2xl">
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center">
+                <RotateCcw className="w-5 h-5 mr-2 text-orange-600" />
+                Process Refund
+              </h3>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-4 py-4 space-y-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <p className="text-sm text-orange-800">
+                  Processing a refund will:
+                </p>
+                <ul className="mt-2 text-xs text-orange-700 space-y-1">
+                  <li>• Mark payment status as "Refunded"</li>
+                  <li>• Restore all product stock quantities</li>
+                  <li>• Record stock movement history</li>
+                </ul>
+              </div>
+
+              <div>
+                <label htmlFor="refundReason" className="block text-sm font-semibold text-slate-700 mb-2">
+                  Refund Reason
+                </label>
+                <textarea
+                  id="refundReason"
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  rows={3}
+                  placeholder="Enter reason for refund..."
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all text-sm resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 flex space-x-3 rounded-b-xl">
+              <button
+                onClick={handleRefundModalClose}
+                disabled={isProcessingRefund}
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRefundSubmit}
+                disabled={isProcessingRefund}
+                className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isProcessingRefund ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Confirm Refund'
                 )}
               </button>
             </div>

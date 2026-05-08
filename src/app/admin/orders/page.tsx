@@ -26,14 +26,14 @@ interface Order {
   customer_email: string;
   customer_phone: string;
   shipping_address: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
   subtotal: number;
   tax: number;
   shipping_cost: number;
   discount_amount: number;
   total: number;
   payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   items: OrderItem[];
   notes: string;
   created_at: string;
@@ -94,6 +94,7 @@ export default function AdminOrdersPage() {
         status: width >= 1600,
         total: width >= 1024,
         payment: width >= 1440,
+        return_status: width >= 1440,
         items: width >= 1440,
         created_at: width >= 1600,
         actions: width >= 1600,
@@ -256,6 +257,7 @@ export default function AdminOrdersPage() {
       case 'shipped': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'returned': return 'bg-orange-50 text-orange-700 border-orange-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
@@ -265,6 +267,16 @@ export default function AdminOrdersPage() {
     if (methodLower === 'cash' || methodLower === 'cod') return { label: 'COD', color: 'bg-green-50 text-green-700 border-green-200' };
     if (methodLower.includes('stripe') || methodLower.includes('online') || methodLower.includes('card')) return { label: 'Stripe', color: 'bg-purple-50 text-purple-700 border-purple-200' };
     return { label: method, color: 'bg-gray-50 text-gray-700 border-gray-200' };
+  };
+
+  const getPaymentStatusColor = (status: Order['payment_status']) => {
+    switch (status) {
+      case 'paid': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'failed': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'refunded': return 'bg-orange-50 text-orange-700 border-orange-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   };
 
   if (loading) {
@@ -382,6 +394,7 @@ export default function AdminOrdersPage() {
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="returned">Returned</option>
               </Select>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button type="submit" className="flex-1 sm:flex-none h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white transition-all">
@@ -461,6 +474,28 @@ export default function AdminOrdersPage() {
                     <Badge className={`${getPaymentMethodLabel(order.payment_method).color} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
                       {getPaymentMethodLabel(order.payment_method).label}
                     </Badge>
+                    <Badge className={`${getPaymentStatusColor(order.payment_status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
+                      {order.payment_status === 'paid' ? 'Paid' : order.payment_status === 'refunded' ? 'Refunded' : order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                    </Badge>
+                  </div>
+                )
+              },
+              {
+                key: 'return_status',
+                title: 'Return Status',
+                render: (_, order): ReactNode => (
+                  <div className="flex items-center min-w-[80px]">
+                    {order.status === 'returned' ? (
+                      <Badge className="bg-orange-50 text-orange-700 border-orange-200 shadow-none border px-2 py-1 rounded text-[10px] font-bold uppercase" variant="outline">
+                        Returned
+                      </Badge>
+                    ) : order.payment_status === 'refunded' ? (
+                      <Badge className="bg-amber-50 text-amber-700 border-amber-200 shadow-none border px-2 py-1 rounded text-[10px] font-bold uppercase" variant="outline">
+                        Refunded
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
                   </div>
                 )
               },
