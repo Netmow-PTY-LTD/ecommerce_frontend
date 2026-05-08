@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import Image from 'next/image';
 import {
@@ -60,6 +61,7 @@ interface LowStockItem {
 export default function ProductAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -160,7 +162,7 @@ export default function ProductAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${inventoryStatus?.total_inventory_value.toFixed(2) || '0.00'}
+              {formatCurrency(inventoryStatus?.total_inventory_value || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">At cost</p>
           </div>
@@ -173,7 +175,7 @@ export default function ProductAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${inventoryStatus?.total_retail_value.toFixed(2) || '0.00'}
+              {formatCurrency(inventoryStatus?.total_retail_value || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">At selling price</p>
           </div>
@@ -216,7 +218,7 @@ export default function ProductAnalyticsPage() {
               <p className="text-sm opacity-80">Potential Profit Margin</p>
               <p className="text-3xl font-bold">{inventoryStatus?.potential_profit_margin.toFixed(1) || 0}%</p>
               <p className="text-sm opacity-80 mt-1">
-                ${inventoryStatus?.total_retail_value.toFixed(2) || '0.00'} retail - ${inventoryStatus?.total_inventory_value.toFixed(2) || '0.00'} cost
+                {formatCurrency(inventoryStatus?.total_retail_value || 0)} retail - {formatCurrency(inventoryStatus?.total_inventory_value || 0)} cost
               </p>
             </div>
             <div className="p-4 bg-white/20 rounded-2xl">
@@ -257,7 +259,7 @@ export default function ProductAnalyticsPage() {
                       <p className="text-xs text-slate-500">SKU: {p.sku}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">${Number(p.total_revenue).toFixed(2)}</p>
+                      <p className="text-sm font-bold text-green-600">{formatCurrency(Number(p.total_revenue))}</p>
                       <p className="text-xs text-slate-500">{p.total_quantity_sold} sold</p>
                     </div>
                   </div>
@@ -288,7 +290,7 @@ export default function ProductAnalyticsPage() {
                         <p className="text-xs text-slate-500">{cat.product_count} products • {cat.total_units} units</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">${Number(cat.total_cost_value).toFixed(2)}</p>
+                        <p className="text-sm font-bold text-green-600">{formatCurrency(Number(cat.total_cost_value))}</p>
                         <p className="text-xs text-slate-500">cost value</p>
                       </div>
                     </div>
@@ -355,7 +357,7 @@ export default function ProductAnalyticsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                          ${item.stock_value.toFixed(2)}
+                          {formatCurrency(item.stock_value)}
                         </td>
                       </tr>
                     );
