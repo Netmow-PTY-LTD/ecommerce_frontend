@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import Image from 'next/image';
 import {
@@ -67,6 +68,7 @@ interface TopCustomer {
 export default function SalesAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -200,7 +202,7 @@ export default function SalesAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${salesSummary?.net_sales.toFixed(2) || '0.00'}
+              {formatCurrency(salesSummary?.net_sales || 0)}
             </p>
             <div className="flex items-center gap-1 mt-2">
               {growthPct >= 0 ? (
@@ -238,10 +240,10 @@ export default function SalesAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${salesSummary?.average_order_value.toFixed(2) || '0.00'}
+              {formatCurrency(salesSummary?.average_order_value || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-2">
-              Gross: ${salesSummary?.gross_sales.toFixed(2) || '0.00'}
+              Gross: {formatCurrency(salesSummary?.gross_sales || 0)}
             </p>
           </div>
 
@@ -253,7 +255,7 @@ export default function SalesAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${salesSummary?.paid_amount.toFixed(2) || '0.00'}
+              {formatCurrency(salesSummary?.paid_amount || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-2">
               {salesSummary?.paid_orders || 0} paid orders
@@ -266,19 +268,19 @@ export default function SalesAnalyticsPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <p className="text-sm font-medium text-slate-600 mb-2">Discounts</p>
             <p className="text-xl font-bold text-amber-600">
-              -${salesSummary?.total_discount.toFixed(2) || '0.00'}
+              -{formatCurrency(salesSummary?.total_discount || 0)}
             </p>
           </div>
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <p className="text-sm font-medium text-slate-600 mb-2">Shipping</p>
             <p className="text-xl font-bold text-blue-600">
-              ${salesSummary?.total_shipping.toFixed(2) || '0.00'}
+              {formatCurrency(salesSummary?.total_shipping || 0)}
             </p>
           </div>
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <p className="text-sm font-medium text-slate-600 mb-2">Tax Collected</p>
             <p className="text-xl font-bold text-purple-600">
-              ${salesSummary?.total_tax.toFixed(2) || '0.00'}
+              {formatCurrency(salesSummary?.total_tax || 0)}
             </p>
           </div>
         </div>
@@ -308,7 +310,7 @@ export default function SalesAnalyticsPage() {
                         />
                       </div>
                       <span className="font-semibold text-slate-900 w-24 text-right">
-                        ${trend.net_sales.toFixed(2)}
+                        {formatCurrency(trend.net_sales)}
                       </span>
                       <span className="text-slate-500 w-16 text-right">{trend.total_orders} orders</span>
                     </div>
@@ -351,7 +353,7 @@ export default function SalesAnalyticsPage() {
                       <p className="text-xs text-slate-500">SKU: {p.sku}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">${Number(p.total_revenue).toFixed(2)}</p>
+                      <p className="text-sm font-bold text-green-600">{formatCurrency(Number(p.total_revenue))}</p>
                       <p className="text-xs text-slate-500">{p.total_quantity_sold} sold</p>
                     </div>
                   </div>
@@ -385,7 +387,7 @@ export default function SalesAnalyticsPage() {
                       <p className="text-xs text-slate-500 truncate">{c.email}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">${Number(c.total_spent).toFixed(2)}</p>
+                      <p className="text-sm font-bold text-green-600">{formatCurrency(Number(c.total_spent))}</p>
                       <p className="text-xs text-slate-500">{c.order_count} orders</p>
                     </div>
                   </div>

@@ -12,8 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
 import { DataTable } from '@/components/ui/data-table';
-import {
-  Eye, Search as SearchIcon, Package, User,
+import { Receipt, Eye, Search as SearchIcon, Package, User,
   ShoppingCart, Printer, MapPin,
   Clock, CheckCircle2, TrendingUp,
   CreditCard,
@@ -220,6 +219,17 @@ export default function PendingOrdersPage() {
     setSearchTerm('');
     setAppliedSearch('');
     setCurrentPage(1);
+  };
+
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'processing': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'shipped': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -436,7 +446,7 @@ export default function PendingOrdersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => router.push(`/admin/order/${order.id}`)}
+                      onClick={() => router.push(`/admin/orders/${order.id}`)}
                       title="View Order"
                     >
                       <Eye className="h-4 w-4" />
@@ -445,10 +455,10 @@ export default function PendingOrdersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => window.print()}
+                      onClick={() => router.push(`/admin/orders/pending/${order.id}/invoice`)}
                       title="Print Slip"
                     >
-                      <Printer className="h-4 w-4" />
+                      <Receipt className="h-4 w-4" />
                     </Button>
                   </div>
                 )
@@ -510,7 +520,7 @@ export default function PendingOrdersPage() {
                   <Button
                     size="sm"
                     className="h-9 px-4 text-xs gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-                    onClick={() => router.push(`/admin/order/${order.id}`)}
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
                   >
                     <Package className="h-3.5 w-3.5" /> Start Processing
                   </Button>
@@ -518,9 +528,9 @@ export default function PendingOrdersPage() {
                     size="sm"
                     variant="outline"
                     className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200"
-                    onClick={() => window.print()}
+                    onClick={() => router.push(`/admin/orders/pending/${order.id}/invoice`)}
                   >
-                    <Printer className="h-3.5 w-3.5" /> Print Packing Slip
+                    <Printer className="h-3.5 w-3.5" /> View Invoice
                   </Button>
                 </div>
               </div>
@@ -544,3 +554,4 @@ export default function PendingOrdersPage() {
     </AdminLayout>
   );
 }
+

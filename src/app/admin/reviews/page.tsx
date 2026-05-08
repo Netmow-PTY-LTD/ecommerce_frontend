@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
 import { Button } from '@/components/ui/button';
-import { Star, Trash2, Check, X, MessageSquare, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import {
+  Star, Trash2, Check, X, MessageSquare,
+  Eye, EyeOff, ChevronLeft, ChevronRight,
+  Clock, Package, User
+} from 'lucide-react';
 
 interface Review {
   id: number;
@@ -27,20 +33,23 @@ interface Review {
 }
 
 const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex gap-0.5">
+  <div className="flex gap-1">
     {[1, 2, 3, 4, 5].map((star) => (
       <Star
         key={star}
-        className={`h-4 w-4 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+        className={cn(
+          "h-3.5 w-3.5 transition-all duration-300",
+          star <= rating ? "text-amber-400 fill-amber-400" : "text-slate-200 dark:text-slate-800"
+        )}
       />
     ))}
   </div>
 );
 
 const statusStyles: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  pending: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400',
+  approved: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400',
+  rejected: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400',
 };
 
 export default function AdminReviewsPage() {
@@ -48,6 +57,7 @@ export default function AdminReviewsPage() {
   const router = useRouter();
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [fetchingReviews, setFetchingReviews] = useState(true);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPage: 0 });
   const [filterStatus, setFilterStatus] = useState('');
   const [filterRating, setFilterRating] = useState('');
@@ -70,6 +80,7 @@ export default function AdminReviewsPage() {
 
   const fetchReviews = useCallback(async () => {
     try {
+      setFetchingReviews(true);
       const params = new URLSearchParams({ page: currentPage.toString(), limit: '20' });
       if (filterStatus) params.append('status', filterStatus);
       if (filterRating) params.append('rating', filterRating);
@@ -79,6 +90,8 @@ export default function AdminReviewsPage() {
     } catch (err) {
       console.error('Failed to fetch reviews:', err);
       setError('Failed to load reviews');
+    } finally {
+      setFetchingReviews(false);
     }
   }, [currentPage, filterStatus, filterRating]);
 
@@ -119,15 +132,32 @@ export default function AdminReviewsPage() {
     setReplyModal({ open: false, reviewId: null, status: 'approved', reply: '' });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (!loading && !isAuthenticated) return null;
 
-  if (!isAuthenticated) return null;
+  const ReviewSkeleton = () => (
+    <div className="bg-card border rounded-lg p-4 space-y-4 animate-pulse">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/50 rounded"></div>
+            <div className="h-3 w-4/5 bg-slate-100 dark:bg-slate-800/50 rounded"></div>
+          </div>
+          <div className="flex gap-4">
+            <div className="h-3 w-20 bg-slate-100 dark:bg-slate-800/50 rounded"></div>
+            <div className="h-3 w-20 bg-slate-100 dark:bg-slate-800/50 rounded"></div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="h-8 w-16 bg-slate-100 dark:bg-slate-800 rounded"></div>
+          <div className="h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <AdminLayout title="Reviews Management" subtitle="Moderate and manage product reviews">
@@ -144,36 +174,48 @@ export default function AdminReviewsPage() {
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <select
-            value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-            className="px-4 py-2 border rounded-lg bg-card text-sm"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <select
-            value={filterRating}
-            onChange={(e) => { setFilterRating(e.target.value); setCurrentPage(1); }}
-            className="px-4 py-2 border rounded-lg bg-card text-sm"
-          >
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
-          </select>
-          <span className="text-sm text-muted-foreground ml-auto">
-            {pagination.total} review{pagination.total !== 1 ? 's' : ''} total
-          </span>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-500">Status:</span>
+            <select
+              value={filterStatus}
+              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-500">Rating:</span>
+            <select
+              value={filterRating}
+              onChange={(e) => { setFilterRating(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            >
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
+          <div className="ml-auto text-xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+            {pagination.total} Total Reviews
+          </div>
         </div>
 
         {/* Reviews List */}
-        {reviews.length === 0 ? (
+        {fetchingReviews ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <ReviewSkeleton key={i} />
+            ))}
+          </div>
+        ) : reviews.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>No reviews found.</p>
@@ -190,41 +232,56 @@ export default function AdminReviewsPage() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <StarRating rating={review.rating} />
                       {review.title && (
-                        <span className="font-medium text-foreground">{review.title}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{review.title}</span>
                       )}
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[review.status]}`}>
+                      <Badge className={cn("px-2 py-0 border text-[10px] font-bold uppercase tracking-wider", statusStyles[review.status])} variant="outline">
                         {review.status}
-                      </span>
+                      </Badge>
                       {review.is_verified_purchase && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                        <Badge className="px-2 py-0 border border-indigo-100 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider" variant="outline">
                           Verified
-                        </span>
+                        </Badge>
                       )}
                     </div>
 
                     {review.body && (
-                      <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{review.body}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">{review.body}</p>
                     )}
 
                     {review.images && Array.isArray(review.images) && review.images.length > 0 && (
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2.5 mt-3">
                         {review.images.map((img: string, i: number) => (
-                          <img key={i} src={img} alt={`Review image ${i + 1}`} className="h-16 w-16 rounded-lg object-cover border" />
+                          <div key={i} className="relative group">
+                            <img src={img} alt={`Review image ${i + 1}`} className="h-16 w-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 transition-all group-hover:scale-105" />
+                          </div>
                         ))}
                       </div>
                     )}
 
                     {review.admin_reply && (
-                      <div className="mt-2 bg-primary/5 rounded-lg p-3 text-sm">
-                        <span className="font-medium text-primary">Admin Reply:</span> {review.admin_reply}
+                      <div className="mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-sm">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
+                          <MessageSquare className="h-3 w-3" /> Admin Response
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm italic">"{review.admin_reply}"</p>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>Product #{review.product_id}</span>
-                      <span>Customer #{review.customer_id}</span>
-                      {review.helpful_count > 0 && <span>{review.helpful_count} helpful</span>}
-                      <span>{new Date(review.created_at).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-4 mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <div className="flex items-center gap-1">
+                        <Package className="h-3 w-3" /> Prod #{review.product_id}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3" /> Cust #{review.customer_id}
+                      </div>
+                      {review.helpful_count > 0 && (
+                        <div className="flex items-center gap-1 text-emerald-600">
+                          <Check className="h-3 w-3" /> {review.helpful_count} Helpful
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 ml-auto">
+                        <Clock className="h-3 w-3" /> {new Date(review.created_at).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
 
