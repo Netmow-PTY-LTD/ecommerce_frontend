@@ -234,6 +234,17 @@ export default function PaidOrdersPage() {
     setCurrentPage(1);
   };
 
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'processing': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'shipped': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -453,7 +464,7 @@ export default function PaidOrdersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => router.push(`/admin/order/${order.id}`)}
+                      onClick={() => router.push(`/admin/orders/${order.id}`)}
                       title="View Order"
                     >
                       <Eye className="h-4 w-4" />
@@ -462,10 +473,10 @@ export default function PaidOrdersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => window.print()}
-                      title="Print Invoice"
+                      onClick={() => router.push(`/admin/orders/paid/${order.id}/invoice`)}
+                      title="View Invoice"
                     >
-                      <Printer className="h-4 w-4" />
+                      <Receipt className="h-4 w-4" />
                     </Button>
                   </div>
                 )
@@ -562,3 +573,4 @@ export default function PaidOrdersPage() {
     </AdminLayout>
   );
 }
+
