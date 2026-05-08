@@ -82,7 +82,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
     try {
       setIsSubmitting(true);
 
-      await api.post('/sales/payments', {
+      await api.post('/sales/orders/payments', {
         order_id: orderId,
         amount: parseFloat(amount),
         payment_method: paymentMethod,
