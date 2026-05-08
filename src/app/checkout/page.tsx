@@ -95,7 +95,7 @@ function CheckoutForm({
             const cartItemsPayload = items.map(item => ({
                 product_id: item.id,
                 quantity: item.quantity,
-                unit_price: item.price
+                unit_price: item.sale_price || item.price
             }));
             const res = await api.post('/pricing/coupons/validate', {
                 code: couponCode.toUpperCase(),
@@ -204,9 +204,9 @@ function CheckoutForm({
                 const mappedItems = items.map(item => ({
                     product_id: item.id,
                     quantity: item.quantity,
-                    unit_price: item.price,
-                    total_price: item.price * item.quantity,
-                    line_total: item.price * item.quantity,
+                    unit_price: item.sale_price || item.price,
+                    total_price: (item.sale_price || item.price) * item.quantity,
+                    line_total: (item.sale_price || item.price) * item.quantity,
                     name: item.name,
                 }));
 
@@ -268,9 +268,9 @@ function CheckoutForm({
                     items: items.map(item => ({
                         product_id: item.id,
                         quantity: item.quantity,
-                        unit_price: item.price,
-                        total_price: item.price * item.quantity,
-                        line_total: item.price * item.quantity
+                        unit_price: item.sale_price || item.price,
+                        total_price: (item.sale_price || item.price) * item.quantity,
+                        line_total: (item.sale_price || item.price) * item.quantity
                     })),
                     customer_email: formData.email,
                     customer_phone: formData.phone,
@@ -792,7 +792,7 @@ function CheckoutForm({
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shipping</span>
                                 <span className="font-medium">
-                                    {cartTotals.shippingCost === 0 ? 'Free' : formatCurrency(cartTotals.shippingCost)}
+                                    {(cartTotals.shippingCost === 0 || freeShipping) ? 'Free' : formatCurrency(cartTotals.shippingCost)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -1022,7 +1022,8 @@ function CheckoutPageContent() {
     const effectiveDiscount = Math.min(discountAmount, cartTotals.cartTotal);
     const discountedSubtotal = Math.max(0, cartTotals.cartTotal - effectiveDiscount);
     const effectiveTax = discountedSubtotal * 0.08;
-    const finalTotal = Math.max(0, discountedSubtotal + cartTotals.shippingCost + effectiveTax);
+    const effectiveShipping = freeShipping ? 0 : cartTotals.shippingCost;
+    const finalTotal = Math.max(0, discountedSubtotal + effectiveShipping + effectiveTax);
 
     if (!mounted) {
         return (

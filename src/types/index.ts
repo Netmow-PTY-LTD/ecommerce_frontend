@@ -8,6 +8,8 @@ export interface Product {
     category_id?: number;
     unit_id?: number;
     price: number;
+    sale_price?: number;
+    price_source?: 'original' | 'flash_sale' | 'tier';
     cost?: number;
     purchase_tax?: number;
     sales_tax?: number;
