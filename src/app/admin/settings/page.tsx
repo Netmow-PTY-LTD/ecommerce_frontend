@@ -17,7 +17,8 @@ import {
     DollarSign,
     Save,
     Loader2,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Truck
 } from 'lucide-react';
 
 interface CompanyProfile {
@@ -68,6 +69,11 @@ export default function SettingsPage() {
         tax_id: ''
     });
 
+    const [shippingRules, setShippingRules] = useState({
+        flat_rate: 15,
+        free_shipping_threshold: 100
+    });
+
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
     // Gallery states
@@ -87,6 +93,7 @@ export default function SettingsPage() {
         if (isAuthenticated) {
             fetchCompanyProfile();
             fetchGalleryImages();
+            fetchShippingRules();
         }
     }, [isAuthenticated]);
 
@@ -141,6 +148,17 @@ export default function SettingsPage() {
         }
     };
 
+    const fetchShippingRules = async () => {
+        try {
+            const response = await api.get('/settings/shipping-rules');
+            if (response.data && response.data.data) {
+                setShippingRules(response.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to load shipping rules:', error);
+        }
+    };
+
     const handleSelectLogo = (image: GalleryImage) => {
         setCompanyProfile(prev => ({ ...prev, logo_url: image.url }));
         setLogoPreview(image.url);
@@ -166,7 +184,11 @@ export default function SettingsPage() {
             });
 
             await api.put('/settings/company/profile', payload);
+            await api.put('/settings/shipping-rules', shippingRules);
+            
             await mutate('/settings/company/profile');
+            await mutate('/settings/shipping-rules');
+            
             toast.success('Settings saved successfully!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to save settings');
@@ -178,6 +200,11 @@ export default function SettingsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setCompanyProfile(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setShippingRules(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
     };
 
     if (loading || loadingProfile) {
@@ -574,6 +601,61 @@ export default function SettingsPage() {
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm"
                                     placeholder="TAX123456"
                                 />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Shipping Settings */}
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                                <Truck className="w-5 h-5 mr-2 text-teal-600" />
+                                Shipping Settings
+                            </h2>
+                            <p className="text-sm text-slate-600 mt-1">Configure global shipping rates and thresholds</p>
+                        </div>
+
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Flat Rate */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Standard Flat Rate
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                                    <input
+                                        type="number"
+                                        name="flat_rate"
+                                        min="0"
+                                        step="0.01"
+                                        value={shippingRules.flat_rate}
+                                        onChange={handleShippingChange}
+                                        className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-sm font-medium"
+                                        placeholder="15.00"
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">The default cost for shipping if an order does not qualify for free shipping.</p>
+                            </div>
+
+                            {/* Free Shipping Threshold */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Free Shipping Threshold
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                                    <input
+                                        type="number"
+                                        name="free_shipping_threshold"
+                                        min="0"
+                                        step="0.01"
+                                        value={shippingRules.free_shipping_threshold}
+                                        onChange={handleShippingChange}
+                                        className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-sm font-medium"
+                                        placeholder="100.00"
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">Orders with a subtotal above this amount will automatically receive free shipping.</p>
                             </div>
                         </div>
                     </div>

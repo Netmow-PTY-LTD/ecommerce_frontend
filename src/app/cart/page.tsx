@@ -11,12 +11,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { validateCoupon } from '@/hooks/use-pricing';
+import { useShippingRules } from '@/hooks/use-settings';
 import api from '@/lib/api';
 
 export default function CartPage() {
     const { items, removeItem, updateQuantity, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
     const { formatCurrency } = useCurrency();
     const { customer } = useCustomerAuth();
+    const { shippingRules } = useShippingRules();
     const [mounted, setMounted] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
@@ -72,7 +74,7 @@ export default function CartPage() {
 
     const cartTotal = total();
     const effectiveDiscount = Math.min(discountAmount, cartTotal);
-    const shipping = freeShipping || cartTotal > 100 ? 0 : 15.00;
+    const shipping = freeShipping || cartTotal >= shippingRules.free_shipping_threshold ? 0 : shippingRules.flat_rate;
     const discountedSubtotal = Math.max(0, cartTotal - effectiveDiscount);
     const tax = discountedSubtotal * 0.08;
     const finalTotal = Math.max(0, discountedSubtotal + shipping + tax);
@@ -271,7 +273,7 @@ export default function CartPage() {
                                 </div>
                                 {shipping > 0 && !freeShipping && (
                                     <p className="text-xs text-muted-foreground">
-                                        Add {formatCurrency(100 - cartTotal)} more for free shipping.
+                                        Add {formatCurrency(shippingRules.free_shipping_threshold - cartTotal)} more for free shipping.
                                     </p>
                                 )}
 

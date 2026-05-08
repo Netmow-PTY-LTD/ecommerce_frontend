@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import Link from 'next/link';
 import api from '@/lib/api';
 import OrderTimeline from '@/components/admin/order-timeline';
 import PaymentHistory from '@/components/admin/payment-history';
@@ -260,7 +261,7 @@ export default function OrderDetailPage() {
       title={`Order ${order.order_number}`}
       subtitle="Order details and management"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-5">
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
@@ -280,17 +281,29 @@ export default function OrderDetailPage() {
         )}
 
         {/* Order Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{order.order_number}</h2>
-                <p className="text-sm text-slate-600 mt-1">Placed on {formatDate(order.created_at)}</p>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-base font-bold text-slate-900">{order.order_number}</h2>
+                  <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border bg-green-50 text-green-700 border-green-200`}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
+
+                </div>
+                <p className="text-xs text-slate-400 hidden sm:block mt-1">Placed on {formatDate(order.created_at)}</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <span className={`px-4 py-2 text-sm font-bold rounded-full border-2 ${getStatusColor(order.status)}`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/orders/${orderId}/invoice`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Invoice
+                </Link>
               </div>
             </div>
           </div>
@@ -300,23 +313,23 @@ export default function OrderDetailPage() {
           {/* Left Column - Order Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Status Update */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   Update Order Status
                 </h3>
               </div>
-              <div className="p-6">
+              <div className="px-4 py-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                   {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleUpdateStatus(status)}
-                      className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${order.status === status
-                        ? getStatusColor(status) + ' scale-105 shadow-lg'
+                      className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all border-1 ${order.status === status
+                        ? getStatusColor(status) + ' scale-105 '
                         : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
                         }`}
                     >
@@ -330,16 +343,16 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Customer Information */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   Customer Information
                 </h3>
               </div>
-              <div className="p-6">
+              <div className="px-4 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
@@ -366,9 +379,9 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Order Items */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
@@ -379,23 +392,23 @@ export default function OrderDetailPage() {
                 <table className="min-w-full divide-y divide-slate-200">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Quantity</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Product</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Quantity</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Price</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-slate-200">
                     {order.items.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">{item.product_name}</td>
-                        <td className="px-6 py-4 text-sm text-slate-900 text-center">
+                        <td className="px-4 py-3 text-sm text-slate-900">{item.product_name}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 text-center">
                           <span className="inline-flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full font-semibold">
                             {item.quantity}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-900 text-right">{formatCurrency(item.price)}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-slate-900 text-right">{formatCurrency(item.total)}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 text-right">{formatCurrency(item.price)}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-900 text-right">{formatCurrency(item.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -405,16 +418,16 @@ export default function OrderDetailPage() {
 
             {/* Order Notes */}
             {order.notes && (
-              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                     <svg className="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                     </svg>
                     Order Notes
                   </h3>
                 </div>
-                <div className="p-6">
+                <div className="px-4 py-4">
                   <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
                     <p className="text-sm text-amber-900">{order.notes}</p>
                   </div>
@@ -426,27 +439,27 @@ export default function OrderDetailPage() {
           {/* Right Column - Summary & Payment */}
           <div className="space-y-6">
             {/* Order Summary */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   Order Summary
                 </h3>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="px-4 py-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Subtotal</span>
-                  <span className="text-base font-semibold text-slate-900">{formatCurrency(order.subtotal)}</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Tax</span>
-                  <span className="text-base font-semibold text-slate-900">{formatCurrency(order.tax)}</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(order.tax)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Shipping</span>
-                  <span className="text-base font-semibold text-slate-900">{formatCurrency(order.shipping_cost)}</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(order.shipping_cost)}</span>
                 </div>
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between items-center bg-green-50 -mx-2 px-2 py-1 rounded-lg">
@@ -454,26 +467,26 @@ export default function OrderDetailPage() {
                     <span className="text-base font-semibold text-green-600">-{formatCurrency(order.discount_amount)}</span>
                   </div>
                 )}
-                <div className="border-t-2 border-slate-200 pt-4">
+                <div className="border-t border-slate-100 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-slate-900">Total</span>
-                    <span className="text-2xl font-bold text-indigo-600">{formatCurrency(order.total)}</span>
+                    <span className="text-sm font-bold text-slate-900">Total</span>
+                    <span className="text-lg font-bold text-indigo-600">{formatCurrency(order.total)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Payment Information */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                   Payment Information
                 </h3>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="px-4 py-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-slate-600">Payment Method</span>
                   <span className={`px-3 py-1 text-xs font-semibold rounded-full ${order.payment_method.toLowerCase() === 'cash' || order.payment_method.toLowerCase() === 'cod'
@@ -506,17 +519,17 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Payment History */}
-            <PaymentHistory
+            {/* <PaymentHistory
               key={`payment-${paymentRefreshKey}`}
               orderId={orderId}
               orderTotal={order.total}
-            />
+            /> */}
 
             {/* Timeline */}
             <OrderTimeline key={`timeline-${timelineRefreshKey}`} orderId={orderId} />
 
             {/* Actions */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="p-6 space-y-3">
                 {/* Check if order is fully paid via Stripe */}
                 {(order.payment_method.toLowerCase().includes('stripe') ||
@@ -533,7 +546,7 @@ export default function OrderDetailPage() {
                 ) : (
                   <button
                     onClick={() => setShowPaymentModal(true)}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center"
+                    className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all  flex items-center justify-center"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -541,9 +554,18 @@ export default function OrderDetailPage() {
                     Add Payment
                   </button>
                 )}
+                <Link
+                  href={`/admin/orders/${orderId}/invoice`}
+                  className="w-full px-6 py-3 bg-white border-1 border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Invoice
+                </Link>
                 <a
                   href="/admin/orders"
-                  className="w-full px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-xl text-sm font-semibold hover:from-slate-700 hover:to-gray-700 transition-all shadow-lg flex items-center justify-center"
+                  className="w-full px-6 py-3 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all  flex items-center justify-center"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -559,10 +581,10 @@ export default function OrderDetailPage() {
       {/* Status Update Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white rounded-xl shadow-md max-w-md w-full">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200 rounded-t-2xl">
-              <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+            <div className="px-4 py-3 border-b border-slate-100 rounded-t-2xl">
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -571,7 +593,7 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4">
+            <div className="px-4 py-4 space-y-3">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   New Status
@@ -590,7 +612,7 @@ export default function OrderDetailPage() {
                   id="statusDate"
                   value={statusDate}
                   onChange={(e) => setStatusDate(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
                   required
                 />
               </div>
@@ -605,13 +627,13 @@ export default function OrderDetailPage() {
                   onChange={(e) => setStatusNote(e.target.value)}
                   rows={3}
                   placeholder="Add a note about this status change..."
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm resize-none"
                 />
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-slate-200 flex space-x-3 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-slate-200 flex space-x-3 rounded-b-xl">
               <button
                 onClick={handleStatusModalClose}
                 disabled={isUpdatingStatus}
@@ -622,7 +644,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={handleStatusModalSubmit}
                 disabled={isUpdatingStatus || !statusDate}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all  disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isUpdatingStatus ? (
                   <>

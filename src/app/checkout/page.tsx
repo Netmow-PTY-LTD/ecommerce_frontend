@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import api from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
+import { useShippingRules } from '@/hooks/use-settings';
 
 // CheckoutForm component
 function CheckoutForm({
@@ -873,6 +874,7 @@ function CheckoutPageContent() {
     const { items, total, clearCart, coupon, discountAmount, freeShipping, applyCoupon, removeCoupon } = useCartStore();
     const { formatCurrency, currency } = useCurrency();
     const { isAuthenticated, customer } = useCustomerAuth();
+    const { shippingRules } = useShippingRules();
     const [mounted, setMounted] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
@@ -916,7 +918,7 @@ function CheckoutPageContent() {
 
         // Calculate totals
         const cartTotal = total();
-        const shippingCost = cartTotal > 100 ? 0 : 15;
+        const shippingCost = freeShipping || cartTotal >= shippingRules.free_shipping_threshold ? 0 : shippingRules.flat_rate;
         const taxRate = 0.08; // 8% tax
         const tax = cartTotal * taxRate;
 
@@ -930,7 +932,7 @@ function CheckoutPageContent() {
         if (searchParams.get('canceled') === 'true') {
             toast.error('Payment was canceled. Please try again.');
         }
-    }, [items, total, searchParams]);
+    }, [items, total, searchParams, freeShipping, shippingRules.free_shipping_threshold, shippingRules.flat_rate]);
 
     // Re-validate coupon when cart items change
     useEffect(() => {

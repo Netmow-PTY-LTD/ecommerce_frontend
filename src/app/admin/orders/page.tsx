@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,8 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
 import { DataTable } from '@/components/ui/data-table';
-import {
-  Eye, Search as SearchIcon, Package, User,
+import { Receipt, Eye, Search as SearchIcon, Package, User,
   ShoppingCart, Printer, PlusCircle, Truck,
   Clock,
   CheckCircle2
@@ -409,7 +408,16 @@ export default function AdminOrdersPage() {
               {
                 key: 'order_number',
                 title: 'Order ID',
-                render: (value) => <span className="font-semibold text-indigo-600 whitespace-nowrap">{value as string}</span>
+                render: (_, order): ReactNode => (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">#{order.order_number}</span>
+                      <Badge className={`${getStatusColor(order.status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </Badge>
+                    </div>
+                  </div>
+                )
               },
               {
                 key: 'customer',
@@ -444,15 +452,7 @@ export default function AdminOrdersPage() {
                 title: 'Total',
                 render: (value): ReactNode => <span className="font-bold text-slate-900 whitespace-nowrap">{formatCurrency(Number(value))}</span>
               },
-              {
-                key: 'status',
-                title: 'Status',
-                render: (value): ReactNode => (
-                  <Badge className={`${getStatusColor(value as Order['status'])} shadow-none border px-2 py-0.5 rounded-lg text-[10px]`} variant="outline">
-                    {(value as string).charAt(0).toUpperCase() + (value as string).slice(1)}
-                  </Badge>
-                )
-              },
+
               {
                 key: 'payment',
                 title: 'Payment',
@@ -479,7 +479,7 @@ export default function AdminOrdersPage() {
                 className: 'text-right',
                 headerClassName: 'text-right',
                 render: (_, order): ReactNode => (
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -487,6 +487,15 @@ export default function AdminOrdersPage() {
                       onClick={() => router.push(`/admin/orders/${order.id}`)}
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => router.push(`/admin/orders/${order.id}/invoice`)}
+                      title="View Invoice"
+                    >
+                      <Receipt className="h-4 w-4" />
                     </Button>
                   </div>
                 )
@@ -543,9 +552,9 @@ export default function AdminOrdersPage() {
                     size="sm"
                     variant="outline"
                     className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200"
-                    onClick={() => window.print()}
+                    onClick={() => router.push(`/admin/orders/${order.id}/invoice`)}
                   >
-                    <Printer className="h-3.5 w-3.5" /> Print Invoice
+                    <Printer className="h-3.5 w-3.5" /> View Invoice
                   </Button>
                 </div>
               </div>
@@ -569,3 +578,4 @@ export default function AdminOrdersPage() {
     </AdminLayout>
   );
 }
+
