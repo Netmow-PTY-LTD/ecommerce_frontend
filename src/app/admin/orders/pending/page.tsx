@@ -112,17 +112,11 @@ export default function PendingOrdersPage() {
   const fetchPendingOrders = async () => {
     try {
       setLoadingOrders(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '10',
-        status: 'pending',
-      });
-      if (appliedSearch) params.append('search', appliedSearch);
-
-      const response = await api.get(`/sales/orders?${params}`);
+      // Fetch a larger batch since the backend doesn't support specific status filtering effectively
+      const response = await api.get('/sales/orders?limit=1000');
       const data = response.data;
 
-      const transformedOrders: Order[] = data.data.map((order: any) => {
+      let transformedOrders: Order[] = (data.data || []).map((order: any) => {
         let shippingAddress = 'N/A';
         try {
           if (order.shipping_address) {
@@ -177,12 +171,24 @@ export default function PendingOrdersPage() {
         };
       });
 
+      // Frontend filter for pending orders
+      transformedOrders = transformedOrders.filter(order => order.status === 'pending');
+
+      if (appliedSearch) {
+        const search = appliedSearch.toLowerCase();
+        transformedOrders = transformedOrders.filter(order => 
+          order.order_number.toLowerCase().includes(search) ||
+          order.customer_name.toLowerCase().includes(search) ||
+          order.customer_email.toLowerCase().includes(search)
+        );
+      }
+
       setOrders(transformedOrders);
       setPagination({
-        total: data.pagination?.total || transformedOrders.length,
-        page: data.pagination?.page || currentPage.toString(),
-        limit: data.pagination?.limit || '10',
-        totalPage: data.pagination?.totalPage || 1,
+        total: transformedOrders.length,
+        page: '1',
+        limit: '10',
+        totalPage: Math.ceil(transformedOrders.length / 10),
       });
 
       // Stats calculation
@@ -191,7 +197,7 @@ export default function PendingOrdersPage() {
       const totalIt = transformedOrders.reduce((sum, order) => sum + order.items.length, 0);
 
       setStats({
-        pending: data.pagination?.total || transformedOrders.length,
+        pending: transformedOrders.length,
         value: val,
         paidUnshipped: paidUn,
         totalItems: totalIt,
@@ -207,7 +213,7 @@ export default function PendingOrdersPage() {
     if (isAuthenticated) {
       fetchPendingOrders();
     }
-  }, [isAuthenticated, currentPage, appliedSearch]);
+  }, [isAuthenticated, appliedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,8 +381,13 @@ export default function PendingOrdersPage() {
                 key: 'order_number',
                 title: 'Order Info',
                 render: (_, order): ReactNode => (
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900">#{order.order_number}</span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">#{order.order_number}</span>
+                      <Badge className={`${getStatusColor(order.status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
+                        {order.status}
+                      </Badge>
+                    </div>
                     <span className="text-[10px] text-slate-500 flex items-center gap-1 uppercase tracking-tighter">
                       <Clock className="h-2.5 w-2.5" /> Received {format(new Date(order.created_at), 'HH:mm')}
                     </span>
@@ -536,14 +547,7 @@ export default function PendingOrdersPage() {
               </div>
             )}
             searchable={false}
-            serverPagination
-            paginationMeta={{
-              total: pagination.total,
-              page: currentPage,
-              limit: parseInt(pagination.limit),
-              totalPage: pagination.totalPage
-            }}
-            onPageChange={(page) => setCurrentPage(page)}
+            serverPagination={false}
             loading={loadingOrders}
             emptyMessage="No pending orders found."
             columnVisibility={columnVisibility}

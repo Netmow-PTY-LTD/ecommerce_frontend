@@ -7,6 +7,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface DashboardStats {
   totalProducts: number;
@@ -104,11 +105,16 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <AdminLayout
-      title="Dashboard"
-      subtitle="Welcome back! Here's what's happening with your store today."
-    >
+    <AdminLayout>
       <div className="w-full">
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
+              <p className="text-slate-500 mt-1 text-sm">Welcome back! Here's what's happening with your store today.</p>
+            </div>
+          </div>
+        </div>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Products */}

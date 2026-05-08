@@ -16,7 +16,6 @@ import {
   Bell,
   Search,
   Menu,
-  MapPin,
   User,
   ShoppingBag
 } from 'lucide-react';
@@ -32,6 +31,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+
+import { useSettingsContext } from '@/contexts/SettingsContext';
 
 interface CustomerLayoutProps {
   children: ReactNode;
@@ -56,6 +57,7 @@ export default function CustomerLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { customer, logout } = useCustomerAuth();
+  const { settings } = useSettingsContext();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultSidebarCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -91,13 +93,27 @@ export default function CustomerLayout({
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
           <div className={cn(
-            'flex items-center gap-2 overflow-hidden transition-all duration-300',
+            'flex items-center transition-all duration-300',
             sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
           )}>
-            <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-100">
-              <ShoppingBag className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-slate-900 whitespace-nowrap tracking-tight">Account</span>
+            {settings?.logo_url ? (
+              <div className="h-9 w-auto max-w-[140px] flex items-center overflow-hidden">
+                <img 
+                  src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
+                  alt="Logo" 
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-100">
+                  <ShoppingBag className="h-5 w-5 text-white" />
+                </div>
+                <span className="font-bold text-lg text-slate-900 whitespace-nowrap tracking-tight">
+                  {settings?.company_name || 'Account'}
+                </span>
+              </div>
+            )}
           </div>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -259,8 +275,27 @@ export default function CustomerLayout({
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <aside className="relative w-72 h-full bg-white flex flex-col shadow-2xl animate-in slide-in-from-left duration-300">
             <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100">
-              <span className="font-bold text-xl text-slate-900">Account</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-slate-100">
+              <div className="flex items-center overflow-hidden">
+                {settings?.logo_url ? (
+                  <div className="h-8 w-auto max-w-[120px] flex items-center overflow-hidden">
+                    <img 
+                      src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
+                      alt="Logo" 
+                      className="h-full w-auto object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-100">
+                      <ShoppingBag className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="font-bold text-lg text-slate-900 truncate tracking-tight">
+                      {settings?.company_name || 'Account'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
                 <ChevronLeft className="h-6 w-6 text-slate-500" />
               </button>
             </div>

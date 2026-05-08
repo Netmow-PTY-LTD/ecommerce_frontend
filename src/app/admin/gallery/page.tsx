@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
+import { ArrowLeft } from 'lucide-react';
 
 interface GalleryImage {
   id: number;
@@ -190,11 +191,26 @@ export default function AdminGalleryPage() {
   }
 
   return (
-    <AdminLayout
-      title="Gallery"
-      subtitle="Manage product images and media"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gallery Management</h1>
+              <p className="text-slate-500 mt-1">Manage product images and media assets</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.history.back()}
+                className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center animate-slide-in">
@@ -272,11 +288,10 @@ export default function AdminGalleryPage() {
                     id="image-upload"
                   />
                   <div
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                      uploading
-                        ? 'border-indigo-300 bg-indigo-50 cursor-not-allowed'
-                        : 'border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 cursor-pointer'
-                    }`}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${uploading
+                      ? 'border-indigo-300 bg-indigo-50 cursor-not-allowed'
+                      : 'border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 cursor-pointer'
+                      }`}
                   >
                     {uploading ? (
                       <div className="space-y-3">

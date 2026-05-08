@@ -115,8 +115,19 @@ export default function ProfitLossPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <AdminLayout title="Profit & Loss Analytics" subtitle="Track profitability, margins, and financial performance">
-      <div className="w-full space-y-6">
+    <AdminLayout>
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Profit & Loss Analytics</h1>
+            <p className="text-slate-500 mt-1 text-sm">Track profitability, margins, and financial performance</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Action buttons could go here */}
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2">
