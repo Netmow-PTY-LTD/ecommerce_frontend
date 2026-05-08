@@ -22,7 +22,7 @@ export function ChatWidget() {
       try {
         const res = await createChatSession();
         setSessionId(res.data.id);
-      } catch {}
+      } catch { }
     }
   };
 
@@ -51,7 +51,7 @@ export function ChatWidget() {
   return (
     <>
       {!isOpen && (
-        <button onClick={handleOpen} className="fixed bottom-6 right-6 bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-700 z-50 transition-all hover:scale-105 group">
+        <button onClick={handleOpen} className="fixed bottom-6 right-6 bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-700 z-50 transition-all hover:scale-105 group print:hidden">
           <MessageCircle size={24} />
           <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
             <Sparkles size={8} /> AI
@@ -59,7 +59,7 @@ export function ChatWidget() {
         </button>
       )}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-slate-200" style={{ height: '500px' }}>
+        <div className="fixed bottom-6 right-6 w-80 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-slate-200 print:hidden" style={{ height: '500px' }}>
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -96,11 +96,10 @@ export function ChatWidget() {
             )}
             {localMessages.map((msg, i) => (
               <div key={i} className={`flex ${msg.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${
-                  msg.sender_type === 'customer'
-                    ? 'bg-indigo-600 text-white rounded-br-md'
-                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-md shadow-sm'
-                }`}>
+                <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm ${msg.sender_type === 'customer'
+                  ? 'bg-indigo-600 text-white rounded-br-md'
+                  : 'bg-white text-slate-800 border border-slate-200 rounded-bl-md shadow-sm'
+                  }`}>
                   {msg.sender_type === 'bot' && (
                     <div className="flex items-center gap-1 mb-1">
                       <Sparkles size={10} className="text-purple-500" />
