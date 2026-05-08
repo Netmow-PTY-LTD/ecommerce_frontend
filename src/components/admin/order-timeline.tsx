@@ -52,6 +52,16 @@ const statusConfig: Record<string, { label: string; color: string; icon: string 
     label: 'Cancelled',
     color: 'bg-red-100 text-red-800 border-red-300',
     icon: '❌'
+  },
+  returned: {
+    label: 'Returned',
+    color: 'bg-orange-100 text-orange-800 border-orange-300',
+    icon: '↩️'
+  },
+  refunded: {
+    label: 'Refunded',
+    color: 'bg-amber-100 text-amber-800 border-amber-300',
+    icon: '💰'
   }
 };
 

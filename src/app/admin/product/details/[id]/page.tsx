@@ -23,8 +23,10 @@ import {
     Star,
     TrendingUp,
     TrendingDown,
-    Activity
+    Activity,
+    Plus
 } from 'lucide-react';
+import StockManagementModal from '@/components/admin/stock-management-modal';
 
 interface Product {
     id: number;
@@ -92,6 +94,7 @@ export default function ProductDetailsPage() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
     const [loadingMovements, setLoadingMovements] = useState(false);
+    const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
     useEffect(() => {
         if (!loading && !isAuthenticated) {
@@ -135,6 +138,11 @@ export default function ProductDetailsPage() {
         } finally {
             setLoadingMovements(false);
         }
+    };
+
+    const handleStockUpdateSuccess = () => {
+        fetchProductDetails();
+        fetchStockMovements();
     };
 
     if (loading || loadingProduct) {
@@ -192,6 +200,13 @@ export default function ProductDetailsPage() {
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Product
                     </a>
+                    <button
+                        onClick={() => setIsStockModalOpen(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-all shadow-lg flex items-center"
+                    >
+                        <Package className="w-4 h-4 mr-2" />
+                        Manage Stock
+                    </button>
                 </div>
                 {/* Product Overview */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -473,7 +488,7 @@ export default function ProductDetailsPage() {
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-slate-600 capitalize">
-                                                        {movement.operation.replace('_', ' ')}
+                                                        {(movement.operation || movement.movement_type || '').replace('_', ' ')}
                                                     </td>
                                                     <td className={`px-4 py-3 text-sm font-semibold ${
                                                         isInflow ? 'text-green-600' : 'text-red-600'
@@ -576,6 +591,18 @@ export default function ProductDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Stock Management Modal */}
+            {product && (
+                <StockManagementModal
+                    isOpen={isStockModalOpen}
+                    onClose={() => setIsStockModalOpen(false)}
+                    productId={product.id}
+                    productName={product.name}
+                    currentStock={product.stock_quantity}
+                    onSuccess={handleStockUpdateSuccess}
+                />
+            )}
         </AdminLayout>
     );
 }

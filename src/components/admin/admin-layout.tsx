@@ -37,7 +37,8 @@ import {
   TrendingUp,
   Globe,
   DollarSign,
-  Layers
+  Layers,
+  Box
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -92,6 +93,7 @@ const navigation: NavItem[] = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
+  { name: 'Stock Management', href: '/admin/stock', icon: Box },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
     name: 'Pricing',
@@ -114,8 +116,8 @@ const navigation: NavItem[] = [
     icon: Mail,
     subitems: [
       { name: 'Templates', href: '/admin/email/templates', icon: FileText },
-      { name: 'Automation', href: '/admin/email/automation', icon: Clock },
-      { name: 'Logs', href: '/admin/email/logs', icon: Mail },
+      // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
+      // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
     ],
   },
   {
@@ -127,6 +129,7 @@ const navigation: NavItem[] = [
       { name: 'Customers', href: '/admin/analytics/customers', icon: Users },
       { name: 'Orders', href: '/admin/analytics/orders', icon: ShoppingCart },
       { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
+      { name: 'Profit & Loss', href: '/admin/analytics/profit-loss', icon: DollarSign },
     ],
   },
 
@@ -332,7 +335,7 @@ export default function AdminLayout({
                         onClick={() => toggleExpanded(item.name)}
                         className={cn(
                           'group flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
-                          'hover:bg-accent hover:text-accent-foreground',
+                          'hover:bg-accent hover:text-accent-foreground cursor-pointer',
                           (isExpanded || hasActiveSubitem)
                             ? 'bg-accent text-accent-foreground'
                             : 'text-muted-foreground',
@@ -350,9 +353,9 @@ export default function AdminLayout({
                           {item.name}
                         </span>
                         {!sidebarCollapsed && (
-                          <ChevronDown className={cn(
-                            'h-4 w-4 shrink-0 transition-transform duration-200',
-                            isExpanded && 'rotate-180'
+                          <ChevronRight className={cn(
+                            "h-4 w-4 shrink-0 transition-transform duration-200",
+                            isExpanded && "rotate-90"
                           )} />
                         )}
                       </button>
@@ -611,9 +614,9 @@ export default function AdminLayout({
                               (isExpanded || hasActiveSubitem) ? 'text-foreground' : 'text-muted-foreground'
                             )} />
                             <span className="flex-1 whitespace-nowrap text-left">{item.name}</span>
-                            <ChevronDown className={cn(
-                              'h-4 w-4 shrink-0 transition-transform duration-200',
-                              isExpanded && 'rotate-180'
+                            <ChevronRight className={cn(
+                              "h-4 w-4 shrink-0 transition-transform duration-200",
+                              isExpanded && "rotate-90"
                             )} />
                           </button>
                         )}

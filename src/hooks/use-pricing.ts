@@ -13,6 +13,19 @@ export function useFlashSale(slug: string) {
   return { flashSale: data?.data, isLoading, isError: error };
 }
 
+export function useProductFlashSalePrice(productId: number | undefined) {
+  const { data, error, isLoading } = useSWR(
+    productId ? `/pricing/public/flash-sale-price/${productId}` : null,
+    fetcher
+  );
+  return {
+    flashSalePrice: data?.data?.sale_price || null,
+    flashSale: data?.data?.flash_sale || null,
+    isLoading,
+    isError: error
+  };
+}
+
 export async function validateCoupon(
   code: string,
   cartTotal: number,

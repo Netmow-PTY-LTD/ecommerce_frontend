@@ -15,6 +15,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useSettingsContext } from '@/contexts/SettingsContext';
+import { toast } from 'sonner';
 
 interface OrderItem {
   id: number;
@@ -63,6 +64,7 @@ export default function OrderDetailsPage() {
   const { formatCurrency } = useCurrency();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryingPayment, setRetryingPayment] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -89,6 +91,35 @@ export default function OrderDetailsPage() {
       setLoading(false);
     }
   };
+
+  const handleRetryPayment = async () => {
+    if (!order) return;
+
+    try {
+      setRetryingPayment(true);
+      const response = await api.post('/payments/customer/retry-payment', {
+        order_id: order.id
+      });
+
+      if (response.data?.data?.url) {
+        toast.info('Redirecting to payment...');
+        window.location.href = response.data.data.url;
+      } else {
+        throw new Error('Failed to create payment session');
+      }
+    } catch (error: any) {
+      console.error('Retry payment error:', error);
+      toast.error(error.response?.data?.message || 'Failed to retry payment. Please try again.');
+    } finally {
+      setRetryingPayment(false);
+    }
+  };
+
+  const canRetryPayment = order &&
+    (order.payment_status === 'unpaid' || order.payment_status === 'failed' || order.payment_status === 'pending') &&
+    (order.payment_method === 'online' || order.payment_method === 'stripe') &&
+    order.status !== 'cancelled' &&
+    order.status !== 'delivered';
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -222,6 +253,25 @@ export default function OrderDetailsPage() {
               )}>
                 {order.payment_status}
               </span>
+              {canRetryPayment && (
+                <button
+                  onClick={handleRetryPayment}
+                  disabled={retryingPayment}
+                  className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl transition-all uppercase tracking-wide"
+                >
+                  {retryingPayment ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Pay Now
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 

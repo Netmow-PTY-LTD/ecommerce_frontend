@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import {
   ShoppingCart,
@@ -81,6 +82,7 @@ const paymentStatusColors: Record<string, { bg: string; text: string; icon: any 
 export default function OrderAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -226,7 +228,7 @@ export default function OrderAnalyticsPage() {
                 <p className="text-sm font-medium text-slate-600">Revenue</p>
                 <TrendingUp size={18} className="text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">${periodComparison.current.revenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(periodComparison.current.revenue)}</p>
               <div className="flex items-center gap-1 mt-2">
                 {periodComparison.growth.revenue >= 0 ? (
                   <ArrowUp size={14} className="text-green-600" />
@@ -244,7 +246,7 @@ export default function OrderAnalyticsPage() {
                 <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
                 <BarChart3 size={18} className="text-indigo-600" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">${periodComparison.current.avg_order_value.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(periodComparison.current.avg_order_value)}</p>
               <div className="flex items-center gap-1 mt-2">
                 {periodComparison.growth.avg_order_value >= 0 ? (
                   <ArrowUp size={14} className="text-green-600" />
@@ -300,7 +302,7 @@ export default function OrderAnalyticsPage() {
                         />
                       </div>
                       <span className="font-semibold text-slate-700 w-8 text-right">{trend.total_orders}</span>
-                      <span className="text-slate-500 text-xs w-16 text-right">${Number(trend.net_sales).toFixed(0)}</span>
+                      <span className="text-slate-500 text-xs w-16 text-right">{formatCurrency(Number(trend.net_sales))}</span>
                     </div>
                     {trend.cancelled_orders > 0 && (
                       <div className="flex items-center gap-3 text-xs pl-[136px]">
@@ -374,7 +376,7 @@ export default function OrderAnalyticsPage() {
                     </div>
                     <p className="text-sm font-medium text-slate-600 capitalize">{status.replace('_', ' ')}</p>
                     <p className="text-2xl font-bold text-slate-900 mt-1">{item.count}</p>
-                    <p className="text-sm text-green-600">${Number(item.amount).toFixed(2)}</p>
+                    <p className="text-sm text-green-600">{formatCurrency(Number(item.amount))}</p>
                   </div>
                 );
               })}
