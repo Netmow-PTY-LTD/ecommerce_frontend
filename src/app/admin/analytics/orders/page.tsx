@@ -14,35 +14,86 @@ import {
   XCircle,
   Truck,
   Package,
+  ArrowUp,
+  ArrowDown,
+  BarChart3,
 } from 'lucide-react';
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  processing: 'bg-blue-100 text-blue-700',
-  shipped: 'bg-indigo-100 text-indigo-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  refunded: 'bg-slate-100 text-slate-600',
+interface SalesTrend {
+  period: string;
+  total_orders: number;
+  net_sales: number;
+  cancelled_orders: number;
+  discounts: number;
+  shipping: number;
+  avg_order_value: number;
+}
+
+interface StatusBreakdown {
+  status: string;
+  count: number;
+  amount: number;
+}
+
+interface PaymentStatusBreakdown {
+  payment_status: string;
+  count: number;
+  amount: number;
+}
+
+interface PeriodComparison {
+  current: {
+    orders: number;
+    revenue: number;
+    avg_order_value: number;
+    unique_customers: number;
+  };
+  previous: {
+    orders: number;
+    revenue: number;
+    avg_order_value: number;
+    unique_customers: number;
+  };
+  growth: {
+    orders: number;
+    revenue: number;
+    avg_order_value: number;
+    unique_customers: number;
+  };
+}
+
+const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
+  pending: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Clock },
+  processing: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Package },
+  shipped: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: Truck },
+  delivered: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle2 },
+  cancelled: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  confirmed: { bg: 'bg-purple-100', text: 'text-purple-700', icon: CheckCircle2 },
 };
 
-const statusIcons: Record<string, any> = {
-  pending: Clock,
-  processing: Package,
-  shipped: Truck,
-  delivered: CheckCircle2,
-  cancelled: XCircle,
-  refunded: TrendingUp,
+const paymentStatusColors: Record<string, { bg: string; text: string; icon: any }> = {
+  paid: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle2 },
+  partially_paid: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Clock },
+  unpaid: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  refunded: { bg: 'bg-slate-100', text: 'text-slate-600', icon: RefreshCw },
 };
 
 export default function OrderAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
-  const [period, setPeriod] = useState('30d');
-  const [orderTrends, setOrderTrends] = useState<any[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
-  const [conversionFunnel, setConversionFunnel] = useState<any>(null);
-  const [avgOrderValue, setAvgOrderValue] = useState<any>(null);
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [granularity, setGranularity] = useState('daily');
+
+  const [salesTrends, setSalesTrends] = useState<SalesTrend[]>([]);
+  const [statusBreakdown, setStatusBreakdown] = useState<StatusBreakdown[]>([]);
+  const [paymentStatusBreakdown, setPaymentStatusBreakdown] = useState<PaymentStatusBreakdown[]>([]);
+  const [periodComparison, setPeriodComparison] = useState<PeriodComparison | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,21 +102,46 @@ export default function OrderAnalyticsPage() {
 
   useEffect(() => {
     if (isAuthenticated) fetchAll();
-  }, [isAuthenticated, period]);
+  }, [isAuthenticated, startDate, endDate, granularity]);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [trendsRes, statusRes, funnelRes, avgRes] = await Promise.all([
-        api.get('/analytics/order-trends', { params: { period } }),
-        api.get('/analytics/order-status-distribution'),
-        api.get('/analytics/conversion-funnel', { params: { period } }),
-        api.get('/analytics/avg-order-value', { params: { period } }),
+      const [trendsRes, comparisonRes] = await Promise.all([
+        api.get('/reports/sales/trends', {
+          params: {
+            start_date: startDate,
+            end_date: endDate,
+            granularity
+          }
+        }),
+        api.get('/reports/sales/period-comparison', {
+          params: {
+            start_date: startDate,
+            end_date: endDate
+          }
+        })
       ]);
-      setOrderTrends(trendsRes.data?.data || []);
-      setStatusDistribution(statusRes.data?.data || []);
-      setConversionFunnel(funnelRes.data?.data);
-      setAvgOrderValue(avgRes.data?.data);
+
+      const trendsData = trendsRes.data?.data || [];
+
+      setSalesTrends(trendsData);
+
+      // Extract status breakdown from trends or fetch separately
+      if (comparisonRes.data?.data) {
+        setPeriodComparison(comparisonRes.data.data);
+
+        // Also fetch the sales summary to get status breakdown
+        const summaryRes = await api.get('/reports/sales/summary', {
+          params: {
+            start_date: startDate,
+            end_date: endDate
+          }
+        });
+
+        setStatusBreakdown(summaryRes.data?.data?.status_breakdown || []);
+        setPaymentStatusBreakdown(summaryRes.data?.data?.payment_status_breakdown || []);
+      }
     } catch (err) {
       console.error('Failed to fetch order analytics:', err);
     } finally {
@@ -82,92 +158,155 @@ export default function OrderAnalyticsPage() {
   }
   if (!isAuthenticated) return null;
 
-  const totalOrders = statusDistribution.reduce((sum, s) => sum + Number(s.count || (s as any).dataValues?.count || 0), 0);
-  const maxTrendOrders = Math.max(...orderTrends.map(t => Number(t.orders || 0)), 1);
+  const totalOrders = statusBreakdown.reduce((sum, s) => sum + s.count, 0);
+  const maxTrendOrders = Math.max(...salesTrends.map(t => t.total_orders), 1);
 
   return (
-    <AdminLayout title="Order Analytics" subtitle="Order trends, status distribution, and fulfillment funnel">
-      <div className="w-full">
+    <AdminLayout title="Order Analytics" subtitle="Order trends, status distribution, and period comparisons">
+      <div className="w-full space-y-6">
         {/* Controls */}
-        <div className="flex items-center gap-3 mb-6">
-          <select value={period} onChange={e => setPeriod(e.target.value)}
-            className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-          </select>
-          <button onClick={fetchAll} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <span className="text-slate-500">to</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={granularity}
+              onChange={e => setGranularity(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <button
+            onClick={fetchAll}
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+          >
             <RefreshCw size={18} />
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
+        {/* Period Comparison Stats */}
+        {periodComparison && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-slate-600">Total Orders</p>
-                <p className="text-2xl font-bold text-slate-900">{totalOrders}</p>
+                <ShoppingCart size={18} className="text-blue-600" />
               </div>
-              <div className="bg-blue-600 p-3 rounded-xl text-white"><ShoppingCart size={20} /></div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
-                <p className="text-2xl font-bold text-indigo-600">${Number(avgOrderValue?.avg_value || 0).toFixed(2)}</p>
+              <p className="text-2xl font-bold text-slate-900">{periodComparison.current.orders}</p>
+              <div className="flex items-center gap-1 mt-2">
+                {periodComparison.growth.orders >= 0 ? (
+                  <ArrowUp size={14} className="text-green-600" />
+                ) : (
+                  <ArrowDown size={14} className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${periodComparison.growth.orders >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(periodComparison.growth.orders).toFixed(1)}%
+                </span>
               </div>
-              <div className="bg-indigo-600 p-3 rounded-xl text-white"><TrendingUp size={20} /></div>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Min / Max Order</p>
-                <p className="text-lg font-bold text-slate-900">
-                  ${Number(avgOrderValue?.min_value || 0).toFixed(0)} / ${Number(avgOrderValue?.max_value || 0).toFixed(0)}
-                </p>
-              </div>
-              <div className="bg-amber-600 p-3 rounded-xl text-white"><Package size={20} /></div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Paid Rate</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {conversionFunnel?.orders > 0
-                    ? ((conversionFunnel.paid / conversionFunnel.orders) * 100).toFixed(1)
-                    : 0}%
-                </p>
-              </div>
-              <div className="bg-green-600 p-3 rounded-xl text-white"><CheckCircle2 size={20} /></div>
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Revenue</p>
+                <TrendingUp size={18} className="text-green-600" />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">${periodComparison.current.revenue.toFixed(2)}</p>
+              <div className="flex items-center gap-1 mt-2">
+                {periodComparison.growth.revenue >= 0 ? (
+                  <ArrowUp size={14} className="text-green-600" />
+                ) : (
+                  <ArrowDown size={14} className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${periodComparison.growth.revenue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(periodComparison.growth.revenue).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
+                <BarChart3 size={18} className="text-indigo-600" />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">${periodComparison.current.avg_order_value.toFixed(2)}</p>
+              <div className="flex items-center gap-1 mt-2">
+                {periodComparison.growth.avg_order_value >= 0 ? (
+                  <ArrowUp size={14} className="text-green-600" />
+                ) : (
+                  <ArrowDown size={14} className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${periodComparison.growth.avg_order_value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(periodComparison.growth.avg_order_value).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Unique Customers</p>
+                <Package size={18} className="text-amber-600" />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{periodComparison.current.unique_customers}</p>
+              <div className="flex items-center gap-1 mt-2">
+                {periodComparison.growth.unique_customers >= 0 ? (
+                  <ArrowUp size={14} className="text-green-600" />
+                ) : (
+                  <ArrowDown size={14} className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${periodComparison.growth.unique_customers >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(periodComparison.growth.unique_customers).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Order Trends */}
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Order Trends</h3>
             {loading ? (
-              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
-            ) : orderTrends.length === 0 ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+              </div>
+            ) : salesTrends.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No order data</p>
             ) : (
-              <div className="space-y-2">
-                {orderTrends.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-24 shrink-0">{item.date}</span>
-                    <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(Number(item.orders || 0) / maxTrendOrders) * 100}%` }}
-                      />
+              <div className="space-y-3">
+                {salesTrends.map((trend, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="text-slate-500 w-24 shrink-0">{trend.period}</span>
+                      <div className="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${(trend.total_orders / maxTrendOrders) * 100}%` }}
+                        />
+                      </div>
+                      <span className="font-semibold text-slate-700 w-8 text-right">{trend.total_orders}</span>
+                      <span className="text-slate-500 text-xs w-16 text-right">${Number(trend.net_sales).toFixed(0)}</span>
                     </div>
-                    <span className="text-sm font-medium text-slate-700 w-8 text-right">{item.orders}</span>
-                    <span className="text-xs text-slate-400 w-20 text-right">${Number(item.revenue || 0).toFixed(0)}</span>
+                    {trend.cancelled_orders > 0 && (
+                      <div className="flex items-center gap-3 text-xs pl-[136px]">
+                        <span className="text-red-500">{trend.cancelled_orders} cancelled</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -178,20 +317,21 @@ export default function OrderAnalyticsPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Order Status Distribution</h3>
             {loading ? (
-              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
-            ) : statusDistribution.length === 0 ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+              </div>
+            ) : statusBreakdown.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No data</p>
             ) : (
               <div className="space-y-3">
-                {statusDistribution.map((item) => {
-                  const status = item.status || (item as any).dataValues?.status;
-                  const count = Number(item.count || (item as any).dataValues?.count || 0);
-                  const Icon = statusIcons[status] || ShoppingCart;
-                  const colorClass = statusColors[status] || 'bg-slate-100 text-slate-700';
-                  const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : 0;
+                {statusBreakdown.map((item) => {
+                  const status = item.status;
+                  const styling = statusColors[status] || { bg: 'bg-slate-100', text: 'text-slate-600', icon: ShoppingCart };
+                  const Icon = styling.icon;
+                  const pct = totalOrders > 0 ? ((item.count / totalOrders) * 100).toFixed(1) : '0';
                   return (
                     <div key={status} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
-                      <div className={`p-2 rounded-lg ${colorClass}`}>
+                      <div className={`p-2 rounded-lg ${styling.bg} ${styling.text}`}>
                         <Icon size={16} />
                       </div>
                       <div className="flex-1">
@@ -201,7 +341,7 @@ export default function OrderAnalyticsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-slate-900">{count}</p>
+                        <p className="text-sm font-bold text-slate-900">{item.count}</p>
                         <p className="text-xs text-slate-500">{pct}%</p>
                       </div>
                     </div>
@@ -212,31 +352,33 @@ export default function OrderAnalyticsPage() {
           </div>
         </div>
 
-        {/* Conversion Funnel */}
+        {/* Payment Status Distribution */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Order Funnel</h3>
-          {conversionFunnel ? (
-            <div className="flex items-center justify-center gap-4 py-4">
-              {[
-                { label: 'Total Orders', value: conversionFunnel.orders, color: 'bg-blue-500' },
-                { label: 'Paid', value: conversionFunnel.paid, color: 'bg-green-500' },
-                { label: 'Delivered', value: conversionFunnel.delivered, color: 'bg-emerald-500' },
-              ].map((step, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <div className="text-center">
-                    <div className={`w-24 h-24 rounded-2xl ${step.color} flex items-center justify-center text-white`}>
-                      <span className="text-2xl font-bold">{step.value}</span>
-                    </div>
-                    <p className="text-xs font-medium text-slate-600 mt-2">{step.label}</p>
-                  </div>
-                  {idx < 2 && (
-                    <div className="text-slate-300 text-2xl">&rarr;</div>
-                  )}
-                </div>
-              ))}
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Payment Status Distribution</h3>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
             </div>
+          ) : paymentStatusBreakdown.length === 0 ? (
+            <p className="text-center text-slate-500 py-8">No data</p>
           ) : (
-            <p className="text-center text-slate-500 py-8">No funnel data</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {paymentStatusBreakdown.map((item) => {
+                const status = item.payment_status;
+                const styling = paymentStatusColors[status] || { bg: 'bg-slate-100', text: 'text-slate-600', icon: CheckCircle2 };
+                const Icon = styling.icon;
+                return (
+                  <div key={status} className="p-4 rounded-xl bg-slate-50 text-center">
+                    <div className={`inline-flex p-3 rounded-xl ${styling.bg} ${styling.text} mb-3`}>
+                      <Icon size={24} />
+                    </div>
+                    <p className="text-sm font-medium text-slate-600 capitalize">{status.replace('_', ' ')}</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">{item.count}</p>
+                    <p className="text-sm text-green-600">${Number(item.amount).toFixed(2)}</p>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

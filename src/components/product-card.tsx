@@ -371,7 +371,16 @@ export function ProductCard({
                 {/* Price and Stock */}
                 <div className="flex items-center justify-between pt-2">
                     <div className="flex items-baseline gap-2">
-                        {hasDiscount ? (
+                        {product.sale_price && product.sale_price < product.price ? (
+                            <>
+                                <span className="text-2xl font-bold text-foreground">
+                                    {formatCurrency(product.sale_price)}
+                                </span>
+                                <span className="text-sm text-muted-foreground line-through">
+                                    {formatCurrency(product.price)}
+                                </span>
+                            </>
+                        ) : hasDiscount ? (
                             <>
                                 <span className="text-2xl font-bold text-foreground">
                                     {formatCurrency(product.price * (1 - (discountPercentage || 20) / 100))}

@@ -34,3 +34,26 @@ export function useSettings() {
         isError: error
     };
 }
+
+interface ShippingRules {
+    flat_rate: number;
+    free_shipping_threshold: number;
+}
+
+export function useShippingRules() {
+    const { data, error, isLoading } = useSWR<{ data: ShippingRules }>(
+        '/settings/shipping-rules',
+        fetcher,
+        {
+            revalidateOnFocus: true,
+            revalidateOnReconnect: false,
+            dedupingInterval: 60000 // Cache for 1 minute
+        }
+    );
+
+    return {
+        shippingRules: data?.data || { flat_rate: 15, free_shipping_threshold: 100 },
+        isLoading,
+        isError: error
+    };
+}
