@@ -18,23 +18,45 @@ import {
     Save,
     Loader2,
     Image as ImageIcon,
-    Truck
+    Truck,
+    MessageCircle,
+    Clock,
+    Headphones,
+    Share2,
+    Building,
+    CreditCard,
+    Contact as ContactIcon
 } from 'lucide-react';
 
 interface CompanyProfile {
     company_name?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postal_code?: string;
     website?: string;
     description?: string;
     logo_url?: string;
     currency?: string;
     tax_id?: string;
+}
+
+interface ContactDetails {
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postal_code?: string;
+    working_hours?: string;
+    support_email?: string;
+    support_phone?: string;
+    map_embed_code?: string;
+    social_links?: {
+        facebook?: string;
+        twitter?: string;
+        instagram?: string;
+        linkedin?: string;
+        youtube?: string;
+    };
 }
 
 interface GalleryImage {
@@ -52,21 +74,37 @@ export default function SettingsPage() {
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [loadingProfile, setLoadingProfile] = useState(true);
+    const [activeTab, setActiveTab] = useState('company');
 
     const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({
         company_name: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        state: '',
-        country: '',
-        postal_code: '',
         website: '',
         description: '',
         logo_url: '',
         currency: 'USD',
         tax_id: ''
+    });
+
+    const [contactDetails, setContactDetails] = useState<ContactDetails>({
+        email: '',
+        phone: '',
+        whatsapp: '',
+        address: '',
+        city: '',
+        state: '',
+        country: '',
+        postal_code: '',
+        working_hours: '',
+        support_email: '',
+        support_phone: '',
+        map_embed_code: '',
+        social_links: {
+            facebook: '',
+            twitter: '',
+            instagram: '',
+            linkedin: '',
+            youtube: ''
+        }
     });
 
     const [shippingRules, setShippingRules] = useState({
@@ -94,6 +132,7 @@ export default function SettingsPage() {
             fetchCompanyProfile();
             fetchGalleryImages();
             fetchShippingRules();
+            fetchContactDetails();
         }
     }, [isAuthenticated]);
 
@@ -125,7 +164,7 @@ export default function SettingsPage() {
                         (sanitizedData[key] as any) = '';
                     }
                 });
-                
+
                 setCompanyProfile(sanitizedData);
                 if (sanitizedData.logo_url) {
                     setLogoPreview(sanitizedData.logo_url);
@@ -136,6 +175,37 @@ export default function SettingsPage() {
             // If no profile exists, that's okay - start with empty form
         } finally {
             setLoadingProfile(false);
+        }
+    };
+
+    const fetchContactDetails = async () => {
+        try {
+            const response = await api.get('/settings/contact-details');
+            if (response.data && response.data.data) {
+                const rawData = response.data.data;
+                const sanitizedData: ContactDetails = { ...rawData };
+
+                // Ensure social_links exists
+                if (!sanitizedData.social_links) {
+                    sanitizedData.social_links = {
+                        facebook: '',
+                        twitter: '',
+                        instagram: '',
+                        linkedin: '',
+                        youtube: ''
+                    };
+                }
+
+                (Object.keys(sanitizedData) as Array<keyof ContactDetails>).forEach(key => {
+                    if (sanitizedData[key] === null && key !== 'social_links') {
+                        (sanitizedData[key] as any) = '';
+                    }
+                });
+
+                setContactDetails(sanitizedData);
+            }
+        } catch (error) {
+            console.error('Failed to load contact details:', error);
         }
     };
 
@@ -185,10 +255,12 @@ export default function SettingsPage() {
 
             await api.put('/settings/company/profile', payload);
             await api.put('/settings/shipping-rules', shippingRules);
-            
+            await api.put('/settings/contact-details', contactDetails);
+
             await mutate('/settings/company/profile');
             await mutate('/settings/shipping-rules');
-            
+            await mutate('/settings/contact-details');
+
             toast.success('Settings saved successfully!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to save settings');
@@ -200,6 +272,21 @@ export default function SettingsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setCompanyProfile(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleContactChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setContactDetails(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSocialLinkChange = (platform: string, value: string) => {
+        setContactDetails(prev => ({
+            ...prev,
+            social_links: {
+                ...prev.social_links,
+                [platform]: value
+            }
+        }));
     };
 
     const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,9 +311,79 @@ export default function SettingsPage() {
             title="Settings"
             subtitle="Manage your store configuration"
         >
-            <div className="mx-auto px-4 py-8 max-w-5xl">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Company Information */}
+            <div className="mx-auto px-4 py-8 max-w-6xl">
+                {/* Tabs Navigation */}
+                <div className="mb-6">
+                    <div className="border-b border-slate-200">
+                        <nav className="flex space-x-8 -mb-px">
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('company')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
+                                    activeTab === 'company'
+                                        ? 'border-indigo-600 text-indigo-600'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                }`}
+                            >
+                                <Building2 className="w-4 h-4 mr-2" />
+                                Company
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('contact')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
+                                    activeTab === 'contact'
+                                        ? 'border-indigo-600 text-indigo-600'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                }`}
+                            >
+                                <Headphones className="w-4 h-4 mr-2" />
+                                Contact
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('financial')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
+                                    activeTab === 'financial'
+                                        ? 'border-indigo-600 text-indigo-600'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                }`}
+                            >
+                                <DollarSign className="w-4 h-4 mr-2" />
+                                Financial
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('shipping')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
+                                    activeTab === 'shipping'
+                                        ? 'border-indigo-600 text-indigo-600'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                }`}
+                            >
+                                <Truck className="w-4 h-4 mr-2" />
+                                Shipping
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('payment')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
+                                    activeTab === 'payment'
+                                        ? 'border-indigo-600 text-indigo-600'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                }`}
+                            >
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Payment
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Company Information Tab */}
+                    {activeTab === 'company' && (
+                    <>
                     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
                             <h2 className="text-lg font-semibold text-slate-900 flex items-center">
@@ -318,59 +475,9 @@ export default function SettingsPage() {
                                     placeholder="Brief description of your company..."
                                 />
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
-                            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                <Mail className="w-5 h-5 mr-2 text-green-600" />
-                                Contact Information
-                            </h2>
-                            <p className="text-sm text-slate-600 mt-1">How customers can reach you</p>
-                        </div>
-
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Email */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Email Address <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        required
-                                        value={companyProfile.email || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="contact@company.com"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Phone */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Phone Number
-                                </label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={companyProfile.phone || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="+1 (555) 000-0000"
-                                    />
-                                </div>
-                            </div>
 
                             {/* Website */}
-                            <div className="md:col-span-2">
+                            <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Website
                                 </label>
@@ -381,105 +488,19 @@ export default function SettingsPage() {
                                         name="website"
                                         value={companyProfile.website || ''}
                                         onChange={handleInputChange}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
                                         placeholder="https://www.company.com"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
+                    </>
+                    )}
 
-                    {/* Address */}
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200">
-                            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                <MapPin className="w-5 h-5 mr-2 text-blue-600" />
-                                Business Address
-                            </h2>
-                            <p className="text-sm text-slate-600 mt-1">Your company's physical location</p>
-                        </div>
-
-                        <div className="p-6 space-y-6">
-                            {/* Street Address */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Street Address
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={companyProfile.address || ''}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                                    placeholder="123 Business Street"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* City */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        City
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={companyProfile.city || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="New York"
-                                    />
-                                </div>
-
-                                {/* State */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        State/Province
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="state"
-                                        value={companyProfile.state || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="NY"
-                                    />
-                                </div>
-
-                                {/* Postal Code */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        Postal Code
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="postal_code"
-                                        value={companyProfile.postal_code || ''}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                                        placeholder="10001"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Country */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Country
-                                </label>
-                                <input
-                                    type="text"
-                                    name="country"
-                                    value={companyProfile.country || ''}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                                    placeholder="United States"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Financial Settings */}
+                    {/* Financial Settings Tab */}
+                    {activeTab === 'financial' && (
+                    <>
                     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
                             <h2 className="text-lg font-semibold text-slate-900 flex items-center">
@@ -518,73 +539,10 @@ export default function SettingsPage() {
                                     <option value="ZAR">ZAR - South African Rand (R)</option>
                                     <option value="BRL">BRL - Brazilian Real (R$)</option>
                                     <option value="MXN">MXN - Mexican Peso ($)</option>
-
-                                    {/* European Currencies */}
-                                    <option value="SEK">SEK - Swedish Krona (kr)</option>
-                                    <option value="NOK">NOK - Norwegian Krone (kr)</option>
-                                    <option value="DKK">DKK - Danish Krone (kr)</option>
-                                    <option value="PLN">PLN - Polish Złoty (zł)</option>
-                                    <option value="CZK">CZK - Czech Koruna (Kč)</option>
-                                    <option value="HUF">HUF - Hungarian Forint (Ft)</option>
-                                    <option value="RON">RON - Romanian Leu (lei)</option>
-                                    <option value="BGN">BGN - Bulgarian Lev (лв)</option>
-                                    <option value="HRK">HRK - Croatian Kuna (kn)</option>
-                                    <option value="RUB">RUB - Russian Ruble (₽)</option>
-                                    <option value="TRY">TRY - Turkish Lira (₺)</option>
-
-                                    {/* Middle Eastern Currencies */}
-                                    <option value="ILS">ILS - Israeli New Shekel (₪)</option>
-                                    <option value="SAR">SAR - Saudi Riyal (﷼)</option>
-                                    <option value="AED">AED - UAE Dirham (د.إ)</option>
-                                    <option value="QAR">QAR - Qatari Riyal (﷼)</option>
-                                    <option value="KWD">KWD - Kuwaiti Dinar (د.ك)</option>
-                                    <option value="BHD">BHD - Bahraini Dinar (BD)</option>
-                                    <option value="OMR">OMR - Omani Rial (﷼)</option>
-                                    <option value="JOD">JOD - Jordanian Dinar (د.ا)</option>
-                                    <option value="LBP">LBP - Lebanese Pound (ل.ل)</option>
-
-                                    {/* Asian Currencies */}
-                                    <option value="THB">THB - Thai Baht (฿)</option>
-                                    <option value="MYR">MYR - Malaysian Ringgit (RM)</option>
-                                    <option value="IDR">IDR - Indonesian Rupiah (Rp)</option>
                                     <option value="PHP">PHP - Philippine Peso (₱)</option>
+                                    <option value="IDR">IDR - Indonesian Rupiah (Rp)</option>
+                                    <option value="THB">THB - Thai Baht (฿)</option>
                                     <option value="VND">VND - Vietnamese Dong (₫)</option>
-                                    <option value="PKR">PKR - Pakistani Rupee (₨)</option>
-                                    <option value="BDT">BDT - Bangladeshi Taka (৳)</option>
-                                    <option value="LKR">LKR - Sri Lankan Rupee (Rs)</option>
-                                    <option value="NPR">NPR - Nepalese Rupee (₨)</option>
-                                    <option value="MMK">MMK - Myanmar Kyat (K)</option>
-
-                                    {/* Americas Currencies */}
-                                    <option value="ARS">ARS - Argentine Peso ($)</option>
-                                    <option value="CLP">CLP - Chilean Peso ($)</option>
-                                    <option value="COP">COP - Colombian Peso ($)</option>
-                                    <option value="PEN">PEN - Peruvian Sol (S/.)</option>
-                                    <option value="BOB">BOB - Bolivian Boliviano (Bs.)</option>
-                                    <option value="UYU">UYU - Uruguayan Peso ($)</option>
-                                    <option value="PYG">PYG - Paraguayan Guaraní (₲)</option>
-                                    <option value="CRC">CRC - Costa Rican Colón (₡)</option>
-                                    <option value="DOP">DOP - Dominican Peso ($)</option>
-                                    <option value="CUP">CUP - Cuban Peso ($)</option>
-
-                                    {/* African Currencies */}
-                                    <option value="EGP">EGP - Egyptian Pound (E£)</option>
-                                    <option value="NGN">NGN - Nigerian Naira (₦)</option>
-                                    <option value="KES">KES - Kenyan Shilling (Sh)</option>
-                                    <option value="GHS">GHS - Ghanaian Cedi (₵)</option>
-                                    <option value="ETB">ETB - Ethiopian Birr (Br)</option>
-                                    <option value="TZS">TZS - Tanzanian Shilling (TSh)</option>
-                                    <option value="UGX">UGX - Ugandan Shilling (Sh)</option>
-                                    <option value="XOF">XOF - CFA Franc BCEAO (CFA)</option>
-                                    <option value="XAF">XAF - CFA Franc BEAC (FCFA)</option>
-                                    <option value="XOF">XOF - West African CFA Franc (CFA)</option>
-
-                                    {/* Oceanian Currencies */}
-                                    <option value="FJD">FJD - Fijian Dollar ($)</option>
-                                    <option value="PGK">PGK - Papua New Guinean Kina (K)</option>
-                                    <option value="WST">WST - Samoan Tala (WS$)</option>
-                                    <option value="VUV">VUV - Vanuatu Vatu (Vt)</option>
-                                    <option value="TOP">TOP - Tongan Pa'anga (T$)</option>
                                 </select>
                             </div>
 
@@ -604,8 +562,304 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+                    </>
+                    )}
 
-                    {/* Shipping Settings */}
+                    {/* Contact Details Tab */}
+                    {activeTab === 'contact' && (
+                    <>
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                                <Headphones className="w-5 h-5 mr-2 text-purple-600" />
+                                Contact Page Details
+                            </h2>
+                            <p className="text-sm text-slate-600 mt-1">Information displayed on the public contact page</p>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Main Contact Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Contact Email
+                                    </label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={contactDetails.email || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="contact@store.com"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Contact Phone
+                                    </label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={contactDetails.phone || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        WhatsApp Number
+                                    </label>
+                                    <div className="relative">
+                                        <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            name="whatsapp"
+                                            value={contactDetails.whatsapp || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Working Hours
+                                    </label>
+                                    <div className="relative">
+                                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            name="working_hours"
+                                            value={contactDetails.working_hours || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="Mon-Fri: 9AM-6PM"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Support Contact */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4">Support Contact</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Support Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="support_email"
+                                            value={contactDetails.support_email || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="support@store.com"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Support Phone
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="support_phone"
+                                            value={contactDetails.support_phone || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Address */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4">Contact Page Address</h3>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Street Address
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={contactDetails.address || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="123 Contact Street"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                City
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="city"
+                                                value={contactDetails.city || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="New York"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                State/Province
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="state"
+                                                value={contactDetails.state || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="NY"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Postal Code
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="postal_code"
+                                                value={contactDetails.postal_code || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="10001"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Country
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="country"
+                                            value={contactDetails.country || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="United States"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Map Embed Code */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Google Maps Embed Code
+                                </label>
+                                <textarea
+                                    name="map_embed_code"
+                                    value={contactDetails.map_embed_code || ''}
+                                    onChange={handleContactChange}
+                                    rows={4}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm resize-none font-mono"
+                                    placeholder='<iframe src="https://www.google.com/maps/embed?..." width="600" height="450" ...></iframe>'
+                                />
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Paste the embed iframe code from Google Maps. This will display a map on the contact page.
+                                </p>
+                            </div>
+
+                            {/* Social Links */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center">
+                                    <Share2 className="w-4 h-4 mr-2" />
+                                    Social Media Links
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Facebook
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.facebook || ''}
+                                            onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://facebook.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Twitter
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.twitter || ''}
+                                            onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://twitter.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Instagram
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.instagram || ''}
+                                            onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://instagram.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            LinkedIn
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.linkedin || ''}
+                                            onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://linkedin.com/company/yourstore"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            YouTube
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.youtube || ''}
+                                            onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://youtube.com/@yourstore"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </>
+                    )}
+
+                    {/* Shipping Settings Tab */}
+                    {activeTab === 'shipping' && (
+                    <>
                     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
                             <h2 className="text-lg font-semibold text-slate-900 flex items-center">
@@ -659,15 +913,17 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+                    </>
+                    )}
 
-                    {/* Payment Configuration Info */}
+                    {/* Payment Configuration Tab */}
+                    {activeTab === 'payment' && (
+                    <>
                     <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                         <div className="p-6">
                             <div className="flex items-start space-x-4">
                                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                    </svg>
+                                    <CreditCard className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-lg font-semibold text-slate-900 mb-2">Stripe Payment Configuration</h3>
@@ -698,6 +954,8 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+                    </>
+                    )}
 
                     {/* Save Button */}
                     <div className="flex justify-end">
