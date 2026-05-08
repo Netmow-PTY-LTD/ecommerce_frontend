@@ -25,10 +25,10 @@ interface PaymentHistoryProps {
 }
 
 const paymentMethods: Record<string, string> = {
-  cash: 'Cash',
-  credit_card: 'Credit Card',
-  bank_transfer: 'Bank Transfer',
+  cod: 'Cash on Delivery',
   online: 'Online Payment',
+  stripe: 'Stripe/Card',
+  bank_transfer: 'Bank Transfer',
   other: 'Other'
 };
 
