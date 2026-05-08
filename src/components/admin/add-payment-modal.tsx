@@ -22,7 +22,7 @@ interface Payment {
 export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, onSuccess }: AddPaymentModalProps) {
   const { formatCurrency } = useCurrency();
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState<'pending' | 'completed'>('completed');
@@ -93,7 +93,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
 
       // Reset form
       setAmount('');
-      setPaymentMethod('cash');
+      setPaymentMethod('cod');
       setReferenceNumber('');
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setStatus('completed');
@@ -213,10 +213,10 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
               required
             >
-              <option value="cash">Cash</option>
-              <option value="credit_card">Credit Card</option>
-              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cod">Cash on Delivery</option>
               <option value="online">Online Payment</option>
+              <option value="stripe">Stripe/Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
               <option value="other">Other</option>
             </select>
           </div>
