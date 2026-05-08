@@ -99,7 +99,7 @@ export const useCartStore = create<CartState>()(
             removeCoupon: () => set({ coupon: null, discountAmount: 0, freeShipping: false }),
             total: () => {
                 return get().items.reduce(
-                    (total, item) => total + item.price * item.quantity,
+                    (total, item) => total + (item.sale_price || item.price) * item.quantity,
                     0
                 );
             },
