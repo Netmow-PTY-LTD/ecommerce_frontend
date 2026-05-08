@@ -18,7 +18,11 @@ import {
     Save,
     Loader2,
     Image as ImageIcon,
-    Truck
+    Truck,
+    MessageCircle,
+    Clock,
+    Headphones,
+    Share2
 } from 'lucide-react';
 
 interface CompanyProfile {
@@ -35,6 +39,28 @@ interface CompanyProfile {
     logo_url?: string;
     currency?: string;
     tax_id?: string;
+}
+
+interface ContactDetails {
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postal_code?: string;
+    working_hours?: string;
+    support_email?: string;
+    support_phone?: string;
+    map_embed_code?: string;
+    social_links?: {
+        facebook?: string;
+        twitter?: string;
+        instagram?: string;
+        linkedin?: string;
+        youtube?: string;
+    };
 }
 
 interface GalleryImage {
@@ -69,6 +95,28 @@ export default function SettingsPage() {
         tax_id: ''
     });
 
+    const [contactDetails, setContactDetails] = useState<ContactDetails>({
+        email: '',
+        phone: '',
+        whatsapp: '',
+        address: '',
+        city: '',
+        state: '',
+        country: '',
+        postal_code: '',
+        working_hours: '',
+        support_email: '',
+        support_phone: '',
+        map_embed_code: '',
+        social_links: {
+            facebook: '',
+            twitter: '',
+            instagram: '',
+            linkedin: '',
+            youtube: ''
+        }
+    });
+
     const [shippingRules, setShippingRules] = useState({
         flat_rate: 15,
         free_shipping_threshold: 100
@@ -94,6 +142,7 @@ export default function SettingsPage() {
             fetchCompanyProfile();
             fetchGalleryImages();
             fetchShippingRules();
+            fetchContactDetails();
         }
     }, [isAuthenticated]);
 
@@ -125,7 +174,7 @@ export default function SettingsPage() {
                         (sanitizedData[key] as any) = '';
                     }
                 });
-                
+
                 setCompanyProfile(sanitizedData);
                 if (sanitizedData.logo_url) {
                     setLogoPreview(sanitizedData.logo_url);
@@ -136,6 +185,37 @@ export default function SettingsPage() {
             // If no profile exists, that's okay - start with empty form
         } finally {
             setLoadingProfile(false);
+        }
+    };
+
+    const fetchContactDetails = async () => {
+        try {
+            const response = await api.get('/settings/contact-details');
+            if (response.data && response.data.data) {
+                const rawData = response.data.data;
+                const sanitizedData: ContactDetails = { ...rawData };
+
+                // Ensure social_links exists
+                if (!sanitizedData.social_links) {
+                    sanitizedData.social_links = {
+                        facebook: '',
+                        twitter: '',
+                        instagram: '',
+                        linkedin: '',
+                        youtube: ''
+                    };
+                }
+
+                (Object.keys(sanitizedData) as Array<keyof ContactDetails>).forEach(key => {
+                    if (sanitizedData[key] === null && key !== 'social_links') {
+                        (sanitizedData[key] as any) = '';
+                    }
+                });
+
+                setContactDetails(sanitizedData);
+            }
+        } catch (error) {
+            console.error('Failed to load contact details:', error);
         }
     };
 
@@ -185,10 +265,12 @@ export default function SettingsPage() {
 
             await api.put('/settings/company/profile', payload);
             await api.put('/settings/shipping-rules', shippingRules);
-            
+            await api.put('/settings/contact-details', contactDetails);
+
             await mutate('/settings/company/profile');
             await mutate('/settings/shipping-rules');
-            
+            await mutate('/settings/contact-details');
+
             toast.success('Settings saved successfully!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to save settings');
@@ -200,6 +282,21 @@ export default function SettingsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setCompanyProfile(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleContactChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setContactDetails(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSocialLinkChange = (platform: string, value: string) => {
+        setContactDetails(prev => ({
+            ...prev,
+            social_links: {
+                ...prev.social_links,
+                [platform]: value
+            }
+        }));
     };
 
     const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -656,6 +753,294 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <p className="text-xs text-slate-500 mt-2">Orders with a subtotal above this amount will automatically receive free shipping.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Contact Details */}
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                                <Headphones className="w-5 h-5 mr-2 text-purple-600" />
+                                Contact Page Details
+                            </h2>
+                            <p className="text-sm text-slate-600 mt-1">Information displayed on the public contact page</p>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Main Contact Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Contact Email
+                                    </label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="email"
+                                            name="contact_email"
+                                            value={contactDetails.email || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="contact@store.com"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Contact Phone
+                                    </label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            name="contact_phone"
+                                            value={contactDetails.phone || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        WhatsApp Number
+                                    </label>
+                                    <div className="relative">
+                                        <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            name="whatsapp"
+                                            value={contactDetails.whatsapp || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Working Hours
+                                    </label>
+                                    <div className="relative">
+                                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            name="working_hours"
+                                            value={contactDetails.working_hours || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="Mon-Fri: 9AM-6PM"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Support Contact */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4">Support Contact</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Support Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="support_email"
+                                            value={contactDetails.support_email || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="support@store.com"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Support Phone
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="support_phone"
+                                            value={contactDetails.support_phone || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Address */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4">Contact Page Address</h3>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Street Address
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="contact_address"
+                                            value={contactDetails.address || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="123 Contact Street"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                City
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="contact_city"
+                                                value={contactDetails.city || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="New York"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                State/Province
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="contact_state"
+                                                value={contactDetails.state || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="NY"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Postal Code
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="contact_postal_code"
+                                                value={contactDetails.postal_code || ''}
+                                                onChange={handleContactChange}
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                placeholder="10001"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Country
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="contact_country"
+                                            value={contactDetails.country || ''}
+                                            onChange={handleContactChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="United States"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Map Embed Code */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Google Maps Embed Code
+                                </label>
+                                <textarea
+                                    name="map_embed_code"
+                                    value={contactDetails.map_embed_code || ''}
+                                    onChange={handleContactChange}
+                                    rows={4}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm resize-none font-mono"
+                                    placeholder='<iframe src="https://www.google.com/maps/embed?..." width="600" height="450" ...></iframe>'
+                                />
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Paste the embed iframe code from Google Maps. This will display a map on the contact page.
+                                </p>
+                            </div>
+
+                            {/* Social Links */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center">
+                                    <Share2 className="w-4 h-4 mr-2" />
+                                    Social Media Links
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Facebook
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.facebook || ''}
+                                            onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://facebook.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Twitter
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.twitter || ''}
+                                            onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://twitter.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            Instagram
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.instagram || ''}
+                                            onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://instagram.com/yourstore"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            LinkedIn
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.linkedin || ''}
+                                            onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://linkedin.com/company/yourstore"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                            YouTube
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={contactDetails.social_links?.youtube || ''}
+                                            onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                            placeholder="https://youtube.com/@yourstore"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
