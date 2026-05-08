@@ -35,7 +35,7 @@ import { Button } from '@/components/ui/button';
 
 interface CustomerLayoutProps {
   children: ReactNode;
-  title: string;
+  title?: string;
   subtitle?: string;
   defaultSidebarCollapsed?: boolean;
 }
@@ -83,7 +83,7 @@ export default function CustomerLayout({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'flex flex-col transition-all duration-300 ease-in-out bg-white border-r border-slate-200 overflow-hidden',
+          'flex flex-col transition-all duration-300 ease-in-out bg-white border-r border-slate-200 overflow-hidden print:hidden',
           sidebarCollapsed ? 'w-20' : 'w-64',
           'hidden lg:flex'
         )}
@@ -143,9 +143,9 @@ export default function CustomerLayout({
           )}>
             <Avatar className="h-10 w-10 shrink-0 border-2 border-slate-50 shadow-sm">
               {customer?.image_url && (
-                <AvatarImage 
-                  src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
-                  className="object-cover" 
+                <AvatarImage
+                  src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`}
+                  className="object-cover"
                 />
               )}
               <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
@@ -174,7 +174,7 @@ export default function CustomerLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 z-30">
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 z-30 print:hidden">
           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -208,9 +208,9 @@ export default function CustomerLayout({
                 <Button variant="ghost" className="relative h-10 w-10 rounded-xl p-0 overflow-hidden border border-slate-100">
                   <Avatar className="h-10 w-10 rounded-xl">
                     {customer?.image_url && (
-                      <AvatarImage 
-                        src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
-                        className="object-cover" 
+                      <AvatarImage
+                        src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`}
+                        className="object-cover"
                       />
                     )}
                     <AvatarFallback className="bg-slate-100 text-slate-700 text-sm font-bold">

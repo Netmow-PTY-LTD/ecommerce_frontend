@@ -173,6 +173,7 @@ export default function AdminProductsPage() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [dataLoading, setDataLoading] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -193,6 +194,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = useCallback(async () => {
     try {
+      setDataLoading(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
@@ -207,6 +209,8 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       console.error('Failed to fetch products:', error);
       setError('Failed to load products');
+    } finally {
+      setDataLoading(false);
     }
   }, [currentPage, selectedCategory, searchTerm]);
 
@@ -366,7 +370,16 @@ export default function AdminProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-border">
-                  {products.length === 0 ? (
+                  {dataLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-20 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                          <span className="text-sm text-muted-foreground">Loading products...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : products.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                         No products found.

@@ -28,9 +28,9 @@ export default function CustomerDashboardLayout({
   };
 
   return (
-    <CustomerLayout 
-      title={getTitle(pathname)} 
-      subtitle={getSubtitle(pathname)}
+    <CustomerLayout
+    // title={getTitle(pathname)} 
+    // subtitle={getSubtitle(pathname)}
     >
       {children}
     </CustomerLayout>
