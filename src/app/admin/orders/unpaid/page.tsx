@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -13,12 +13,11 @@ import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/admin-layout';
 import { DataTable } from '@/components/ui/data-table';
 import {
-  Eye, Search as SearchIcon, Package, User,
+  Receipt, Eye, Search as SearchIcon, Package, User,
   ShoppingCart, Printer, Mail, Phone, MapPin,
   Clock, AlertTriangle, CheckCircle2, TrendingUp, XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ReactNode } from 'react';
 
 interface Order {
   id: number;
@@ -93,7 +92,7 @@ export default function UnpaidOrdersPage() {
         payment_status: width >= 1440,
         overdue: width >= 1280,
         created_at: width >= 1600,
-        actions: width >= 1600,
+        actions: true,
       });
     };
 
@@ -188,7 +187,6 @@ export default function UnpaidOrdersPage() {
         totalPage: data.pagination?.totalPage || 1,
       });
 
-      // Calculate stats from current page as fallback
       const totalAmt = transformedOrders.reduce((sum, order) => sum + order.total, 0);
       const overdueCount = transformedOrders.filter(order => {
         const days = Math.floor((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60 * 24));
@@ -230,6 +228,17 @@ export default function UnpaidOrdersPage() {
     setAppliedSearch('');
     setSelectedStatus('');
     setCurrentPage(1);
+  };
+
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'processing': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'shipped': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   };
 
   const sendReminder = (order: Order) => {
@@ -353,8 +362,13 @@ export default function UnpaidOrdersPage() {
                 key: 'order_number',
                 title: 'Order Info',
                 render: (_, order): ReactNode => (
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900">#{order.order_number}</span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">#{order.order_number}</span>
+                      <Badge className={`${getStatusColor(order.status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </Badge>
+                    </div>
                     <span className="text-[10px] text-slate-500 flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" /> {format(new Date(order.created_at), 'MMM dd, HH:mm')}
                     </span>
@@ -425,7 +439,7 @@ export default function UnpaidOrdersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => router.push(`/admin/order/${order.id}`)}
+                      onClick={() => router.push(`/admin/orders/${order.id}`)}
                       title="View Order"
                     >
                       <Eye className="h-4 w-4" />
@@ -433,11 +447,11 @@ export default function UnpaidOrdersPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                      onClick={() => sendReminder(order)}
-                      title="Send Reminder"
+                      className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50"
+                      onClick={() => router.push(`/admin/orders/unpaid/${order.id}/invoice`)}
+                      title="View Invoice"
                     >
-                      <Mail className="h-4 w-4" />
+                      <Receipt className="h-4 w-4" />
                     </Button>
                   </div>
                 )
@@ -508,7 +522,7 @@ export default function UnpaidOrdersPage() {
                     size="sm"
                     variant="outline"
                     className="h-9 px-4 text-xs gap-2 rounded-lg bg-white border-slate-200 ml-auto"
-                    onClick={() => router.push(`/admin/order/${order.id}`)}
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
                   >
                     <Eye className="h-3.5 w-3.5" /> View Full Details
                   </Button>
