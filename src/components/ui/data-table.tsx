@@ -13,10 +13,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   ChevronsLeft,
   ChevronsRight,
+  Plus,
+  Minus,
   Search,
 } from 'lucide-react';
 
@@ -26,14 +30,8 @@ export interface Column<T> {
   sortable?: boolean;
   render?: (value: unknown, row: T) => React.ReactNode;
   cellClassName?: string;
-}
-
-export interface Action<T> {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: (row: T) => void;
-  variant?: 'default' | 'destructive' | 'ghost' | 'outline' | 'secondary';
-  showLabel?: boolean;
+  headerClassName?: string;
+  className?: string;
 }
 
 export interface PaginationMeta {
@@ -46,7 +44,6 @@ export interface PaginationMeta {
 interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  actions?: Action<T>[];
   searchable?: boolean;
   searchPlaceholder?: string;
   pagination?: boolean;
@@ -60,12 +57,17 @@ interface DataTableProps<T> {
   serverPagination?: boolean;
   paginationMeta?: PaginationMeta;
   onPageChange?: (page: number) => void;
+  // Row expansion
+  expandable?: boolean;
+  renderExpandedRow?: (row: T) => React.ReactNode;
+  // Column visibility
+  columnVisibility?: Record<string, boolean>;
+  onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void;
 }
 
 export function DataTable<T extends object>({
   data,
   columns,
-  actions,
   searchable = true,
   searchPlaceholder = 'Search...',
   pagination = true,
@@ -78,9 +80,33 @@ export function DataTable<T extends object>({
   serverPagination = false,
   paginationMeta,
   onPageChange,
+  expandable = false,
+  renderExpandedRow,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set());
+  const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<Record<string, boolean>>(
+    columns.reduce((acc, col) => ({ ...acc, [col.key]: true }), {})
+  );
+
+  const visibility = columnVisibility ?? internalColumnVisibility;
+
+  const responsiveColumns = React.useMemo(() => {
+    return columns.filter((col) => visibility[col.key] !== false);
+  }, [columns, visibility]);
+
+  const toggleRow = (index: number) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (newExpandedRows.has(index)) {
+      newExpandedRows.delete(index);
+    } else {
+      newExpandedRows.add(index);
+    }
+    setExpandedRows(newExpandedRows);
+  };
 
   // For client-side filtering and pagination
   const filteredData = React.useMemo(() => {
@@ -178,94 +204,104 @@ export function DataTable<T extends object>({
       )}
 
       <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-muted/50">
-              {columns.map((column) => (
-                <TableHead
-                  key={column.key}
-                  className={cn(
-                    column.sortable && 'cursor-pointer hover:bg-muted transition-colors select-none',
-                    'font-semibold'
-                  )}
-                  onClick={() => handleSort(column)}
-                >
-                  <div className="flex items-center gap-2">
-                    {column.title}
-                    {column.sortable && (
-                      <span className={cn(
-                        'text-muted-foreground transition-colors',
-                        sortBy === column.key && 'text-foreground'
-                      )}>
-                        {sortBy === column.key ? (
-                          sortOrder === 'asc' ? '↑' : '↓'
-                        ) : (
-                          <span className="opacity-30">↕</span>
-                        )}
-                      </span>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-muted/50">
+                {expandable && <TableHead className="w-[40px]"></TableHead>}
+                {responsiveColumns.map((column) => (
+                  <TableHead
+                    key={column.key}
+                    className={cn(
+                      column.sortable && 'cursor-pointer hover:bg-muted transition-colors select-none',
+                      'font-semibold',
+                      column.className,
+                      column.headerClassName
                     )}
-                  </div>
-                </TableHead>
-              ))}
-              {actions && actions.length > 0 && (
-                <TableHead className="text-right">Actions</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayData.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (actions?.length ? 1 : 0)}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  {emptyMessage}
-                </TableCell>
+                    onClick={() => handleSort(column)}
+                  >
+                    <div className={cn(
+                      "flex items-center gap-2",
+                      (column.headerClassName?.includes('text-right') || column.className?.includes('text-right')) && "justify-end"
+                    )}>
+                      {column.title}
+                      {column.sortable && (
+                        <span className={cn(
+                          'text-muted-foreground transition-colors',
+                          sortBy === column.key && 'text-foreground'
+                        )}>
+                          {sortBy === column.key ? (
+                            sortOrder === 'asc' ? '↑' : '↓'
+                          ) : (
+                            <span className="opacity-30">↕</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : (
-              displayData.map((row, rowIndex) => (
-                <TableRow key={rowIndex} className="hover:bg-muted/50">
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      className={column.cellClassName}
-                    >
-                      {column.render
-                        ? column.render((row as Record<string, unknown>)[column.key], row)
-                        : (row as Record<string, unknown>)[column.key] as React.ReactNode}
-                    </TableCell>
-                  ))}
-                  {actions && actions.length > 0 && (
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {actions.map((action, actionIndex) => (
+            </TableHeader>
+            <TableBody>
+              {displayData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={responsiveColumns.length + (expandable ? 1 : 0)}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {emptyMessage}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                displayData.map((row, rowIndex) => (
+                  <React.Fragment key={rowIndex}>
+                    <TableRow className="hover:bg-muted/50">
+                      {expandable && (
+                        <TableCell>
                           <Button
-                            key={actionIndex}
-                            variant={action.variant || 'ghost'}
+                            variant="ghost"
                             size="sm"
-                            onClick={() => action.onClick(row)}
-                            className={cn(
-                              'h-8 w-8 p-0',
-                              action.variant === 'destructive' && 'text-destructive hover:text-destructive'
-                            )}
+                            className="h-8 w-8 p-0"
+                            onClick={() => toggleRow(rowIndex)}
                           >
-                            {action.icon && (
-                              <span className="h-4 w-4">{action.icon}</span>
+                            {expandedRows.has(rowIndex) ? (
+                              <Minus className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Plus className="h-4 w-4 text-primary" />
                             )}
                           </Button>
-                        ))}
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                        </TableCell>
+                      )}
+                      {responsiveColumns.map((column) => (
+                        <TableCell
+                          key={column.key}
+                          className={cn(column.className, column.cellClassName)}
+                        >
+                          {column.render
+                            ? column.render((row as Record<string, unknown>)[column.key], row)
+                            : (row as Record<string, unknown>)[column.key] as React.ReactNode}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {expandable && expandedRows.has(rowIndex) && (
+                      <TableRow className="border-b">
+                        <TableCell colSpan={responsiveColumns.length + 1} className="p-0">
+                          <div className="py-2">
+                            {renderExpandedRow ? renderExpandedRow(row) : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {pagination && (
-        <div className="flex items-center justify-between px-2">
+        <div className="flex flex-wrap items-center justify-between px-2 gap-4">
           <div className="text-sm text-muted-foreground">
             {totalItems > 0 ? (
               <>
@@ -276,7 +312,7 @@ export function DataTable<T extends object>({
             )}
           </div>
           {totalItems > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Button
                 variant="outline"
                 size="sm"

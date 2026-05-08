@@ -57,9 +57,8 @@ function SortableUnitItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${
-        isDragging ? 'shadow-lg' : 'hover:shadow-sm'
-      }`}
+      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${isDragging ? 'shadow-lg' : 'hover:shadow-sm'
+        }`}
     >
       <button
         {...attributes}
@@ -75,11 +74,10 @@ function SortableUnitItem({
           <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
             {unit.symbol}
           </span>
-          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-            unit.status === 'active'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-          }`}>
+          <span className={`px-2 py-0.5 rounded text-xs font-medium ${unit.status === 'active'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+            }`}>
             {unit.status === 'active' ? 'Active' : 'Inactive'}
           </span>
         </div>
@@ -147,7 +145,7 @@ export default function AdminUnitsPage() {
 
   const fetchUnits = useCallback(async (page: number = currentPage) => {
     try {
-      const response = await api.get(`/products/units?page=${page}&limit=100`);
+      const response = await api.get(`/products/units/?page=${page}&limit=100`);
       setUnits(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
         total: 0,
