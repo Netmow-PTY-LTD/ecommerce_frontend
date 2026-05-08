@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import {
   TrendingUp,
@@ -62,6 +63,7 @@ interface ProductProfitability {
 export default function ProfitLossPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -148,10 +150,10 @@ export default function ProfitLossPage() {
               <DollarSign size={18} className="text-green-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${profitLoss?.revenue.net_sales.toFixed(2) || '0.00'}
+              {formatCurrency(profitLoss?.revenue.net_sales || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              Gross: ${profitLoss?.revenue.gross_sales.toFixed(2) || '0.00'}
+              Gross: {formatCurrency(profitLoss?.revenue.gross_sales || 0)}
             </p>
           </div>
 
@@ -161,9 +163,9 @@ export default function ProfitLossPage() {
               <TrendingUp size={18} className="text-blue-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${profitLoss?.profit.gross_profit.toFixed(2) || '0.00'}
+              {formatCurrency(profitLoss?.profit.gross_profit || 0)}
             </p>
-            <p className={`text-sm font-medium mt-1 ${profitLoss?.profit.gross_profit_margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm font-medium mt-1 ${(profitLoss?.profit.gross_profit_margin || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {profitLoss?.profit.gross_profit_margin.toFixed(1) || 0}% margin
             </p>
           </div>
@@ -174,7 +176,7 @@ export default function ProfitLossPage() {
               <BarChart3 size={18} className="text-indigo-600" />
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${profitLoss?.profit.operating_profit.toFixed(2) || '0.00'}
+              {formatCurrency(profitLoss?.profit.operating_profit || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">After shipping & fees</p>
           </div>
@@ -182,16 +184,16 @@ export default function ProfitLossPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium text-slate-600">Net Profit</p>
-              {profitLoss?.profit.net_profit >= 0 ? (
+              {(profitLoss?.profit.net_profit || 0) >= 0 ? (
                 <CheckCircle2 size={18} className="text-green-600" />
               ) : (
                 <AlertCircle size={18} className="text-red-600" />
               )}
             </div>
-            <p className={`text-2xl font-bold ${profitLoss?.profit.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${profitLoss?.profit.net_profit.toFixed(2) || '0.00'}
+            <p className={`text-2xl font-bold ${(profitLoss?.profit.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(profitLoss?.profit.net_profit || 0)}
             </p>
-            <p className={`text-sm font-medium mt-1 ${profitLoss?.profit.net_profit_margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm font-medium mt-1 ${(profitLoss?.profit.net_profit_margin || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {profitLoss?.profit.net_profit_margin.toFixed(1) || 0}% margin
             </p>
           </div>
@@ -206,20 +208,20 @@ export default function ProfitLossPage() {
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
                 <span className="text-sm font-medium text-slate-700">Gross Sales</span>
                 <span className="text-lg font-bold text-green-600">
-                  ${profitLoss?.revenue.gross_sales.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.revenue.gross_sales || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-amber-50 rounded-xl">
                 <span className="text-sm font-medium text-slate-700">Less: Discounts</span>
                 <span className="text-lg font-bold text-amber-600">
-                  -${profitLoss?.revenue.discounts.toFixed(2) || '0.00'}
+                  -{formatCurrency(profitLoss?.revenue.discounts || 0)}
                 </span>
               </div>
               <div className="border-t border-slate-200 my-2" />
               <div className="flex justify-between items-center p-3 bg-slate-100 rounded-xl">
                 <span className="text-sm font-semibold text-slate-900">Net Sales</span>
                 <span className="text-lg font-bold text-slate-900">
-                  ${profitLoss?.revenue.net_sales.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.revenue.net_sales || 0)}
                 </span>
               </div>
             </div>
@@ -232,26 +234,26 @@ export default function ProfitLossPage() {
               <div className="flex justify-between items-center p-3 bg-red-50 rounded-xl">
                 <span className="text-sm font-medium text-slate-700">COGS</span>
                 <span className="text-lg font-bold text-red-600">
-                  ${profitLoss?.costs.cogs.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.costs.cogs || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
                 <span className="text-sm font-medium text-slate-700">Shipping</span>
                 <span className="text-lg font-bold text-blue-600">
-                  ${profitLoss?.costs.shipping.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.costs.shipping || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-purple-50 rounded-xl">
                 <span className="text-sm font-medium text-slate-700">Payment Fees</span>
                 <span className="text-lg font-bold text-purple-600">
-                  ${profitLoss?.costs.payment_fees.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.costs.payment_fees || 0)}
                 </span>
               </div>
               <div className="border-t border-slate-200 my-2" />
               <div className="flex justify-between items-center p-3 bg-slate-100 rounded-xl">
                 <span className="text-sm font-semibold text-slate-900">Total Costs</span>
                 <span className="text-lg font-bold text-slate-900">
-                  ${profitLoss?.costs.total_costs.toFixed(2) || '0.00'}
+                  {formatCurrency(profitLoss?.costs.total_costs || 0)}
                 </span>
               </div>
             </div>
@@ -264,25 +266,25 @@ export default function ProfitLossPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm opacity-80">Gross Profit</p>
-              <p className="text-2xl font-bold">${profitLoss?.profit.gross_profit.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">{formatCurrency(profitLoss?.profit.gross_profit || 0)}</p>
               <p className="text-sm opacity-80">{profitLoss?.profit.gross_profit_margin.toFixed(1) || 0}% margin</p>
             </div>
             <div>
               <p className="text-sm opacity-80">Operating Profit</p>
-              <p className="text-2xl font-bold">${profitLoss?.profit.operating_profit.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">{formatCurrency(profitLoss?.profit.operating_profit || 0)}</p>
               <p className="text-sm opacity-80">After operations</p>
             </div>
             <div>
               <p className="text-sm opacity-80">Net Profit</p>
-              <p className="text-2xl font-bold">${profitLoss?.profit.net_profit.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">{formatCurrency(profitLoss?.profit.net_profit || 0)}</p>
               <p className="text-sm opacity-80">{profitLoss?.profit.net_profit_margin.toFixed(1) || 0}% margin</p>
             </div>
             <div>
               <p className="text-sm opacity-80">Total Orders</p>
               <p className="text-2xl font-bold">{profitLoss?.orders.total_orders || 0}</p>
-              <p className="text-sm opacity-80">${profitLoss && profitLoss.orders.total_orders > 0
-                ? (profitLoss.revenue.net_sales / profitLoss.orders.total_orders).toFixed(2)
-                : '0.00'}/order</p>
+              <p className="text-sm opacity-80">{profitLoss && profitLoss.orders.total_orders > 0
+                ? formatCurrency(profitLoss.revenue.net_sales / profitLoss.orders.total_orders)
+                : formatCurrency(0)}/order</p>
             </div>
           </div>
         </div>
@@ -316,10 +318,10 @@ export default function ProfitLossPage() {
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">{p.name}</td>
                       <td className="px-4 py-3 text-sm text-slate-500 font-mono">{p.sku}</td>
                       <td className="px-4 py-3 text-sm text-slate-700 text-right">{p.units_sold}</td>
-                      <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">${Number(p.revenue).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-sm text-red-600 font-medium text-right">${Number(p.cogs).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">{formatCurrency(Number(p.revenue))}</td>
+                      <td className="px-4 py-3 text-sm text-red-600 font-medium text-right">{formatCurrency(Number(p.cost))}</td>
                       <td className={`px-4 py-3 text-sm font-medium text-right ${p.gross_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${Number(p.gross_profit).toFixed(2)}
+                        {formatCurrency(Number(p.gross_profit))}
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${

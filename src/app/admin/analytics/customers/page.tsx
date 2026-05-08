@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import {
   Users,
@@ -62,6 +63,7 @@ interface CLVCustomer {
 export default function CustomerAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -187,7 +189,7 @@ export default function CustomerAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900">
-              ${customerAnalytics?.metrics.avg_customer_value.toFixed(2) || '0.00'}
+              {formatCurrency(customerAnalytics?.metrics.avg_customer_value || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">Per customer</p>
           </div>
@@ -235,7 +237,7 @@ export default function CustomerAnalyticsPage() {
                           <p className="text-xs text-slate-500">{segment.customer_count} customers</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-green-600">${Number(segment.total_revenue).toFixed(2)}</p>
+                          <p className="text-sm font-bold text-green-600">{formatCurrency(Number(segment.total_revenue))}</p>
                           <p className="text-xs text-slate-500">{Number(pct).toFixed(1)}% of revenue</p>
                         </div>
                       </div>
@@ -286,7 +288,7 @@ export default function CustomerAnalyticsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">
-                          ${Number(cohort.revenue).toFixed(2)}
+                          {formatCurrency(Number(cohort.revenue))}
                         </td>
                       </tr>
                     ))}
@@ -339,14 +341,14 @@ export default function CustomerAnalyticsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-700 text-right">{customer.total_orders}</td>
                       <td className="px-4 py-3 text-sm text-green-600 font-bold text-right">
-                        ${Number(customer.total_spent).toFixed(2)}
+                        {formatCurrency(Number(customer.total_spent))}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                        ${Number(customer.avg_order_value).toFixed(2)}
+                        {formatCurrency(Number(customer.avg_order_value))}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-700 text-right">{customer.customer_lifetime_days}</td>
                       <td className="px-4 py-3 text-sm text-indigo-600 font-medium text-right">
-                        ${Number(customer.projected_annual_value).toFixed(2)}
+                        {formatCurrency(Number(customer.projected_annual_value))}
                       </td>
                     </tr>
                   ))}

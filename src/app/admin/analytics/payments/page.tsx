@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import {
   CreditCard,
@@ -65,6 +66,7 @@ const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
 export default function PaymentsAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { formatCurrency } = useCurrency();
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -151,7 +153,7 @@ export default function PaymentsAnalyticsPage() {
               {paymentSummary?.total_orders || 0}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              ${paymentSummary?.total_order_amount.toFixed(2) || '0.00'} total value
+              {formatCurrency(paymentSummary?.total_order_amount || 0)} total value
             </p>
           </div>
 
@@ -163,7 +165,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-green-600">
-              ${paymentSummary?.total_collected.toFixed(2) || '0.00'}
+              {formatCurrency(paymentSummary?.total_collected || 0)}
             </p>
             <p className="text-sm font-medium text-green-600 mt-1">
               {paymentSummary?.collection_rate.toFixed(1) || 0}% collection rate
@@ -178,7 +180,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-amber-600">
-              ${paymentSummary?.partially_paid.toFixed(2) || '0.00'}
+              {formatCurrency(paymentSummary?.partially_paid || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">Partially paid</p>
           </div>
@@ -191,7 +193,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
             </div>
             <p className="text-2xl font-bold text-red-600">
-              ${paymentSummary?.unpaid.toFixed(2) || '0.00'}
+              {formatCurrency(paymentSummary?.unpaid || 0)}
             </p>
             <p className="text-xs text-slate-500 mt-1">Unpaid orders</p>
           </div>
@@ -204,7 +206,7 @@ export default function PaymentsAnalyticsPage() {
               <p className="text-sm opacity-80">Collection Health</p>
               <p className="text-3xl font-bold">{paymentSummary?.collection_rate.toFixed(1) || 0}%</p>
               <p className="text-sm opacity-80 mt-1">
-                ${paymentSummary?.total_collected.toFixed(2) || '0.00'} of ${paymentSummary?.total_order_amount.toFixed(2) || '0.00'} collected
+                {formatCurrency(paymentSummary?.total_collected || 0)} of {formatCurrency(paymentSummary?.total_order_amount || 0)} collected
               </p>
             </div>
             <div className="p-4 bg-white/20 rounded-2xl">
@@ -222,7 +224,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">Fully Paid</p>
-                <p className="text-xl font-bold text-slate-900">${paymentSummary?.fully_paid.toFixed(2) || '0.00'}</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(paymentSummary?.fully_paid || 0)}</p>
               </div>
             </div>
           </div>
@@ -233,7 +235,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">Partially Paid</p>
-                <p className="text-xl font-bold text-slate-900">${paymentSummary?.partially_paid.toFixed(2) || '0.00'}</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(paymentSummary?.partially_paid || 0)}</p>
               </div>
             </div>
           </div>
@@ -244,7 +246,7 @@ export default function PaymentsAnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">Unpaid</p>
-                <p className="text-xl font-bold text-slate-900">${paymentSummary?.unpaid.toFixed(2) || '0.00'}</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(paymentSummary?.unpaid || 0)}</p>
               </div>
             </div>
           </div>
@@ -298,14 +300,14 @@ export default function PaymentsAnalyticsPage() {
                           {new Date(txn.order_date).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-700 text-right">
-                          ${Number(txn.order_total).toFixed(2)}
+                          {formatCurrency(Number(txn.order_total))}
                         </td>
                         <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">
-                          ${Number(txn.amount_paid).toFixed(2)}
+                          {formatCurrency(Number(txn.amount_paid))}
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
                           <span className={`font-semibold ${hasBalance ? 'text-red-600' : 'text-slate-500'}`}>
-                            ${Number(txn.balance_due).toFixed(2)}
+                            {formatCurrency(Number(txn.balance_due))}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -324,7 +326,7 @@ export default function PaymentsAnalyticsPage() {
                                     <Icon size={12} className="text-slate-400" />
                                     <span className="text-slate-600 capitalize">{payment.method}</span>
                                     <span className={`font-medium ${payment.status === 'completed' ? 'text-green-600' : 'text-amber-600'}`}>
-                                      ${Number(payment.amount).toFixed(2)}
+                                      {formatCurrency(Number(payment.amount))}
                                     </span>
                                   </div>
                                 );
