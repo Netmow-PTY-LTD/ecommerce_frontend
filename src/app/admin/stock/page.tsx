@@ -94,15 +94,17 @@ export default function StockManagementPage() {
             if (selectedFilter === 'out') params.append('out_of_stock', 'true');
 
             const response = await api.get(`/products/stock?${params}`);
-            setProducts(response.data.data || []);
+            const productsData = Array.isArray(response.data?.data) ? response.data.data : [];
+            setProducts(productsData);
             setPagination(response.data.pagination || {
-                total: response.data.data?.length || 0,
+                total: productsData.length || 0,
                 page: currentPage.toString(),
                 limit: '20',
                 totalPage: 1
             });
         } catch (error: any) {
             console.error('Failed to fetch products:', error);
+            setProducts([]);
         } finally {
             setDataLoading(false);
         }
@@ -340,7 +342,7 @@ export default function StockManagementPage() {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : products.length === 0 ? (
+                                ) : !products || products.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                                             No products found.
