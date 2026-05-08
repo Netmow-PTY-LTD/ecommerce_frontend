@@ -34,7 +34,7 @@ interface Order {
   discount_amount: number;
   total: number;
   payment_method: string;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: 'unpaid' | 'partially_paid' | 'paid' | 'refunded';
   items: OrderItem[];
   notes: string;
   created_at: string;
@@ -114,10 +114,8 @@ export default function UnpaidOrdersPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
+        payment_status: 'unpaid,partially_paid'
       });
-      
-      params.append('payment_status', 'pending');
-      params.append('payment_status', 'failed');
 
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
@@ -384,13 +382,14 @@ export default function UnpaidOrdersPage() {
                 render: (status): ReactNode => {
                   const s = status as string;
                   const config: Record<string, string> = {
-                    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-                    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+                    unpaid: 'bg-amber-50 text-amber-700 border-amber-200',
+                    partially_paid: 'bg-blue-50 text-blue-700 border-blue-200',
                     paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    refunded: 'bg-slate-50 text-slate-700 border-slate-200',
                   };
                   return (
                     <Badge className={`${config[s] || 'bg-slate-50'} shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
-                      {s}
+                      {s.replace('_', ' ')}
                     </Badge>
                   );
                 }
