@@ -124,6 +124,7 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [dataLoading, setDataLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
     total: number;
@@ -155,6 +156,7 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = useCallback(async (page: number = currentPage) => {
     try {
+      setDataLoading(true);
       const response = await api.get(`/ecommerce/categories?page=${page}&limit=100`);
       setCategories(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
@@ -165,6 +167,8 @@ export default function AdminCategoriesPage() {
       });
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+    } finally {
+      setDataLoading(false);
     }
   }, [currentPage]);
 
@@ -249,7 +253,12 @@ export default function AdminCategoriesPage() {
           </Button>
         </div>
 
-        {categories.length === 0 ? (
+        {dataLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+            <p className="text-sm text-muted-foreground font-medium">Loading categories...</p>
+          </div>
+        ) : categories.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             No categories found. Add your first category to get started.
           </div>

@@ -113,6 +113,7 @@ export default function AdminUnitsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [dataLoading, setDataLoading] = useState(true);
   const [modalError, setModalError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
@@ -145,6 +146,7 @@ export default function AdminUnitsPage() {
 
   const fetchUnits = useCallback(async (page: number = currentPage) => {
     try {
+      setDataLoading(true);
       const response = await api.get(`/products/units/?page=${page}&limit=100`);
       setUnits(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
@@ -155,6 +157,8 @@ export default function AdminUnitsPage() {
       });
     } catch (error) {
       console.error('Failed to fetch units:', error);
+    } finally {
+      setDataLoading(false);
     }
   }, [currentPage]);
 
@@ -281,7 +285,12 @@ export default function AdminUnitsPage() {
           </Button>
         </div>
 
-        {units.length === 0 ? (
+        {dataLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+            <p className="text-sm text-muted-foreground font-medium">Loading units...</p>
+          </div>
+        ) : units.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             No units found. Add your first unit to get started.
           </div>
