@@ -96,7 +96,7 @@ export default function AdminOrderInvoicePage() {
 
   if (authLoading || loading) {
     return (
-      <AdminLayout title="Invoice" subtitle="Loading...">
+      <AdminLayout>
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
           <p className="text-slate-500 text-sm font-medium">Generating invoice...</p>
@@ -113,7 +113,8 @@ export default function AdminOrderInvoicePage() {
   const customerEmail = order.customer_email || order.customer?.email || '';
 
   return (
-    <AdminLayout title={`Invoice — ${order.order_number}`} subtitle="Printable order invoice">
+    <AdminLayout>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 print:px-0 print:max-w-none">
 
         {/* Action Bar - Hidden on Print */}

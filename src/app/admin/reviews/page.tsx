@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils';
 import {
   Star, Trash2, Check, X, MessageSquare,
   Eye, EyeOff, ChevronLeft, ChevronRight,
-  Clock, Package, User
+  Clock, Package, User,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Review {
@@ -160,213 +161,234 @@ export default function AdminReviewsPage() {
   );
 
   return (
-    <AdminLayout title="Reviews Management" subtitle="Moderate and manage product reviews">
-      <div className="space-y-6">
-        {success && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
-            {success}
+    <AdminLayout
+    >
+      <div className="w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reviews Management</h1>
+            <p className="text-slate-500 mt-1 text-sm">Manage and track your customer reviews.</p>
           </div>
-        )}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-500">Status:</span>
-            <select
-              value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-              className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+          <div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => window.history.back()}
             >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-500">Rating:</span>
-            <select
-              value={filterRating}
-              onChange={(e) => { setFilterRating(e.target.value); setCurrentPage(1); }}
-              className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            >
-              <option value="">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4 Stars</option>
-              <option value="3">3 Stars</option>
-              <option value="2">2 Stars</option>
-              <option value="1">1 Star</option>
-            </select>
-          </div>
-          <div className="ml-auto text-xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
-            {pagination.total} Total Reviews
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
           </div>
         </div>
 
-        {/* Reviews List */}
-        {fetchingReviews ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <ReviewSkeleton key={i} />
-            ))}
-          </div>
-        ) : reviews.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No reviews found.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className="bg-card border rounded-lg p-4 space-y-3"
+        <div className="space-y-6">
+          {success && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
+              {success}
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Filters */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-500">Status:</span>
+              <select
+                value={filterStatus}
+                onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <StarRating rating={review.rating} />
-                      {review.title && (
-                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{review.title}</span>
-                      )}
-                      <Badge className={cn("px-2 py-0 border text-[10px] font-bold uppercase tracking-wider", statusStyles[review.status])} variant="outline">
-                        {review.status}
-                      </Badge>
-                      {review.is_verified_purchase && (
-                        <Badge className="px-2 py-0 border border-indigo-100 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider" variant="outline">
-                          Verified
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-500">Rating:</span>
+              <select
+                value={filterRating}
+                onChange={(e) => { setFilterRating(e.target.value); setCurrentPage(1); }}
+                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              >
+                <option value="">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
+            <div className="ml-auto text-xs font-medium text-slate-400 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+              {pagination.total} Total Reviews
+            </div>
+          </div>
+
+          {/* Reviews List */}
+          {fetchingReviews ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <ReviewSkeleton key={i} />
+              ))}
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No reviews found.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="bg-card border rounded-lg p-4 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <StarRating rating={review.rating} />
+                        {review.title && (
+                          <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{review.title}</span>
+                        )}
+                        <Badge className={cn("px-2 py-0 border text-[10px] font-bold uppercase tracking-wider", statusStyles[review.status])} variant="outline">
+                          {review.status}
                         </Badge>
+                        {review.is_verified_purchase && (
+                          <Badge className="px-2 py-0 border border-indigo-100 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider" variant="outline">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+
+                      {review.body && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">{review.body}</p>
                       )}
-                    </div>
 
-                    {review.body && (
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">{review.body}</p>
-                    )}
+                      {review.images && Array.isArray(review.images) && review.images.length > 0 && (
+                        <div className="flex gap-2.5 mt-3">
+                          {review.images.map((img: string, i: number) => (
+                            <div key={i} className="relative group">
+                              <img src={img} alt={`Review image ${i + 1}`} className="h-16 w-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 transition-all group-hover:scale-105" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-                    {review.images && Array.isArray(review.images) && review.images.length > 0 && (
-                      <div className="flex gap-2.5 mt-3">
-                        {review.images.map((img: string, i: number) => (
-                          <div key={i} className="relative group">
-                            <img src={img} alt={`Review image ${i + 1}`} className="h-16 w-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 transition-all group-hover:scale-105" />
+                      {review.admin_reply && (
+                        <div className="mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-sm">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
+                            <MessageSquare className="h-3 w-3" /> Admin Response
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {review.admin_reply && (
-                      <div className="mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-sm">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
-                          <MessageSquare className="h-3 w-3" /> Admin Response
-                        </div>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm italic">"{review.admin_reply}"</p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-4 mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      <div className="flex items-center gap-1">
-                        <Package className="h-3 w-3" /> Prod #{review.product_id}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" /> Cust #{review.customer_id}
-                      </div>
-                      {review.helpful_count > 0 && (
-                        <div className="flex items-center gap-1 text-emerald-600">
-                          <Check className="h-3 w-3" /> {review.helpful_count} Helpful
+                          <p className="text-slate-600 dark:text-slate-400 text-sm italic">"{review.admin_reply}"</p>
                         </div>
                       )}
-                      <div className="flex items-center gap-1 ml-auto">
-                        <Clock className="h-3 w-3" /> {new Date(review.created_at).toLocaleDateString()}
+
+                      <div className="flex items-center gap-4 mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="flex items-center gap-1">
+                          <Package className="h-3 w-3" /> Prod #{review.product_id}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" /> Cust #{review.customer_id}
+                        </div>
+                        {review.helpful_count > 0 && (
+                          <div className="flex items-center gap-1 text-emerald-600">
+                            <Check className="h-3 w-3" /> {review.helpful_count} Helpful
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 ml-auto">
+                          <Clock className="h-3 w-3" /> {new Date(review.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {review.status === 'pending' && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleModerate(review.id, 'approved')}
-                          className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
-                          title="Approve"
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleModerate(review.id, 'rejected')}
-                          className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Reject"
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openReplyModal(review.id, review.status === 'rejected' ? 'rejected' : 'approved')}
-                      className="h-8 px-2"
-                      title="Reply"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(review.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {review.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleModerate(review.id, 'approved')}
+                            className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="Approve"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleModerate(review.id, 'rejected')}
+                            className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Reject"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openReplyModal(review.id, review.status === 'rejected' ? 'rejected' : 'approved')}
+                        className="h-8 px-2"
+                        title="Reply"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(review.id)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Pagination */}
-        {pagination.totalPage > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {Array.from({ length: pagination.totalPage }, (_, i) => i + 1).map((page) => (
+          {/* Pagination */}
+          {pagination.totalPage > 1 && (
+            <div className="flex items-center justify-center gap-2">
               <Button
-                key={page}
-                variant={page === currentPage ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(page)}
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               >
-                {page}
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= pagination.totalPage}
-              onClick={() => setCurrentPage((p) => Math.min(pagination.totalPage, p + 1))}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+              {Array.from({ length: pagination.totalPage }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={page === currentPage ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= pagination.totalPage}
+                onClick={() => setCurrentPage((p) => Math.min(pagination.totalPage, p + 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Reply Modal */}
