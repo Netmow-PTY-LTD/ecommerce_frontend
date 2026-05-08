@@ -114,18 +114,11 @@ export default function PaidOrdersPage() {
   const fetchPaidOrders = async () => {
     try {
       setLoadingOrders(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '10',
-        payment_status: 'paid',
-      });
-      if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
-      if (appliedSearch) params.append('search', appliedSearch);
-
-      const response = await api.get(`/sales/orders?${params}`);
+      // Fetch a larger batch since the backend doesn't support specific payment_status filtering
+      const response = await api.get('/sales/orders?limit=1000');
       const data = response.data;
 
-      const transformedOrders: Order[] = data.data.map((order: any) => {
+      let transformedOrders: Order[] = (data.data || []).map((order: any) => {
         let shippingAddress = 'N/A';
         try {
           if (order.shipping_address) {
@@ -180,34 +173,42 @@ export default function PaidOrdersPage() {
         };
       });
 
+      // Frontend filter for paid orders
+      transformedOrders = transformedOrders.filter(order => order.payment_status === 'paid');
+
+      // Apply other filters if selected
+      if (selectedStatus && selectedStatus !== 'all') {
+        transformedOrders = transformedOrders.filter(order => order.status === selectedStatus);
+      }
+      if (appliedSearch) {
+        const search = appliedSearch.toLowerCase();
+        transformedOrders = transformedOrders.filter(order => 
+          order.order_number.toLowerCase().includes(search) ||
+          order.customer_name.toLowerCase().includes(search) ||
+          order.customer_email.toLowerCase().includes(search)
+        );
+      }
+
       setOrders(transformedOrders);
       setPagination({
-        total: data.pagination?.total || transformedOrders.length,
-        page: data.pagination?.page || currentPage.toString(),
-        limit: data.pagination?.limit || '10',
-        totalPage: data.pagination?.totalPage || 1,
+        total: transformedOrders.length,
+        page: '1',
+        limit: '10',
+        totalPage: Math.ceil(transformedOrders.length / 10),
       });
 
-      // Update stats if available or calculate from current data
-      if (data.stats) {
-        setStats({
-          pending: data.stats.pending || 0,
-          delivered: data.stats.delivered || 0,
-          revenue: data.stats.total_revenue || 0,
-          avgValue: data.stats.avg_order_value || 0,
-        });
-      } else if (data.data) {
-        const totalRev = transformedOrders.reduce((sum, order) => sum + order.total, 0);
-        const pendingDel = transformedOrders.filter(o => o.status === 'processing' || o.status === 'shipped').length;
-        const deliveredCount = transformedOrders.filter(o => o.status === 'delivered').length;
+      // Calculate stats from filtered data
+      const totalRev = transformedOrders.reduce((sum, order) => sum + order.total, 0);
+      const pendingDel = transformedOrders.filter(o => o.status === 'processing' || o.status === 'shipped').length;
+      const deliveredCount = transformedOrders.filter(o => o.status === 'delivered').length;
 
-        setStats({
-          pending: pendingDel,
-          delivered: deliveredCount,
-          revenue: totalRev,
-          avgValue: transformedOrders.length > 0 ? totalRev / transformedOrders.length : 0,
-        });
-      }
+      setStats({
+        pending: pendingDel,
+        delivered: deliveredCount,
+        revenue: totalRev,
+        avgValue: transformedOrders.length > 0 ? totalRev / transformedOrders.length : 0,
+      });
+      
     } catch (error: any) {
       console.error('Failed to fetch paid orders:', error);
     } finally {
@@ -219,7 +220,7 @@ export default function PaidOrdersPage() {
     if (isAuthenticated) {
       fetchPaidOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
+  }, [isAuthenticated, selectedStatus, appliedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -555,14 +556,7 @@ export default function PaidOrdersPage() {
               </div>
             )}
             searchable={false}
-            serverPagination
-            paginationMeta={{
-              total: pagination.total,
-              page: currentPage,
-              limit: parseInt(pagination.limit),
-              totalPage: pagination.totalPage
-            }}
-            onPageChange={(page) => setCurrentPage(page)}
+            serverPagination={false}
             loading={loadingOrders}
             emptyMessage="No paid orders found."
             columnVisibility={columnVisibility}

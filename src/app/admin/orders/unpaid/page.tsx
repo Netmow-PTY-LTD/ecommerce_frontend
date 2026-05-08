@@ -122,7 +122,7 @@ export default function UnpaidOrdersPage() {
       const response = await api.get(`/sales/orders?${params}`);
       const data = response.data;
 
-      const transformedOrders: Order[] = data.data.map((order: any) => {
+      let transformedOrders: Order[] = (data.data || []).map((order: any) => {
         let shippingAddress = 'N/A';
         try {
           if (order.shipping_address) {
@@ -177,12 +177,28 @@ export default function UnpaidOrdersPage() {
         };
       });
 
+      // Frontend filter for unpaid orders
+      transformedOrders = transformedOrders.filter(order => order.payment_status !== 'paid');
+
+      // Apply other filters if selected
+      if (selectedStatus && selectedStatus !== 'all') {
+        transformedOrders = transformedOrders.filter(order => order.status === selectedStatus);
+      }
+      if (appliedSearch) {
+        const search = appliedSearch.toLowerCase();
+        transformedOrders = transformedOrders.filter(order =>
+          order.order_number.toLowerCase().includes(search) ||
+          order.customer_name.toLowerCase().includes(search) ||
+          order.customer_email.toLowerCase().includes(search)
+        );
+      }
+
       setOrders(transformedOrders);
       setPagination({
-        total: data.pagination?.total || transformedOrders.length,
-        page: data.pagination?.page || currentPage.toString(),
-        limit: data.pagination?.limit || '10',
-        totalPage: data.pagination?.totalPage || 1,
+        total: transformedOrders.length,
+        page: '1',
+        limit: '10',
+        totalPage: Math.ceil(transformedOrders.length / 10),
       });
 
       const totalAmt = transformedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -196,7 +212,7 @@ export default function UnpaidOrdersPage() {
       }).length;
 
       setStats({
-        unpaid: data.pagination?.total || transformedOrders.length,
+        unpaid: transformedOrders.length,
         amount: totalAmt,
         overdue: overdueCount,
         critical: criticalCount,
@@ -213,7 +229,7 @@ export default function UnpaidOrdersPage() {
     if (isAuthenticated) {
       fetchUnpaidOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus, appliedSearch]);
+  }, [isAuthenticated, selectedStatus, appliedSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,7 +432,7 @@ export default function UnpaidOrdersPage() {
                   let color = 'text-slate-500';
                   if (days > 7) color = 'text-rose-600 font-bold';
                   else if (days > 3) color = 'text-orange-600 font-bold';
-                  
+
                   return (
                     <div className="flex flex-col">
                       <span className={`text-xs ${color}`}>{days} days</span>
@@ -529,14 +545,7 @@ export default function UnpaidOrdersPage() {
               </div>
             )}
             searchable={false}
-            serverPagination
-            paginationMeta={{
-              total: pagination.total,
-              page: currentPage,
-              limit: parseInt(pagination.limit),
-              totalPage: pagination.totalPage
-            }}
-            onPageChange={(page) => setCurrentPage(page)}
+            serverPagination={false}
             loading={loadingOrders}
             emptyMessage="No unpaid orders found."
             columnVisibility={columnVisibility}

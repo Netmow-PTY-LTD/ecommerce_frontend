@@ -52,11 +52,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { useSettingsContext } from '@/contexts/SettingsContext';
 
 interface AdminLayoutProps {
   children: ReactNode;
-  title?: string;
-  subtitle?: string;
   defaultSidebarCollapsed?: boolean;
 }
 
@@ -139,13 +138,12 @@ const navigation: NavItem[] = [
 
 export default function AdminLayout({
   children,
-  title,
-  subtitle,
   defaultSidebarCollapsed = false
 }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { settings } = useSettingsContext();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultSidebarCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClosingMobileMenu, setIsClosingMobileMenu] = useState(false);
@@ -269,13 +267,27 @@ export default function AdminLayout({
           {/* Logo */}
           <div className="flex items-center justify-between h-14 px-3 border-b border-border">
             <div className={cn(
-              'flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out',
+              'flex items-center transition-all duration-300 ease-in-out',
               sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
             )}>
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg text-foreground whitespace-nowrap">Admin</span>
+              {settings?.logo_url ? (
+                <div className="h-8 w-auto max-w-[140px] flex items-center overflow-hidden">
+                  <img 
+                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
+                    alt="Logo" 
+                    className="h-full w-auto object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                    <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold text-lg text-foreground whitespace-nowrap">
+                    {settings?.company_name || 'Admin'}
+                  </span>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -436,13 +448,8 @@ export default function AdminLayout({
                 <Menu className="h-5 w-5" />
               </button>
 
-              {/* Breadcrumb / Title */}
-              <div className="flex-1 min-w-0">
-                {title && <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>}
-                {subtitle && (
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate hidden md:block">{subtitle}</p>
-                )}
-              </div>
+              {/* Breadcrumb / Title Area (Now managed by individual pages) */}
+              <div className="flex-1 min-w-0"></div>
             </div>
 
             {/* Header Actions */}
@@ -548,11 +555,25 @@ export default function AdminLayout({
             )}>
               {/* Mobile Sidebar Content */}
               <div className="flex items-center justify-between h-14 px-3 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                    <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <span className="font-semibold text-lg text-foreground">Admin</span>
+                <div className="flex items-center transition-all duration-300 ease-in-out">
+                  {settings?.logo_url ? (
+                    <div className="h-8 w-auto max-w-[120px] flex items-center overflow-hidden">
+                      <img 
+                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
+                        alt="Logo" 
+                        className="h-full w-auto object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                        <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <span className="font-semibold text-lg text-foreground">
+                        {settings?.company_name || 'Admin'}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={closeMobileMenu}

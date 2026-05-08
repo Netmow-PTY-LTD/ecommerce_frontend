@@ -4,7 +4,7 @@ import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { 
-  ShoppingBag, Heart, User, MapPin, Package, Clock, 
+  ShoppingBag, Heart, User, Package, Clock, 
   CheckCircle, ArrowRight, TrendingUp, DollarSign, Activity, CreditCard,
   Sparkles, Mail
 } from 'lucide-react';
@@ -186,18 +186,6 @@ export default function CustomerDashboard() {
                     <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
                   </Link>
 
-                  <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <MapPin className="h-6 w-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Saved Addresses</h3>
-                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Manage delivery locations</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
                 </div>
              </div>
           </div>
