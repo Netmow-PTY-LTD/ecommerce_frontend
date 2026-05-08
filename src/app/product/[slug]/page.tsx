@@ -271,7 +271,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         <div className="bg-card border border-border rounded-xl p-6 shadow-sm sticky top-24 space-y-6">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                    <div className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</div>
+                                    <div className="flex flex-col">
+                                        {product.sale_price && product.sale_price < product.price ? (
+                                            <>
+                                                <div className="text-3xl font-bold text-primary">{formatCurrency(product.sale_price)}</div>
+                                                <div className="text-sm text-muted-foreground line-through">{formatCurrency(product.price)}</div>
+                                            </>
+                                        ) : (
+                                            <div className="text-3xl font-bold text-primary">{formatCurrency(product.price)}</div>
+                                        )}
+                                    </div>
                                     {isBogoDeal && (
                                         <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
                                             <Gift className="h-3.5 w-3.5" />
