@@ -14,7 +14,37 @@ import {
   RefreshCw,
   Banknote,
   Wallet,
+  TrendingUp,
+  AlertCircle,
+  ArrowDown,
 } from 'lucide-react';
+
+interface PaymentSummary {
+  total_orders: number;
+  total_order_amount: number;
+  fully_paid: number;
+  partially_paid: number;
+  unpaid: number;
+  total_collected: number;
+  collection_rate: number;
+}
+
+interface PaymentTransaction {
+  order_id: number;
+  order_number: string;
+  order_date: string;
+  order_total: number;
+  payment_status: string;
+  payment_method: string;
+  amount_paid: number;
+  balance_due: number;
+  payment_count: number;
+  payment_details: Array<{
+    method: string;
+    status: string;
+    amount: number;
+  }>;
+}
 
 const methodIcons: Record<string, any> = {
   cod: Banknote,
@@ -25,12 +55,26 @@ const methodIcons: Record<string, any> = {
   other: CreditCard,
 };
 
+const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
+  paid: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle2 },
+  partially_paid: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Clock },
+  unpaid: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  pending: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
+};
+
 export default function PaymentsAnalyticsPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
-  const [paymentStatuses, setPaymentStatuses] = useState<any[]>([]);
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null);
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,19 +83,19 @@ export default function PaymentsAnalyticsPage() {
 
   useEffect(() => {
     if (isAuthenticated) fetchAll();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, startDate, endDate]);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [methodsRes, statusesRes] = await Promise.all([
-        api.get('/analytics/payment-methods'),
-        api.get('/analytics/payment-statuses'),
-      ]);
-      setPaymentMethods(methodsRes.data?.data || []);
-      setPaymentStatuses(statusesRes.data?.data || []);
+      const res = await api.get('/reports/payments/reconciliation', {
+        params: { start_date: startDate, end_date: endDate }
+      });
+
+      setPaymentSummary(res.data?.data?.summary);
+      setTransactions(res.data?.data?.transactions || []);
     } catch (err) {
-      console.error('Failed to fetch payment analytics:', err);
+      console.error('Failed to fetch payment reconciliation:', err);
     } finally {
       setLoading(false);
     }
@@ -66,128 +110,237 @@ export default function PaymentsAnalyticsPage() {
   }
   if (!isAuthenticated) return null;
 
-  const totalPaymentAmount = paymentMethods.reduce((sum, m) => sum + Number(m.total || 0), 0);
-  const totalPaymentCount = paymentMethods.reduce((sum, m) => sum + Number(m.count || 0), 0);
-
   return (
-    <AdminLayout title="Payment Analytics" subtitle="Payment method distribution and payment status overview">
-      <div className="w-full">
+    <AdminLayout title="Payment Reconciliation" subtitle="Track payments, collections, and outstanding balances">
+      <div className="w-full space-y-6">
         {/* Controls */}
-        <div className="flex justify-end mb-6">
-          <button onClick={fetchAll} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <span className="text-slate-500">to</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={fetchAll}
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+          >
             <RefreshCw size={18} />
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Payment Volume</p>
-                <p className="text-2xl font-bold text-green-600">${Number(totalPaymentAmount).toFixed(2)}</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-600">Total Orders</p>
+              <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+                <CreditCard size={18} />
               </div>
-              <div className="bg-green-600 p-3 rounded-xl text-white"><DollarSign size={20} /></div>
             </div>
+            <p className="text-2xl font-bold text-slate-900">
+              {paymentSummary?.total_orders || 0}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              ${paymentSummary?.total_order_amount.toFixed(2) || '0.00'} total value
+            </p>
           </div>
+
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-slate-900">{totalPaymentCount}</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-600">Collected</p>
+              <div className="bg-green-100 p-2 rounded-xl text-green-600">
+                <CheckCircle2 size={18} />
               </div>
-              <div className="bg-blue-600 p-3 rounded-xl text-white"><CreditCard size={20} /></div>
             </div>
+            <p className="text-2xl font-bold text-green-600">
+              ${paymentSummary?.total_collected.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-sm font-medium text-green-600 mt-1">
+              {paymentSummary?.collection_rate.toFixed(1) || 0}% collection rate
+            </p>
           </div>
+
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Payment Methods</p>
-                <p className="text-2xl font-bold text-indigo-600">{paymentMethods.length}</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-600">Pending</p>
+              <div className="bg-amber-100 p-2 rounded-xl text-amber-600">
+                <Clock size={18} />
               </div>
-              <div className="bg-indigo-600 p-3 rounded-xl text-white"><Wallet size={20} /></div>
+            </div>
+            <p className="text-2xl font-bold text-amber-600">
+              ${paymentSummary?.partially_paid.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">Partially paid</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-600">Outstanding</p>
+              <div className="bg-red-100 p-2 rounded-xl text-red-600">
+                <XCircle size={18} />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-red-600">
+              ${paymentSummary?.unpaid.toFixed(2) || '0.00'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">Unpaid orders</p>
+          </div>
+        </div>
+
+        {/* Collection Health */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-80">Collection Health</p>
+              <p className="text-3xl font-bold">{paymentSummary?.collection_rate.toFixed(1) || 0}%</p>
+              <p className="text-sm opacity-80 mt-1">
+                ${paymentSummary?.total_collected.toFixed(2) || '0.00'} of ${paymentSummary?.total_order_amount.toFixed(2) || '0.00'} collected
+              </p>
+            </div>
+            <div className="p-4 bg-white/20 rounded-2xl">
+              <TrendingUp size={48} />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Payment Methods */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Payment Methods</h3>
-            {loading ? (
-              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
-            ) : paymentMethods.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">No payment data</p>
-            ) : (
-              <div className="space-y-3">
-                {paymentMethods.map((m) => {
-                  const Icon = methodIcons[(m.payment_method || '').toLowerCase()] || CreditCard;
-                  const pct = totalPaymentAmount > 0 ? ((Number(m.total) / totalPaymentAmount) * 100).toFixed(1) : 0;
-                  return (
-                    <div key={m.payment_method} className="p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600">
-                          <Icon size={18} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-slate-900 capitalize">{m.payment_method || 'Unknown'}</p>
-                          <p className="text-xs text-slate-500">{m.count} transactions</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-green-600">${Number(m.total).toFixed(2)}</p>
-                          <p className="text-xs text-slate-500">{pct}%</p>
-                        </div>
-                      </div>
-                      <div className="bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
+        {/* Payment Status Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 p-3 rounded-xl text-green-600">
+                <CheckCircle2 size={20} />
               </div>
-            )}
+              <div>
+                <p className="text-sm font-medium text-slate-600">Fully Paid</p>
+                <p className="text-xl font-bold text-slate-900">${paymentSummary?.fully_paid.toFixed(2) || '0.00'}</p>
+              </div>
+            </div>
           </div>
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-100 p-3 rounded-xl text-amber-600">
+                <Clock size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Partially Paid</p>
+                <p className="text-xl font-bold text-slate-900">${paymentSummary?.partially_paid.toFixed(2) || '0.00'}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-red-100 p-3 rounded-xl text-red-600">
+                <XCircle size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Unpaid</p>
+                <p className="text-xl font-bold text-slate-900">${paymentSummary?.unpaid.toFixed(2) || '0.00'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* Payment Statuses */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Payment Status</h3>
-            {loading ? (
-              <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>
-            ) : paymentStatuses.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">No data</p>
-            ) : (
-              <div className="space-y-3">
-                {paymentStatuses.map((s) => {
-                  const status = s.payment_status || '';
-                  const colorMap: Record<string, { bg: string; text: string; icon: any }> = {
-                    paid: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle2 },
-                    pending: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Clock },
-                    unpaid: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
-                    failed: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
-                    refunded: { bg: 'bg-slate-100', text: 'text-slate-600', icon: RefreshCw },
-                  };
-                  const styling = colorMap[status] || { bg: 'bg-slate-100', text: 'text-slate-600', icon: CreditCard };
-                  const Icon = styling.icon;
-                  const pct = totalPaymentAmount > 0 ? ((Number(s.total) / totalPaymentAmount) * 100).toFixed(1) : 0;
-                  return (
-                    <div key={status} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50">
-                      <div className={`p-2 rounded-lg ${styling.bg} ${styling.text}`}>
-                        <Icon size={18} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-900 capitalize">{status}</p>
-                        <p className="text-xs text-slate-500">{s.count} orders</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-slate-900">${Number(s.total).toFixed(2)}</p>
-                        <p className="text-xs text-slate-500">{pct}%</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+        {/* Transactions Table */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Transaction Details</h3>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+            </div>
+          ) : transactions.length === 0 ? (
+            <p className="text-center text-slate-500 py-8">No transaction data</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Order</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Date</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-700 uppercase">Order Total</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-700 uppercase">Amount Paid</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-700 uppercase">Balance Due</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Payments</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {transactions.map((txn) => {
+                    const statusStyle = statusColors[txn.payment_status] || statusColors.pending;
+                    const StatusIcon = statusStyle.icon;
+                    const hasBalance = txn.balance_due > 0;
+
+                    return (
+                      <tr key={txn.order_id} className={`hover:bg-slate-50 ${hasBalance ? 'bg-red-50/50' : ''}`}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`/admin/orders/${txn.order_id}`}
+                              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                            >
+                              {txn.order_number}
+                            </a>
+                            {hasBalance && (
+                              <AlertCircle size={14} className="text-red-500" />
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500">
+                          {new Date(txn.order_date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right">
+                          ${Number(txn.order_total).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">
+                          ${Number(txn.amount_paid).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right">
+                          <span className={`font-semibold ${hasBalance ? 'text-red-600' : 'text-slate-500'}`}>
+                            ${Number(txn.balance_due).toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                            <StatusIcon size={12} />
+                            {txn.payment_status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {txn.payment_count > 0 ? (
+                            <div className="flex flex-col gap-1">
+                              {txn.payment_details.map((payment, idx) => {
+                                const Icon = methodIcons[payment.method] || CreditCard;
+                                return (
+                                  <div key={idx} className="flex items-center gap-2 text-xs">
+                                    <Icon size={12} className="text-slate-400" />
+                                    <span className="text-slate-600 capitalize">{payment.method}</span>
+                                    <span className={`font-medium ${payment.status === 'completed' ? 'text-green-600' : 'text-amber-600'}`}>
+                                      ${Number(payment.amount).toFixed(2)}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400">No payments</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
