@@ -194,50 +194,72 @@ function CheckoutForm({
             }
 
             // Show processing message
-            if (paymentMethod === 'cod') {
-                toast.info('Creating your order...');
-            }
-
-            if (paymentMethod === 'online') {
-                // Online payment with Stripe Checkout
-                // Map items to correct format BEFORE saving to pendingOrder
-                const mappedItems = items.map(item => ({
+            // Common Order Data for both Online and COD
+            const orderData = {
+                items: items.map(item => ({
                     product_id: item.id,
                     quantity: item.quantity,
                     unit_price: item.sale_price || item.price,
                     total_price: (item.sale_price || item.price) * item.quantity,
                     line_total: (item.sale_price || item.price) * item.quantity,
                     name: item.name,
-                }));
+                })),
+                customer_email: formData.email,
+                customer_phone: formData.phone,
+                shipping_address: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address: formData.address,
+                    apartment: formData.apartment,
+                    city: formData.city,
+                    state: formData.state,
+                    postalCode: formData.postalCode,
+                    country: formData.country
+                }),
+                billing_address: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address: formData.address,
+                    apartment: formData.apartment,
+                    city: formData.city,
+                    state: formData.state,
+                    postalCode: formData.postalCode,
+                    country: formData.country
+                }),
+                subtotal: cartTotals.cartTotal,
+                tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
+                shipping_cost: cartTotals.shippingCost,
+                total_amount: finalTotal,
+                discount_amount: Math.min(discountAmount, cartTotals.cartTotal),
+                coupon_id: appliedCoupon?.id || null,
+                payment_method: paymentMethod,
+                payment_status: 'unpaid',
+                status: 'pending',
+                notes: formData.newsletter ? 'Customer subscribed to newsletter' : ''
+            };
 
-                // Store order details for later use after payment
-                const orderDetails = {
-                    items: mappedItems,
-                    subtotal: cartTotals.cartTotal,
-                    shipping_cost: cartTotals.shippingCost,
-                    tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
-                    total_amount: finalTotal,
-                    payment_method: 'online',
-                    customer_email: formData.email,
-                    customer_phone: formData.phone,
-                    shipping_address: {
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        address: formData.address,
-                        apartment: formData.apartment,
-                        city: formData.city,
-                        state: formData.state,
-                        postalCode: formData.postalCode,
-                        country: formData.country
-                    }
-                };
+            console.log(`🛒 Creating ${paymentMethod} order with items:`, items);
+            console.log('📦 Sending order data:', orderData);
 
-                // Save order details to localStorage
-                localStorage.setItem('pendingOrder', JSON.stringify(orderDetails));
+            // Step 1: Create the Order in the backend (reserves stock)
+            const orderResponse = await api.post('/sales/public/checkout-order', orderData);
+            
+            if (!orderResponse.data || (orderResponse.data.status !== true && !orderResponse.data.data)) {
+                throw new Error(orderResponse.data?.message || 'Failed to create order');
+            }
 
+            const orderData_response = orderResponse.data.data || orderResponse.data;
+            const orderId = String(orderData_response.id || orderData_response.order_id || '');
+            const orderNum = String(orderData_response.order_number || '');
+
+            // Step 2: Handle Payment flow
+            if (paymentMethod === 'online') {
+                // Online payment with Stripe Checkout
+                toast.info('Redirecting to secure payment...');
                 const response = await api.post('/payments/public/create-checkout-session', {
                     amount: finalTotal,
                     currency: currency.toLowerCase(),
+                    order_id: orderId,
                     metadata: {
                         customer_email: formData.email,
                         customer_name: `${formData.firstName} ${formData.lastName}`,
@@ -246,92 +268,30 @@ function CheckoutForm({
                         apartment: formData.apartment,
                         city: formData.city,
                         state: formData.state,
-                        postal_code: formData.postalCode
+                        postal_code: formData.postalCode,
+                        order_id: orderId,
+                        order_number: orderNum
                     }
                 });
 
                 if (response.data?.data?.url) {
-                    // Clear cart before redirecting
                     clearCart();
-                    // Redirect to Stripe Checkout
                     window.location.href = response.data.data.url;
                 } else {
                     throw new Error('Failed to create checkout session');
                 }
             } else {
-                // Cash on Delivery - Create actual order
-                console.log('🛒 Creating COD order with items:', items);
-                console.log('📧 Customer email:', formData.email);
-                console.log('💰 Total:', finalTotal);
-
-                const orderData = {
-                    items: items.map(item => ({
-                        product_id: item.id,
-                        quantity: item.quantity,
-                        unit_price: item.sale_price || item.price,
-                        total_price: (item.sale_price || item.price) * item.quantity,
-                        line_total: (item.sale_price || item.price) * item.quantity
-                    })),
-                    customer_email: formData.email,
-                    customer_phone: formData.phone,
-                    shipping_address: JSON.stringify({
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        address: formData.address,
-                        apartment: formData.apartment,
-                        city: formData.city,
-                        state: formData.state,
-                        postalCode: formData.postalCode,
-                        country: formData.country
-                    }),
-                    billing_address: JSON.stringify({
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        address: formData.address,
-                        apartment: formData.apartment,
-                        city: formData.city,
-                        state: formData.state,
-                        postalCode: formData.postalCode,
-                        country: formData.country
-                    }),
-                    subtotal: cartTotals.cartTotal,
-                    tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
-                    shipping_cost: cartTotals.shippingCost,
-                    total_amount: finalTotal,
-                    discount_amount: Math.min(discountAmount, cartTotals.cartTotal),
-                    coupon_id: appliedCoupon?.id || null,
-                    payment_method: 'cod',
-                    payment_status: 'pending',
-                    status: 'pending',
-                    notes: formData.newsletter ? 'Customer subscribed to newsletter' : ''
-                };
-
-                console.log('📦 Sending order data:', orderData);
-
-                const response = await api.post('/sales/public/checkout-order', orderData);
-                console.log('✅ Order response:', response.data);
-
-                // Check if order was created successfully
-                if (response.data && (response.data.status === true || response.data.data)) {
-                    const orderData_response = response.data.data || response.data;
-                    // Order created successfully
-                    clearCart();
-                    toast.success(`Order placed successfully! Order #${orderData_response.order_number || 'created'}. Pay on delivery.`);
-                    // Store order ID for success page — convert to string explicitly
-                    const orderId = String(orderData_response.id || orderData_response.order_id || '');
-                    const orderNum = String(orderData_response.order_number || '');
-                    console.log('💾 Storing in localStorage:', { orderId, orderNum });
-                    if (orderId && orderId !== 'undefined') {
-                        localStorage.setItem('lastOrderId', orderId);
-                    }
-                    if (orderNum && orderNum !== 'undefined') {
-                        localStorage.setItem('lastOrderNumber', orderNum);
-                    }
-                    router.push('/checkout/success');
-                } else {
-                    console.error('❌ Invalid response:', response.data);
-                    throw new Error(response.data?.message || 'Failed to create order');
+                // Cash on Delivery
+                clearCart();
+                toast.success(`Order placed successfully! Order #${orderNum || 'created'}. Pay on delivery.`);
+                
+                if (orderId && orderId !== 'undefined') {
+                    localStorage.setItem('lastOrderId', orderId);
                 }
+                if (orderNum && orderNum !== 'undefined') {
+                    localStorage.setItem('lastOrderNumber', orderNum);
+                }
+                router.push('/checkout/success');
             }
         } catch (error: any) {
             console.error('❌ Checkout error:', error);

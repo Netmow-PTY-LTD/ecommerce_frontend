@@ -94,46 +94,31 @@ function CheckoutSuccessPageContent() {
                     setShowLoader(false);
                 }
 
-                // For online payments, process the order from session
+                // For online payments, verify the session
                 if (sessionId) {
-                    console.log('💳 Processing online payment order');
-                    const pendingOrderStr = localStorage.getItem('pendingOrder');
-                    if (!pendingOrderStr) {
-                        toast.error('Order details not found');
+                    console.log('💳 Verifying online payment order');
+                    
+                    try {
+                        const response = await api.post('/sales/public/verify-payment', {
+                            session_id: sessionId
+                        }, { skipAuthRedirect: true } as any);
+
+                        if (response.data?.data?.order_number) {
+                            setOrderNumber(response.data.data.order_number);
+                            orderId = String(response.data.data.id);
+                            setShowLoader(false);
+                        } else {
+                            throw new Error('Order verification returned unexpected format');
+                        }
+                    } catch (err: any) {
+                        console.error('Payment verification error:', err);
+                        toast.error(err.response?.data?.message || 'Payment verification failed');
                         setTimeout(() => {
                             setHasError(true);
                             setIsLoading(false);
                             setShowLoader(false);
                         }, 1500);
                         return;
-                    }
-
-                    const pendingOrder = JSON.parse(pendingOrderStr);
-
-                    // Create order in database
-                    const response = await api.post('/sales/public/checkout-order', {
-                        stripe_session_id: sessionId,
-                        payment_method: pendingOrder.payment_method,
-                        customer_email: pendingOrder.customer_email,
-                        customer_phone: pendingOrder.customer_phone,
-                        shipping_address: pendingOrder.shipping_address,
-                        items: pendingOrder.items,
-                        subtotal: pendingOrder.subtotal,
-                        shipping_cost: pendingOrder.shipping_cost,
-                        tax_amount: pendingOrder.tax_amount,
-                        total_amount: pendingOrder.total_amount
-                    }, { skipAuthRedirect: true } as any);
-
-                    if (response.data?.data?.order_number) {
-                        setOrderNumber(response.data.data.order_number);
-                        orderId = String(response.data.data.id);
-                        localStorage.removeItem('pendingOrder');
-                        setShowLoader(false);
-                    } else {
-                        const fallbackOrderNumber = `ORD-${Date.now().toString().slice(-8)}`;
-                        setOrderNumber(fallbackOrderNumber);
-                        localStorage.removeItem('pendingOrder');
-                        setShowLoader(false);
                     }
                 }
 
