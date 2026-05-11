@@ -44,17 +44,11 @@ export function FlashSalesSection() {
                 <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
                   FLASH SALE
                 </div>
-                {sale.items && sale.items.length > 0 && (() => {
-                  const firstItem = sale.items[0];
-                  const discount = firstItem?.original_price > 0
-                    ? Math.round(((firstItem.original_price - firstItem.sale_price) / firstItem.original_price) * 100)
-                    : 0;
-                  return discount > 0 ? (
-                    <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
-                      {discount}% OFF
-                    </div>
-                  ) : null;
-                })()}
+                {sale.discount_percentage > 0 && (
+                  <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
+                    {sale.discount_percentage}% OFF
+                  </div>
+                )}
                 <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
                   {sale.banner_image ? (
                     <Image
