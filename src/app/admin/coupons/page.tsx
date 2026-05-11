@@ -22,6 +22,7 @@ interface Coupon {
   starts_at?: string;
   expires_at?: string;
   status: 'active' | 'inactive';
+  visibility: 'private' | 'public' | 'restricted';
   applicable_products?: number[];
   applicable_categories?: number[];
   created_at: string;
@@ -181,6 +182,15 @@ export default function AdminCouponsPage() {
                             : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}>
                         {isActive(coupon) ? 'Active' : isExpired(coupon) ? 'Expired' : 'Inactive'}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        coupon.visibility === 'public'
+                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                          : coupon.visibility === 'restricted'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      }`}>
+                        {coupon.visibility === 'public' ? '🌐 Public' : coupon.visibility === 'restricted' ? '🔒 Restricted' : '🔒 Private'}
                       </span>
                     </div>
 

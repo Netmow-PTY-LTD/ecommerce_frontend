@@ -2,12 +2,11 @@
 
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { 
-  User, Mail, Phone, MapPin, Building2, Globe, Hash, Save, 
-  ShieldCheck, ArrowLeft, Camera, Loader2, CheckCircle2
+import {
+  User, Mail, Phone, MapPin, Building2, Globe, Hash, Save,
+  ShieldCheck, Camera, Loader2, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

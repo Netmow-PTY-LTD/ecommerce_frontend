@@ -23,6 +23,7 @@ const emptyForm = {
   starts_at: '',
   expires_at: '',
   status: 'active' as 'active' | 'inactive',
+  visibility: 'private' as 'private' | 'public' | 'restricted',
   applicable_products: [] as number[],
 };
 
@@ -71,6 +72,7 @@ export default function CouponFormPage() {
         starts_at: coupon.starts_at ? coupon.starts_at.slice(0, 16) : '',
         expires_at: coupon.expires_at ? coupon.expires_at.slice(0, 16) : '',
         status: coupon.status,
+        visibility: coupon.visibility || 'private',
         applicable_products: Array.isArray(coupon.applicable_products)
           ? coupon.applicable_products
           : (typeof coupon.applicable_products === 'string' ? JSON.parse(coupon.applicable_products) : []),
@@ -136,6 +138,7 @@ export default function CouponFormPage() {
         type: formData.type,
         value: formData.type === 'bogo' ? 0 : parseFloat(formData.value),
         status: formData.status,
+        visibility: formData.visibility,
         per_customer_limit: parseInt(formData.per_customer_limit) || 1,
       };
       if (formData.type === 'bogo' && formData.applicable_products.length > 0) {
@@ -454,6 +457,26 @@ export default function CouponFormPage() {
                 className="w-4 h-4 text-primary border-border rounded"
               />
               <Label htmlFor="status" className="cursor-pointer">Active</Label>
+            </div>
+
+            {/* Visibility */}
+            <div className="space-y-2">
+              <Label htmlFor="visibility">Visibility *</Label>
+              <select
+                id="visibility"
+                value={formData.visibility}
+                onChange={(e) => setFormData({ ...formData, visibility: e.target.value as any })}
+                className="w-full px-3 py-2 border rounded-lg bg-background text-sm"
+              >
+                <option value="private">Private (Hidden - Customers must know the code)</option>
+                <option value="public">Public (Shown on homepage and in ads)</option>
+                <option value="restricted">Restricted (Shown to logged-in customers only)</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                {formData.visibility === 'private' && 'Only customers who know the code can use this coupon.'}
+                {formData.visibility === 'public' && 'This coupon will be displayed on your homepage for all visitors.'}
+                {formData.visibility === 'restricted' && 'Only logged-in customers can see this coupon on the homepage.'}
+              </p>
             </div>
 
             {/* Actions */}
