@@ -9,7 +9,13 @@ export function useActiveFlashSales() {
 }
 
 export function useFlashSale(slug: string) {
-  const { data, error, isLoading } = useSWR(slug ? `/pricing/public/flash-sales/${slug}` : null, fetcher);
+  // Check if slug is a number (ID) or actual slug string
+  const isNumeric = /^\d+$/.test(slug);
+  const endpoint = isNumeric
+    ? `/pricing/public/flash-sales-by-id/${slug}`
+    : `/pricing/public/flash-sales/${slug}`;
+
+  const { data, error, isLoading } = useSWR(slug ? endpoint : null, fetcher);
   return { flashSale: data?.data, isLoading, isError: error };
 }
 

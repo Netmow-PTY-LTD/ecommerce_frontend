@@ -47,7 +47,7 @@ export function FlashSalesSection() {
                 <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
                   {sale.discount_percentage}% OFF
                 </div>
-                <Link href={`/flash-sale/${sale.slug}`} className="block aspect-square bg-secondary/30">
+                <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
                   {sale.image_url ? (
                     <Image
                       src={sale.image_url}
@@ -93,7 +93,7 @@ export function FlashSalesSection() {
                 </div>
 
                 <Link
-                  href={`/flash-sale/${sale.slug}`}
+                  href={`/flash-sale/${sale.slug || sale.id}`}
                   className="block w-full bg-primary text-primary-foreground text-center py-2 rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
                 >
                   View Deal
