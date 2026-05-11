@@ -46,7 +46,10 @@ export function FlashSalesSection() {
                 </div>
                 {sale.discount_percentage > 0 && (
                   <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
-                    {sale.discount_percentage}% OFF
+                    {sale.discount_min !== null && sale.discount_min !== sale.discount_percentage
+                      ? `Up to ${sale.discount_percentage}% OFF`
+                      : `${sale.discount_percentage}% OFF`
+                    }
                   </div>
                 )}
                 <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
