@@ -527,17 +527,8 @@ function CheckoutForm({
                                 />
                             ) : null}
 
-                            {/* Divider between saved addresses and manual entry */}
-                            {isAuthenticated && !selectedAddress && (
-                                <div className="flex items-center gap-3 py-2">
-                                    <div className="flex-1 h-px bg-border"></div>
-                                    <span className="text-xs text-muted-foreground">or enter manually</span>
-                                    <div className="flex-1 h-px bg-border"></div>
-                                </div>
-                            )}
-
-                            {/* Manual Address Entry - Always available */}
-                            {(!selectedAddress || !isAuthenticated) && (
+                            {/* Manual Address Entry - Only for guest checkout */}
+                            {!isAuthenticated && (
                                 <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
