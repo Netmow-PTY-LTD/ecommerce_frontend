@@ -61,7 +61,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const fetchCustomer = async () => {
     try {
       setLoadingCustomer(true);
-      const response = await api.get(`/customers/id/${id}`);
+      const response = await api.get(`/customers/${id}`);
       setCustomer(response.data.data);
     } catch (err: unknown) {
       const error = err as ApiError;
