@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Eye, EyeOff, ShoppingBag, Mail, Lock, ArrowRight,
   ShieldCheck, Truck, RefreshCcw
 } from 'lucide-react';
 
-export default function CustomerLoginPage() {
+function CustomerLoginPageContent() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,14 @@ export default function CustomerLoginPage() {
   const router = useRouter();
 
   const isAuthenticated = isCustomerAuthenticated || isAdminAuthenticated;
+
+  useEffect(() => {
+    // Pre-fill email from query params
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -179,5 +188,17 @@ export default function CustomerLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600"></div>
+      </div>
+    }>
+      <CustomerLoginPageContent />
+    </Suspense>
   );
 }

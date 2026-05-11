@@ -8,8 +8,27 @@ export function useActiveFlashSales() {
   return { flashSales: data?.data || [], isLoading, isError: error };
 }
 
+export function useActiveCoupons() {
+  const { data, error, isLoading } = useSWR('/pricing/public/active-coupons', (url) => {
+    // Get token from localStorage to check if user is logged in
+    const token = typeof window !== 'undefined' ? localStorage.getItem('customer_token') : null;
+    return api.get(url, {
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    }).then(res => res.data);
+  });
+  return { coupons: data?.data || [], isLoading, isError: error };
+}
+
 export function useFlashSale(slug: string) {
-  const { data, error, isLoading } = useSWR(slug ? `/pricing/public/flash-sales/${slug}` : null, fetcher);
+  // Check if slug is a number (ID) or actual slug string
+  const isNumeric = /^\d+$/.test(slug);
+  const endpoint = isNumeric
+    ? `/pricing/public/flash-sales-by-id/${slug}`
+    : `/pricing/public/flash-sales/${slug}`;
+
+  const { data, error, isLoading } = useSWR(slug ? endpoint : null, fetcher);
   return { flashSale: data?.data, isLoading, isError: error };
 }
 

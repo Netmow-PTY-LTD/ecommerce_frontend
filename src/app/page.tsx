@@ -1,6 +1,7 @@
 import { Hero } from "@/components/hero";
 import { HomeCategories } from "@/components/home-categories";
 import { FlashSalesSection } from "@/components/flash-sales-section";
+import { CouponsSection } from "@/components/coupons-section";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Hero />
       <HomeCategories />
       <FlashSalesSection />
+      <CouponsSection />
 
       {/* Promotional Section - Just for visual appeal */}
       <section className="py-24 bg-zinc-900 text-white overflow-hidden relative">

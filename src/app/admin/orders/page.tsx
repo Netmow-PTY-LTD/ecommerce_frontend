@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -58,7 +58,9 @@ interface Pagination {
 export default function AdminOrdersPage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { formatCurrency } = useCurrency();
+  const customerIdParam = searchParams.get('customer_id');
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -121,6 +123,7 @@ export default function AdminOrdersPage() {
       });
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
+      if (customerIdParam) params.append('customer_id', customerIdParam);
 
       if (selectedDateRange) {
         const today = new Date();
@@ -234,7 +237,7 @@ export default function AdminOrdersPage() {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated, currentPage, selectedStatus, selectedDateRange, appliedSearch]);
+  }, [isAuthenticated, currentPage, selectedStatus, selectedDateRange, appliedSearch, customerIdParam]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

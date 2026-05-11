@@ -3,14 +3,15 @@
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { 
-  ShoppingBag, Heart, User, Package, Clock, 
+import {
+  ShoppingBag, Heart, User, Package, Clock,
   CheckCircle, ArrowRight, TrendingUp, DollarSign, Activity, CreditCard,
-  Sparkles, Mail
+  Sparkles, Mail, Tag, Percent, Gift, Truck
 } from 'lucide-react';
 import Link from 'next/link';
 import { useWishlistStore } from '@/lib/store';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useActiveCoupons, useActiveFlashSales } from '@/hooks/use-pricing';
 import api from '@/lib/api';
 import CustomerLayout from '@/components/customer/customer-layout';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,8 @@ export default function CustomerDashboard() {
   const router = useRouter();
   const wishlistItems = useWishlistStore((state) => state.items);
   const { formatCurrency } = useCurrency();
+  const { coupons, isLoading: loadingCoupons } = useActiveCoupons();
+  const { flashSales, isLoading: loadingFlashSales } = useActiveFlashSales();
   const [orderStats, setOrderStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -28,6 +31,7 @@ export default function CustomerDashboard() {
     totalSpent: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -66,6 +70,30 @@ export default function CustomerDashboard() {
     } finally {
       setLoadingStats(false);
     }
+  };
+
+  const copyCouponCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCoupon(code);
+    setTimeout(() => setCopiedCoupon(null), 2000);
+  };
+
+  const getCouponIcon = (type: string) => {
+    switch (type) {
+      case 'percentage': return Percent;
+      case 'fixed': return DollarSign;
+      case 'free_shipping': return Truck;
+      case 'bogo': return Gift;
+      default: return Tag;
+    }
+  };
+
+  const getCouponDiscountLabel = (coupon: any) => {
+    if (coupon.type === 'percentage') return `${coupon.value}% OFF`;
+    if (coupon.type === 'fixed') return `${formatCurrency(coupon.value)} OFF`;
+    if (coupon.type === 'free_shipping') return 'FREE SHIPPING';
+    if (coupon.type === 'bogo') return 'BUY 1 GET 1 FREE';
+    return 'DISCOUNT';
   };
 
   if (loading || !isAuthenticated || !customer) {
@@ -132,6 +160,136 @@ export default function CustomerDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Special Offers Section - Coupons & Flash Sales */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {/* Active Coupons */}
+        {(coupons.length > 0 || loadingCoupons) && (
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-3xl p-8 shadow-sm border border-purple-100 dark:border-purple-900">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <Tag className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Your Coupons</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Exclusive discounts just for you</p>
+              </div>
+            </div>
+
+            {loadingCoupons ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <div key={i} className="bg-white/60 dark:bg-slate-800/60 rounded-2xl p-4 animate-pulse">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : coupons.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No active coupons available right now.</p>
+            ) : (
+              <div className="space-y-3">
+                {coupons.slice(0, 3).map((coupon: any) => {
+                  const Icon = getCouponIcon(coupon.type);
+                  return (
+                    <div key={coupon.id} className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Icon className="h-4 w-4 text-purple-600" />
+                            <span className="font-bold text-slate-900 dark:text-slate-100">{getCouponDiscountLabel(coupon)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <code className="text-xs font-mono font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded">{coupon.code}</code>
+                            {copiedCoupon === coupon.code && (
+                              <span className="text-xs text-green-600 dark:text-green-400">Copied!</span>
+                            )}
+                          </div>
+                          {coupon.description && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{coupon.description}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => copyCouponCode(coupon.code)}
+                          className="shrink-0 p-2 bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-400 rounded-xl transition-colors"
+                          title="Copy code"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {coupons.length > 3 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center pt-2">
+                    +{coupons.length - 3} more coupons available
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Active Flash Sales */}
+        {(flashSales.length > 0 || loadingFlashSales) && (
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-3xl p-8 shadow-sm border border-red-100 dark:border-red-900">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Flash Sales</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Limited time offers - Act fast!</p>
+              </div>
+            </div>
+
+            {loadingFlashSales ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <div key={i} className="bg-white/60 dark:bg-slate-800/60 rounded-2xl p-4 animate-pulse">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : flashSales.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No active flash sales right now.</p>
+            ) : (
+              <div className="space-y-3">
+                {flashSales.slice(0, 3).map((sale: any) => (
+                  <Link
+                    key={sale.id}
+                    href={`/flash-sale/${sale.slug || sale.id}`}
+                    className="block bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1">{sale.name}</h3>
+                        {sale.discount_percentage && (
+                          <span className="inline-flex items-center gap-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                            Up to {sale.discount_percentage}% OFF
+                          </span>
+                        )}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          Ends: {new Date(sale.ends_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-slate-400" />
+                    </div>
+                  </Link>
+                ))}
+                {flashSales.length > 3 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center pt-2">
+                    +{flashSales.length - 3} more flash sales
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
