@@ -113,8 +113,16 @@ export default function PaymentsAnalyticsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <AdminLayout title="Payment Reconciliation" subtitle="Track payments, collections, and outstanding balances">
-      <div className="w-full space-y-6">
+    <AdminLayout>
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Payment Reconciliation</h1>
+            <p className="text-slate-500 mt-1 text-sm">Track payments, collections, and outstanding balances</p>
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2">

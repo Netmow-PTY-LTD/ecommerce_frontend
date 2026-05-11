@@ -34,6 +34,13 @@ interface SalesSummary {
   total_shipping: number;
   paid_orders: number;
   paid_amount: number;
+  previous_period?: {
+    summary: {
+      net_sales: number;
+      total_orders: number;
+      gross_sales: number;
+    };
+  };
 }
 
 interface SalesTrend {
@@ -137,23 +144,59 @@ export default function SalesAnalyticsPage() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
-      </div>
-    );
-  }
-  if (!isAuthenticated) return null;
+  const isDataLoading = loading || authLoading;
+
+  if (!authLoading && !isAuthenticated) return null;
 
   const growthPct = salesSummary?.previous_period?.summary
     ? ((salesSummary.net_sales - salesSummary.previous_period.summary.net_sales) /
-       Math.abs(salesSummary.previous_period.summary.net_sales)) * 100
+       Math.max(1, Math.abs(salesSummary.previous_period.summary.net_sales))) * 100
     : 0;
 
+  const StatsSkeleton = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 animate-pulse">
+          <div className="flex justify-between mb-3">
+            <div className="h-4 w-20 bg-slate-100 rounded" />
+            <div className="h-8 w-8 bg-slate-50 rounded-lg" />
+          </div>
+          <div className="h-8 w-32 bg-slate-100 rounded mb-3" />
+          <div className="h-4 w-24 bg-slate-50 rounded" />
+        </div>
+      ))}
+    </div>
+  );
+
+  const ListSkeleton = () => (
+    <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map(i => (
+        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 animate-pulse">
+          <div className="w-10 h-10 rounded-lg bg-slate-100" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-32 bg-slate-100 rounded" />
+            <div className="h-3 w-20 bg-slate-100 rounded" />
+          </div>
+          <div className="text-right space-y-2">
+            <div className="h-4 w-16 bg-slate-100 rounded ml-auto" />
+            <div className="h-3 w-12 bg-slate-100 rounded ml-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <AdminLayout title="Sales & Revenue Analytics" subtitle="Comprehensive sales reports with trends and insights">
-      <div className="w-full space-y-6">
+    <AdminLayout>
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Sales & Revenue Analytics</h1>
+            <p className="text-slate-500 mt-1 text-sm">Comprehensive sales reports with trends and insights</p>
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -193,75 +236,77 @@ export default function SalesAnalyticsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-600">Net Sales</p>
-              <div className="bg-green-100 p-2 rounded-xl text-green-600">
-                <DollarSign size={18} />
+        {isDataLoading ? <StatsSkeleton /> : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Net Sales</p>
+                <div className="bg-green-100 p-2 rounded-xl text-green-600">
+                  <DollarSign size={18} />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {formatCurrency(salesSummary?.net_sales || 0)}
+              </p>
+              <div className="flex items-center gap-1 mt-2">
+                {growthPct >= 0 ? (
+                  <ArrowUp size={14} className="text-green-600" />
+                ) : (
+                  <ArrowDown size={14} className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${growthPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(growthPct).toFixed(1)}%
+                </span>
+                <span className="text-xs text-slate-500">vs previous</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {formatCurrency(salesSummary?.net_sales || 0)}
-            </p>
-            <div className="flex items-center gap-1 mt-2">
-              {growthPct >= 0 ? (
-                <ArrowUp size={14} className="text-green-600" />
-              ) : (
-                <ArrowDown size={14} className="text-red-600" />
-              )}
-              <span className={`text-sm font-medium ${growthPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {Math.abs(growthPct).toFixed(1)}%
-              </span>
-              <span className="text-xs text-slate-500">vs previous</span>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-600">Total Orders</p>
-              <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
-                <ShoppingCart size={18} />
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Total Orders</p>
+                <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+                  <ShoppingCart size={18} />
+                </div>
               </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {salesSummary?.total_orders || 0}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                {salesSummary?.cancelled_orders || 0} cancelled
+              </p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {salesSummary?.total_orders || 0}
-            </p>
-            <p className="text-xs text-slate-500 mt-2">
-              {salesSummary?.cancelled_orders || 0} cancelled
-            </p>
-          </div>
 
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
-              <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
-                <TrendingUp size={18} />
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
+                <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+                  <TrendingUp size={18} />
+                </div>
               </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {formatCurrency(salesSummary?.average_order_value || 0)}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                Gross: {formatCurrency(salesSummary?.gross_sales || 0)}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {formatCurrency(salesSummary?.average_order_value || 0)}
-            </p>
-            <p className="text-xs text-slate-500 mt-2">
-              Gross: {formatCurrency(salesSummary?.gross_sales || 0)}
-            </p>
-          </div>
 
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-slate-600">Paid Amount</p>
-              <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
-                <CreditCard size={18} />
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-slate-600">Paid Amount</p>
+                <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+                  <CreditCard size={18} />
+                </div>
               </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {formatCurrency(salesSummary?.paid_amount || 0)}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                {salesSummary?.paid_orders || 0} paid orders
+              </p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
-              {formatCurrency(salesSummary?.paid_amount || 0)}
-            </p>
-            <p className="text-xs text-slate-500 mt-2">
-              {salesSummary?.paid_orders || 0} paid orders
-            </p>
           </div>
-        </div>
+        )}
 
         {/* Revenue Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -288,9 +333,15 @@ export default function SalesAnalyticsPage() {
         {/* Sales Trends Chart */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Revenue Over Time</h3>
-          {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          {isDataLoading ? (
+            <div className="space-y-4 py-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex gap-4 items-center">
+                  <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
+                  <div className="flex-1 h-4 bg-slate-50 rounded-full animate-pulse" />
+                  <div className="h-4 w-20 bg-slate-100 rounded animate-pulse" />
+                </div>
+              ))}
             </div>
           ) : salesTrends.length === 0 ? (
             <p className="text-center text-slate-500 py-12">No sales data available for the selected period</p>
@@ -328,10 +379,8 @@ export default function SalesAnalyticsPage() {
               <TrendingUp size={18} className="text-green-600" />
               <h3 className="text-lg font-semibold text-slate-900">Top Products</h3>
             </div>
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
-              </div>
+            {isDataLoading ? (
+              <ListSkeleton />
             ) : topProducts.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No sales data yet</p>
             ) : (
@@ -368,10 +417,8 @@ export default function SalesAnalyticsPage() {
               <Users size={18} className="text-blue-600" />
               <h3 className="text-lg font-semibold text-slate-900">Top Customers</h3>
             </div>
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
-              </div>
+            {isDataLoading ? (
+              <ListSkeleton />
             ) : topCustomers.length === 0 ? (
               <p className="text-center text-slate-500 py-8">No customer data</p>
             ) : (

@@ -314,11 +314,15 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <AdminLayout
-      title={`Order ${order.order_number}`}
-      subtitle="Order details and management"
-    >
-      <div className="max-w-6xl mx-auto px-4 py-5">
+    <AdminLayout>
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Order Details</h1>
+            <p className="text-slate-500 mt-1 text-sm">Order details and management</p>
+          </div>
+        </div>
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">

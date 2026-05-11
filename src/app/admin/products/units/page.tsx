@@ -260,8 +260,6 @@ export default function AdminUnitsPage() {
 
   return (
     <AdminLayout
-      title="Units Management"
-      subtitle="Manage product units of measurement"
     >
       <div className="space-y-6">
         <ProductsNavbar />

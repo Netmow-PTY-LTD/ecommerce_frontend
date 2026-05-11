@@ -37,6 +37,7 @@ export default function AdminCouponsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fetchingCoupons, setFetchingCoupons] = useState(true);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/admin/login');
@@ -58,12 +59,15 @@ export default function AdminCouponsPage() {
 
   const fetchCoupons = useCallback(async () => {
     try {
+      setFetchingCoupons(true);
       const response = await api.get(`/pricing/coupons?page=${currentPage}&limit=20`);
       setCoupons(response.data.data || []);
       setPagination(response.data.pagination || { total: 0, page: 1, limit: 20, totalPage: 0 });
     } catch (err) {
       console.error('Failed to fetch coupons:', err);
       setError('Failed to load coupons');
+    } finally {
+      setFetchingCoupons(false);
     }
   }, [currentPage]);
 
@@ -97,18 +101,34 @@ export default function AdminCouponsPage() {
     bogo: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  const CouponSkeleton = () => (
+    <div className="bg-card border rounded-lg p-4 animate-pulse">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-24 bg-muted rounded"></div>
+            <div className="h-5 w-20 bg-muted rounded-full"></div>
+            <div className="h-5 w-16 bg-muted rounded-full"></div>
+          </div>
+          <div className="h-4 w-3/4 bg-muted/60 rounded"></div>
+          <div className="flex gap-4">
+            <div className="h-4 w-12 bg-muted/80 rounded"></div>
+            <div className="h-4 w-20 bg-muted/40 rounded"></div>
+            <div className="h-4 w-20 bg-muted/40 rounded"></div>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <div className="h-8 w-8 bg-muted rounded"></div>
+          <div className="h-8 w-8 bg-muted rounded"></div>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!isAuthenticated) return null;
+  if (!loading && !isAuthenticated) return null;
 
   return (
-    <AdminLayout title="Coupons Management" subtitle="Create and manage discount coupons">
+    <AdminLayout>
       <div className="space-y-6">
         {success && (
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
@@ -129,7 +149,13 @@ export default function AdminCouponsPage() {
           </Button>
         </div>
 
-        {coupons.length === 0 ? (
+        {fetchingCoupons ? (
+          <div className="grid gap-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <CouponSkeleton key={i} />
+            ))}
+          </div>
+        ) : coupons.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Tag className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>No coupons found. Create your first coupon to get started.</p>
@@ -148,13 +174,12 @@ export default function AdminCouponsPage() {
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeBadge[coupon.type]}`}>
                         {coupon.type === 'free_shipping' ? 'Free Shipping' : coupon.type === 'bogo' ? 'BOGO' : coupon.type}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        isActive(coupon)
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isActive(coupon)
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                           : coupon.status === 'inactive'
                             ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                             : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
+                        }`}>
                         {isActive(coupon) ? 'Active' : isExpired(coupon) ? 'Expired' : 'Inactive'}
                       </span>
                     </div>

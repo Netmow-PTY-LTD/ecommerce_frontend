@@ -276,10 +276,17 @@ export default function AdminProductsPage() {
 
   return (
     <AdminLayout
-      title="Products Management"
-      subtitle="Manage your product catalog"
     >
       <div className="w-full">
+
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Products Management</h1>
+            <p className="text-sm text-muted-foreground">Manage your product catalog</p>
+          </div>
+        </div>
+
         <ProductsNavbar />
 
         {success && (
