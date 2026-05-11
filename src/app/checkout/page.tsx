@@ -76,6 +76,10 @@ function CheckoutForm({
 
     // Address management
     const { addresses, isLoading: loadingAddresses, mutate, createAddress } = useAddresses();
+
+
+
+    
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [showManualAddress, setShowManualAddress] = useState(true);
 

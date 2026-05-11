@@ -30,17 +30,23 @@ export function AddressForm({ onSuccess, editingAddress, onCancel, createAddress
     is_default: editingAddress?.is_default || false
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
 
     try {
       if (editingAddress && updateAddress) {
-        await updateAddress(editingAddress.id, formData);
+      const result=  await updateAddress(editingAddress.id, formData);
+      if(result.status){
+
         toast.success('Address updated successfully');
+      }
       } else if (createAddress) {
-        await createAddress(formData);
-        toast.success('Address added successfully');
+       const result= await createAddress(formData);
+          if(result.status){
+
+       
+            toast.success('Address added successfully');
+      }
       }
       onSuccess?.();
     } catch (err: any) {
@@ -51,7 +57,7 @@ export function AddressForm({ onSuccess, editingAddress, onCancel, createAddress
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">First Name *</label>
@@ -163,7 +169,7 @@ export function AddressForm({ onSuccess, editingAddress, onCancel, createAddress
       </div>
 
       <div className="flex gap-3 pt-4">
-        <Button type="submit" disabled={loading} className="gap-2">
+        <Button type="button" onClick={handleSubmit} disabled={loading} className="gap-2">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {editingAddress ? 'Update Address' : 'Add Address'}
         </Button>
@@ -173,6 +179,6 @@ export function AddressForm({ onSuccess, editingAddress, onCancel, createAddress
           </Button>
         )}
       </div>
-    </form>
+    </div>
   );
 }

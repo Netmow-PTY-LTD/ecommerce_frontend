@@ -48,6 +48,7 @@ export function useAddresses() {
     addresses: data || [],
     isLoading,
     isError: error,
+    mutate,
     createAddress,
     updateAddress,
     deleteAddress,
