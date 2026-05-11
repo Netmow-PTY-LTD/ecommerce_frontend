@@ -48,9 +48,9 @@ export function FlashSalesSection() {
                   {sale.discount_percentage}% OFF
                 </div>
                 <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
-                  {sale.image_url ? (
+                  {sale.banner_image ? (
                     <Image
-                      src={sale.image_url}
+                      src={sale.banner_image}
                       alt={sale.name}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300"

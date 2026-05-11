@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Zap, Plus, Edit, Trash2, X, Loader2, ChevronLeft, ChevronRight, Package, Search } from 'lucide-react';
+import { Zap, Plus, Edit, Trash2, X, Loader2, ChevronLeft, ChevronRight, Package, Search, Upload, Image as ImageIcon } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import Image from 'next/image';
 
 interface FlashSaleItem {
   id: number;
@@ -75,6 +76,11 @@ export default function AdminFlashSalesPage() {
   const [saleDetails, setSaleDetails] = useState<FlashSale | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  // Image upload
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/admin/login');
   }, [isAuthenticated, loading, router]);
@@ -121,6 +127,7 @@ export default function AdminFlashSalesPage() {
   const openCreateModal = () => {
     setEditingSale(null);
     setForm(emptyForm);
+    setImagePreview(null);
     setShowModal(true);
   };
 
@@ -134,6 +141,7 @@ export default function AdminFlashSalesPage() {
       banner_image: sale.banner_image || '',
       status: sale.status,
     });
+    setImagePreview(sale.banner_image || null);
     setShowModal(true);
   };
 
@@ -244,6 +252,70 @@ export default function AdminFlashSalesPage() {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove item');
     }
+  };
+
+  // --- Image Upload Handlers ---
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await api.post('/pricing/flash-sales/upload-banner', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const imageUrl = res.data.data.url;
+      setForm(f => ({ ...f, banner_image: imageUrl }));
+      setImagePreview(imageUrl);
+      setSuccess('Banner image uploaded successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageUpload(e.target.files[0]);
+    }
+  };
+
+  const removeImage = () => {
+    setForm(f => ({ ...f, banner_image: '' }));
+    setImagePreview(null);
   };
 
   const getStatusBadge = (sale: FlashSale) => {
@@ -525,12 +597,88 @@ export default function AdminFlashSalesPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="mb-1.5">Banner Image URL</Label>
-                  <Input
-                    placeholder="https://..."
-                    value={form.banner_image}
-                    onChange={e => setForm(f => ({ ...f, banner_image: e.target.value }))}
-                  />
+                  <Label className="mb-1.5">Banner Image</Label>
+
+                  {/* Image Upload Area */}
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                      dragActive
+                        ? 'border-primary bg-primary/5'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    {imagePreview || form.banner_image ? (
+                      <div className="relative">
+                        <div className="relative w-full h-40 rounded-lg overflow-hidden bg-slate-100">
+                          <Image
+                            src={imagePreview || form.banner_image}
+                            alt="Banner preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={removeImage}
+                          className="absolute top-2 right-2"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="py-6">
+                        {uploadingImage ? (
+                          <div className="flex flex-col items-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                            <p className="text-sm text-slate-600">Uploading...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <ImageIcon className="h-10 w-10 text-slate-400 mx-auto mb-2" />
+                            <p className="text-sm text-slate-600 mb-2">
+                              Drag & drop an image, or click to browse
+                            </p>
+                            <p className="text-xs text-slate-400 mb-3">PNG, JPG, GIF up to 5MB</p>
+                            <input
+                              type="file"
+                              id="banner-upload"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleFileInput}
+                            />
+                            <label htmlFor="banner-upload">
+                              <Button type="button" size="sm" variant="outline" asChild>
+                                <span className="cursor-pointer">
+                                  <Upload className="h-4 w-4 mr-1" />
+                                  Choose File
+                                </span>
+                              </Button>
+                            </label>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* URL input as alternative */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Or enter image URL..."
+                        value={form.banner_image && !imagePreview ? form.banner_image : ''}
+                        onChange={e => {
+                          setForm(f => ({ ...f, banner_image: e.target.value }));
+                          setImagePreview(null);
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
