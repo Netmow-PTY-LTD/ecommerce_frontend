@@ -167,8 +167,8 @@ function CheckoutForm({
         // state and postalCode are optional
 
         // Password validation if user wants to create account
-        if (formData.password && formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+        if (formData.password && formData.password.length < 8) {
+            newErrors.password = 'Password must be at least 8 characters';
         }
 
         if (formData.password && formData.password !== formData.confirmPassword) {
@@ -193,9 +193,24 @@ function CheckoutForm({
         setIsProcessing(true);
 
         try {
-            // Create account if password is provided
-            if (formData.password && formData.password.length >= 6) {
+            // Handle account creation if password is provided
+            if (formData.password && formData.password.length >= 8 && !isAuthenticated) {
                 try {
+                    // First check if email already exists
+                    const checkResponse = await api.post('/auth/check-email', { email: formData.email });
+                    if (checkResponse.data?.exists) {
+                        toast.error('You already have an account! Please login to continue.', {
+                            duration: 5000,
+                            action: {
+                                label: 'Login',
+                                onClick: () => router.push('/login?redirect=checkout&email=' + encodeURIComponent(formData.email))
+                            }
+                        });
+                        setIsProcessing(false);
+                        return;
+                    }
+
+                    // Email doesn't exist, proceed with account creation
                     toast.info('Creating your account...');
                     const registerData = {
                         name: `${formData.firstName} ${formData.lastName}`,
@@ -210,8 +225,19 @@ function CheckoutForm({
                         toast.success('Account created successfully!');
                     }
                 } catch (error: any) {
-                    // If account creation fails, continue with order
-                    toast.warning('Could not create account, but your order will still be processed');
+                    // Handle validation errors
+                    if (error.response?.data?.errors) {
+                        const validationErrors = error.response.data.errors;
+                        const firstError = validationErrors[0];
+                        toast.error(`${firstError.path.join('.')}: ${firstError.message}`, { duration: 5000 });
+                        setIsProcessing(false);
+                        return;
+                    }
+
+                    // If account creation fails for other reasons, show error and stop
+                    toast.error(error.response?.data?.message || 'Could not create account. Please try again.', { duration: 5000 });
+                    setIsProcessing(false);
+                    return;
                 }
             }
 
@@ -598,7 +624,7 @@ function CheckoutForm({
                                                 placeholder="Create a password for your account"
                                             />
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Leave empty to continue as guest. Minimum 6 characters.
+                                                Leave empty to continue as guest. Minimum 8 characters.
                                             </p>
                                         </div>
                                         <div>
