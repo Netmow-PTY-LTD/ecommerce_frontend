@@ -158,25 +158,75 @@ function CheckoutForm({
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.email) newErrors.email = 'Email is required';
-        if (!formData.phone) newErrors.phone = 'Phone is required';
-        if (!formData.firstName) newErrors.firstName = 'First name is required';
-        if (!formData.lastName) newErrors.lastName = 'Last name is required';
-        if (!formData.address) newErrors.address = 'Address is required';
-        if (!formData.city) newErrors.city = 'City is required';
-        // state and postalCode are optional
-
-        // Password validation if user wants to create account
-        if (formData.password && formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
+        // Email validation
+        if (!formData.email) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
         }
 
-        if (formData.password && formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
+        // Phone validation
+        if (!formData.phone) {
+            newErrors.phone = 'Phone is required';
+        } else if (!/^[\d\s\-\+\(\)]+$/.test(formData.phone) || formData.phone.replace(/\D/g, '').length < 10) {
+            newErrors.phone = 'Please enter a valid phone number (at least 10 digits)';
+        }
+
+        // Name validation
+        if (!formData.firstName) {
+            newErrors.firstName = 'First name is required';
+        } else if (formData.firstName.trim().length < 2) {
+            newErrors.firstName = 'First name must be at least 2 characters';
+        }
+
+        if (!formData.lastName) {
+            newErrors.lastName = 'Last name is required';
+        } else if (formData.lastName.trim().length < 2) {
+            newErrors.lastName = 'Last name must be at least 2 characters';
+        }
+
+        // Address validation
+        if (!formData.address) {
+            newErrors.address = 'Address is required';
+        } else if (formData.address.trim().length < 5) {
+            newErrors.address = 'Please enter a valid address';
+        }
+
+        if (!formData.city) {
+            newErrors.city = 'City is required';
+        } else if (formData.city.trim().length < 2) {
+            newErrors.city = 'City must be at least 2 characters';
+        }
+
+        // Country validation
+        if (!formData.country) {
+            newErrors.country = 'Country is required';
+        }
+
+        // Password validation if user wants to create account
+        if (formData.password) {
+            if (formData.password.length < 8) {
+                newErrors.password = 'Password must be at least 8 characters';
+            } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
+                newErrors.password = 'Password must contain both letters and numbers';
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                newErrors.confirmPassword = 'Passwords do not match';
+            }
+        }
+
+        // If confirmPassword is provided but password is not
+        if (formData.confirmPassword && !formData.password) {
+            newErrors.password = 'Please enter a password';
         }
 
         if (Object.keys(newErrors).length > 0) {
-            toast.error(`Please fill in: ${Object.keys(newErrors).join(', ')}`, { duration: 5000 });
+            const errorFields = Object.keys(newErrors).map(key => {
+                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                return label;
+            }).join(', ');
+            toast.error(`Please fix: ${errorFields}`, { duration: 5000 });
         }
 
         setErrors(newErrors);
@@ -374,7 +424,7 @@ function CheckoutForm({
                             <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Email</label>
+                                        <label className="block text-sm font-medium mb-2">Email *</label>
                                         <input
                                             type="email"
                                             name="email"
@@ -386,7 +436,7 @@ function CheckoutForm({
                                         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Phone</label>
+                                        <label className="block text-sm font-medium mb-2">Phone *</label>
                                         <input
                                             type="tel"
                                             name="phone"
@@ -409,24 +459,26 @@ function CheckoutForm({
                             <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-6 space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Email</label>
+                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Email *</label>
                                         <input
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-green-900"
+                                            className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-green-900 focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-green-300 dark:border-green-700'}`}
                                         />
+                                        {errors.email && <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.email}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Phone</label>
+                                        <label className="block text-sm font-medium mb-2 text-green-900 dark:text-green-100">Phone *</label>
                                         <input
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-green-900"
+                                            className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-green-900 focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-green-300 dark:border-green-700'}`}
                                         />
+                                        {errors.phone && <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.phone}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -471,38 +523,40 @@ function CheckoutForm({
                                 <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">First Name</label>
+                                        <label className="block text-sm font-medium mb-2">First Name *</label>
                                         <input
                                             type="text"
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.firstName ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="John"
                                         />
                                         {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Last Name</label>
+                                        <label className="block text-sm font-medium mb-2">Last Name *</label>
                                         <input
                                             type="text"
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.lastName ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="Doe"
                                         />
                                         {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Address</label>
+                                        <label className="block text-sm font-medium mb-2">Address *</label>
                                         <input
                                             type="text"
                                             name="address"
                                             value={formData.address}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.address ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="Street address"
+                                            placeholder="123 Main Street"
                                         />
                                         {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
                                     </div>
@@ -514,18 +568,20 @@ function CheckoutForm({
                                             value={formData.apartment}
                                             onChange={handleInputChange}
                                             className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                            placeholder="Apt 4B"
                                         />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">City</label>
+                                        <label className="block text-sm font-medium mb-2">City *</label>
                                         <input
                                             type="text"
                                             name="city"
                                             value={formData.city}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.city ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="New York"
                                         />
                                         {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                                     </div>
@@ -537,6 +593,7 @@ function CheckoutForm({
                                             value={formData.state}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.state ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="NY"
                                         />
                                         {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
                                     </div>
@@ -548,18 +605,19 @@ function CheckoutForm({
                                             value={formData.postalCode}
                                             onChange={handleInputChange}
                                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.postalCode ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="10001"
                                         />
                                         {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Country</label>
+                                    <label className="block text-sm font-medium mb-2">Country *</label>
                                     <input
                                         type="text"
                                         name="country"
                                         value={formData.country}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.country ? 'border-red-500' : 'border-input'}`}
                                         placeholder="United States"
                                     />
                                     {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
@@ -630,11 +688,14 @@ function CheckoutForm({
                                                 name="password"
                                                 value={formData.password || ''}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.password ? 'border-red-500' : 'border-input'}`}
                                                 placeholder="Create a password for your account"
                                             />
+                                            {errors.password && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                                            )}
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Leave empty to continue as guest. Minimum 8 characters.
+                                                Leave empty to continue as guest. Minimum 8 characters, must contain letters and numbers.
                                             </p>
                                         </div>
                                         <div>
@@ -644,7 +705,7 @@ function CheckoutForm({
                                                 name="confirmPassword"
                                                 value={formData.confirmPassword || ''}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.confirmPassword ? 'border-red-500' : 'border-input'}`}
                                                 placeholder="Confirm your password"
                                             />
                                             {errors.confirmPassword && (
