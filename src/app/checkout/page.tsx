@@ -222,22 +222,21 @@ function CheckoutForm({
             newErrors.country = 'Country is required';
         }
 
-        // Password validation - only if user wants to create account (not guest checkout)
-        if (!formData.guestCheckout && formData.password) {
-            if (formData.password.length < 8) {
+        // Password validation - required if user wants to create account (not guest checkout)
+        if (!formData.guestCheckout) {
+            if (!formData.password) {
+                newErrors.password = 'Password is required';
+            } else if (formData.password.length < 8) {
                 newErrors.password = 'Password must be at least 8 characters';
             } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
                 newErrors.password = 'Password must contain both letters and numbers';
             }
 
-            if (formData.password !== formData.confirmPassword) {
+            if (!formData.confirmPassword) {
+                newErrors.confirmPassword = 'Please confirm your password';
+            } else if (formData.password !== formData.confirmPassword) {
                 newErrors.confirmPassword = 'Passwords do not match';
             }
-        }
-
-        // If confirmPassword is provided but password is not (only when not guest)
-        if (!formData.guestCheckout && formData.confirmPassword && !formData.password) {
-            newErrors.password = 'Please enter a password';
         }
 
         if (Object.keys(newErrors).length > 0) {
