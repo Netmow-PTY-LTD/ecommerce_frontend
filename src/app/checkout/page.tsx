@@ -221,8 +221,8 @@ function CheckoutForm({
             newErrors.country = 'Country is required';
         }
 
-        // Password validation - required if user wants to create account (not guest checkout)
-        if (!formData.guestCheckout) {
+        // Password validation - required only for unauthenticated users who want to create account (not guest checkout)
+        if (!isAuthenticated && !formData.guestCheckout) {
             if (!formData.password) {
                 newErrors.password = 'Password is required';
             } else if (formData.password.length < 8) {
