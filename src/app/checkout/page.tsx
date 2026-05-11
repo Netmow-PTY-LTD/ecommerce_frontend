@@ -198,19 +198,29 @@ function CheckoutForm({
                 try {
                     // First check if email already exists
                     const checkResponse = await api.post('/auth/check-email', { email: formData.email });
-                    if (checkResponse.data?.exists) {
-                        toast.error('You already have an account! Please login to continue.', {
-                            duration: 5000,
-                            action: {
-                                label: 'Login',
-                                onClick: () => router.push('/login?redirect=checkout&email=' + encodeURIComponent(formData.email))
-                            }
+
+                    // Response structure: { status: true, message: "...", data: { exists: true/false } }
+                    if (checkResponse.data?.status && checkResponse.data?.data?.exists) {
+                        const email = encodeURIComponent(formData.email);
+                        toast.error('You already have an account! Redirecting to login...', {
+                            duration: 3000,
                         });
                         setIsProcessing(false);
+                        // Redirect to login page
+                        setTimeout(() => {
+                            window.location.href = `/login?redirect=checkout&email=${email}`;
+                        }, 1000);
                         return;
                     }
 
                     // Email doesn't exist, proceed with account creation
+                } catch (checkError: any) {
+                    // If check-email endpoint fails, log it but continue with registration
+                    // The registration endpoint will handle duplicate email validation
+                    console.log('Email check failed, continuing with registration:', checkError?.response?.status);
+                }
+
+                try {
                     toast.info('Creating your account...');
                     const registerData = {
                         name: `${formData.firstName} ${formData.lastName}`,
