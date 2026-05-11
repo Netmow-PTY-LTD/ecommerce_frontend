@@ -145,13 +145,32 @@ function CheckoutForm({
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
+        const newValue = type === 'checkbox' ? checked : value;
+
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: newValue
         });
+
         // Clear error when user starts typing
         if (errors[name]) {
             setErrors({ ...errors, [name]: '' });
+        }
+
+        // Clear password errors when switching to guest checkout
+        if (name === 'guestCheckout' && checked === true) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.password;
+                delete newErrors.confirmPassword;
+                return newErrors;
+            });
+            // Also clear password values
+            setFormData(prev => ({
+                ...prev,
+                password: '',
+                confirmPassword: ''
+            }));
         }
     };
 
@@ -203,8 +222,8 @@ function CheckoutForm({
             newErrors.country = 'Country is required';
         }
 
-        // Password validation if user wants to create account
-        if (formData.password) {
+        // Password validation - only if user wants to create account (not guest checkout)
+        if (!formData.guestCheckout && formData.password) {
             if (formData.password.length < 8) {
                 newErrors.password = 'Password must be at least 8 characters';
             } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
@@ -216,8 +235,8 @@ function CheckoutForm({
             }
         }
 
-        // If confirmPassword is provided but password is not
-        if (formData.confirmPassword && !formData.password) {
+        // If confirmPassword is provided but password is not (only when not guest)
+        if (!formData.guestCheckout && formData.confirmPassword && !formData.password) {
             newErrors.password = 'Please enter a password';
         }
 
@@ -243,8 +262,8 @@ function CheckoutForm({
         setIsProcessing(true);
 
         try {
-            // Handle account creation if password is provided
-            if (formData.password && formData.password.length >= 8 && !isAuthenticated) {
+            // Handle account creation if password is provided AND not guest checkout
+            if (formData.password && formData.password.length >= 8 && !isAuthenticated && !formData.guestCheckout) {
                 try {
                     // First check if email already exists
                     const checkResponse = await api.post('/auth/check-email', { email: formData.email });
@@ -652,37 +671,16 @@ function CheckoutForm({
                                     </Button>
                                 </div>
 
-                                {/* Guest Checkout */}
-                                <div className="border-t border-border pt-4">
-                                    <div className="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            id="guestCheckout"
-                                            name="guestCheckout"
-                                            checked={formData.guestCheckout}
-                                            onChange={handleInputChange}
-                                            className="w-4 h-4 mt-1"
-                                        />
-                                        <div className="flex-1">
-                                            <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
-                                                Continue as Guest
-                                            </label>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                You can create an account later after placing your order
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {/* Account Creation (Optional) */}
                                 {!formData.guestCheckout && (
+                                    <>
                                     <div className="border-t border-border pt-4 space-y-4">
                                         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                             <Mail className="h-4 w-4" />
-                                            <span>Create account with checkout email</span>
+                                            <span>Create account with checkout email (Optional)</span>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Password (optional)</label>
+                                            <label className="block text-sm font-medium mb-2">Password</label>
                                             <input
                                                 type="password"
                                                 name="password"
@@ -695,7 +693,7 @@ function CheckoutForm({
                                                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                                             )}
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                Leave empty to continue as guest. Minimum 8 characters, must contain letters and numbers.
+                                                Minimum 8 characters, must contain letters and numbers. Leave empty to skip account creation.
                                             </p>
                                         </div>
                                         <div>
@@ -712,6 +710,51 @@ function CheckoutForm({
                                                 <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                                             )}
                                         </div>
+                                    </div>
+
+                                    {/* Guest Checkout Option */}
+                                    <div className="border-t border-border pt-4">
+                                        <div className="flex items-start gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="guestCheckout"
+                                                name="guestCheckout"
+                                                checked={formData.guestCheckout}
+                                                onChange={handleInputChange}
+                                                className="w-4 h-4 mt-1"
+                                            />
+                                            <div className="flex-1">
+                                                <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
+                                                    Continue as Guest (No account required)
+                                                </label>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Check this to skip account creation and checkout as a guest
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </>
+                                )}
+
+                                {/* Show guest checkout message if already selected */}
+                                {formData.guestCheckout && (
+                                    <div className="border-t border-border pt-4">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <input
+                                                type="checkbox"
+                                                id="guestCheckout"
+                                                name="guestCheckout"
+                                                checked={formData.guestCheckout}
+                                                onChange={handleInputChange}
+                                                className="w-4 h-4"
+                                            />
+                                            <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
+                                                Continue as Guest (No password needed)
+                                            </label>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2 ml-6">
+                                            You will not create an account. You can create one later if you wish.
+                                        </p>
                                     </div>
                                 )}
                             </div>
