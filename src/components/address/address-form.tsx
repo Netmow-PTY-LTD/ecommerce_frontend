@@ -3,17 +3,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, MapPin, Plus, Trash2, Star } from 'lucide-react';
-import { createAddress, updateAddress } from '@/hooks/use-addresses';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AddressFormProps {
   onSuccess?: () => void;
   editingAddress?: any;
   onCancel?: () => void;
+  createAddress?: (data: any) => Promise<any>;
+  updateAddress?: (id: number, data: any) => Promise<any>;
 }
 
-export function AddressForm({ onSuccess, editingAddress, onCancel }: AddressFormProps) {
+export function AddressForm({ onSuccess, editingAddress, onCancel, createAddress, updateAddress }: AddressFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     label: editingAddress?.label || '',
@@ -25,7 +26,7 @@ export function AddressForm({ onSuccess, editingAddress, onCancel }: AddressForm
     city: editingAddress?.city || '',
     state: editingAddress?.state || '',
     postal_code: editingAddress?.postal_code || '',
-    country: editingAddress?.country || 'Bangladesh',
+    country: editingAddress?.country || 'United States',
     is_default: editingAddress?.is_default || false
   });
 
@@ -34,10 +35,10 @@ export function AddressForm({ onSuccess, editingAddress, onCancel }: AddressForm
     setLoading(true);
 
     try {
-      if (editingAddress) {
+      if (editingAddress && updateAddress) {
         await updateAddress(editingAddress.id, formData);
         toast.success('Address updated successfully');
-      } else {
+      } else if (createAddress) {
         await createAddress(formData);
         toast.success('Address added successfully');
       }

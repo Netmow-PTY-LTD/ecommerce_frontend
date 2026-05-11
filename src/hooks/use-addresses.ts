@@ -1,12 +1,12 @@
 'use client';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import api from '@/lib/api';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
 export function useAddresses() {
   const { isAuthenticated } = useCustomerAuth();
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     isAuthenticated ? '/addresses' : null,
     async (url) => {
       try {
@@ -18,29 +18,67 @@ export function useAddresses() {
       }
     }
   );
-  return { addresses: data || [], isLoading, isError: error };
+
+  const createAddress = async (addressData: any) => {
+    const res = await api.post('/addresses', addressData);
+    // Force revalidation to get the updated list
+    await mutate();
+    return res.data;
+  };
+
+  const updateAddress = async (id: number, addressData: any) => {
+    const res = await api.put(`/addresses/${id}`, addressData);
+    await mutate();
+    return res.data;
+  };
+
+  const deleteAddress = async (id: number) => {
+    const res = await api.delete(`/addresses/${id}`);
+    await mutate();
+    return res.data;
+  };
+
+  const setDefaultAddress = async (id: number) => {
+    const res = await api.patch(`/addresses/${id}/default`);
+    await mutate();
+    return res.data;
+  };
+
+  return {
+    addresses: data || [],
+    isLoading,
+    isError: error,
+    createAddress,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress
+  };
 }
 
-export async function createAddress(data: any) {
-  const res = await api.post('/addresses', data);
-  mutate('/addresses');
+// Re-export functions for standalone use (for components that don't need the hook)
+// These use global SWR mutate to trigger revalidation
+import { mutate as globalMutate } from 'swr';
+
+export async function createAddress(addressData: any) {
+  const res = await api.post('/addresses', addressData);
+  globalMutate('/addresses');
   return res.data;
 }
 
-export async function updateAddress(id: number, data: any) {
-  const res = await api.put(`/addresses/${id}`, data);
-  mutate('/addresses');
+export async function updateAddress(id: number, addressData: any) {
+  const res = await api.put(`/addresses/${id}`, addressData);
+  globalMutate('/addresses');
   return res.data;
 }
 
 export async function deleteAddress(id: number) {
   const res = await api.delete(`/addresses/${id}`);
-  mutate('/addresses');
+  globalMutate('/addresses');
   return res.data;
 }
 
 export async function setDefaultAddress(id: number) {
   const res = await api.patch(`/addresses/${id}/default`);
-  mutate('/addresses');
+  globalMutate('/addresses');
   return res.data;
 }

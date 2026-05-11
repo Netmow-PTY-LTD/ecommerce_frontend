@@ -75,10 +75,9 @@ function CheckoutForm({
     const [bogoCouponCodes, setBogoCouponCodes] = useState<Map<number, string>>(new Map());
 
     // Address management
-    const { addresses, isLoading: loadingAddresses } = useAddresses();
+    const { addresses, isLoading: loadingAddresses, mutate, createAddress } = useAddresses();
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [showManualAddress, setShowManualAddress] = useState(true);
-    const [addressesKey, setAddressesKey] = useState(0);
 
     useEffect(() => {
         api.get('/pricing/public/bogo-deals').then(res => {
@@ -520,7 +519,8 @@ function CheckoutForm({
                                     onSelectAddress={(addr) => {
                                         setSelectedAddress(addr);
                                     }}
-                                    onAddressesUpdate={() => setAddressesKey(prev => prev + 1)}
+                                    mutateAddresses={() => mutate()}
+                                    createAddress={createAddress}
                                     onFormVisibilityChange={(isFormVisible) => {
                                         setShowManualAddress(!isFormVisible);
                                     }}

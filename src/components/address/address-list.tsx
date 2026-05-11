@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { MapPin, Plus, Pencil, Trash2, Star, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddressForm } from './address-form';
-import { deleteAddress, setDefaultAddress } from '@/hooks/use-addresses';
+import { deleteAddress, setDefaultAddress, createAddress, updateAddress } from '@/hooks/use-addresses';
 import { toast } from 'sonner';
 
 interface AddressListProps {
@@ -47,6 +47,8 @@ export function AddressList({ addresses, isLoading, onUpdate }: AddressListProps
         </h3>
         <AddressForm
           editingAddress={editingAddress}
+          createAddress={createAddress}
+          updateAddress={updateAddress}
           onSuccess={() => {
             setShowForm(false);
             setEditingAddress(null);

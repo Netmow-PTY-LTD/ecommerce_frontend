@@ -19,8 +19,7 @@ export default function CustomerProfilePage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addresses, isLoading: loadingAddresses } = useAddresses();
-  const [addressesKey, setAddressesKey] = useState(0); // Used to refresh addresses
+  const { addresses, isLoading: loadingAddresses, mutate } = useAddresses();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -475,10 +474,9 @@ export default function CustomerProfilePage() {
           {/* Address Management Section */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
             <AddressList
-              key={addressesKey}
               addresses={addresses}
               isLoading={loadingAddresses}
-              onUpdate={() => setAddressesKey(prev => prev + 1)}
+              onUpdate={() => mutate()}
             />
           </div>
 

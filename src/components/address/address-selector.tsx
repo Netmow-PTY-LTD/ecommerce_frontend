@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Plus, Star, Check, X } from 'lucide-react';
 import { AddressForm } from './address-form';
-import { toast } from 'sonner';
 
 interface Address {
   id: number;
@@ -24,23 +23,22 @@ interface AddressSelectorProps {
   addresses: Address[];
   selectedAddress: Address | null;
   onSelectAddress: (address: Address | null) => void;
-  onAddressesUpdate: () => void;
+  mutateAddresses: () => void | Promise<void>;
+  createAddress?: (data: any) => Promise<any>;
   onFormVisibilityChange?: (visible: boolean) => void;
 }
 
-export function AddressSelector({ addresses, selectedAddress, onSelectAddress, onAddressesUpdate, onFormVisibilityChange }: AddressSelectorProps) {
+export function AddressSelector({ addresses, selectedAddress, onSelectAddress, mutateAddresses, createAddress, onFormVisibilityChange }: AddressSelectorProps) {
   const [showForm, setShowForm] = useState(false);
 
   const handleSelectAddress = (address: Address) => {
     onSelectAddress(address);
   };
 
-  const handleNewAddress = () => {
+  const handleNewAddress = async () => {
     // This will be called after AddressForm successfully adds an address
     setShowForm(false);
-    onAddressesUpdate();
-    // Note: We can't immediately select because we need to wait for the updated list
-    toast.success('Address added! Select it from your saved addresses.');
+    await mutateAddresses();
   };
 
   const toggleForm = () => {
@@ -87,7 +85,7 @@ export function AddressSelector({ addresses, selectedAddress, onSelectAddress, o
               ✕
             </button>
           </div>
-          <AddressForm onSuccess={handleNewAddress} onCancel={toggleForm} />
+          <AddressForm onSuccess={handleNewAddress} onCancel={toggleForm} createAddress={createAddress} />
         </div>
       )}
 
