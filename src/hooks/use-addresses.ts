@@ -1,17 +1,23 @@
 'use client';
 import useSWR, { mutate } from 'swr';
 import api from '@/lib/api';
+import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
 export function useAddresses() {
-  const { data, error, isLoading } = useSWR('/addresses', async (url) => {
-    try {
-      const res = await api.get(url);
-      return res.data?.data || res.data || [];
-    } catch (err) {
-      console.error('Failed to fetch addresses:', err);
-      return [];
+  const { isAuthenticated } = useCustomerAuth();
+
+  const { data, error, isLoading } = useSWR(
+    isAuthenticated ? '/addresses' : null,
+    async (url) => {
+      try {
+        const res = await api.get(url);
+        return res.data?.data || res.data || [];
+      } catch (err) {
+        console.error('Failed to fetch addresses:', err);
+        return [];
+      }
     }
-  });
+  );
   return { addresses: data || [], isLoading, isError: error };
 }
 
