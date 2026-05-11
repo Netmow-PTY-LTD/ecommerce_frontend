@@ -12,6 +12,8 @@ import api from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useShippingRules } from '@/hooks/use-settings';
+import { useAddresses } from '@/hooks/use-addresses';
+import { AddressSelector } from '@/components/address/address-selector';
 
 // CheckoutForm component
 function CheckoutForm({
@@ -72,6 +74,12 @@ function CheckoutForm({
     const [bogoProductIds, setBogoProductIds] = useState<Set<number>>(new Set());
     const [bogoCouponCodes, setBogoCouponCodes] = useState<Map<number, string>>(new Map());
 
+    // Address management
+    const { addresses, isLoading: loadingAddresses } = useAddresses();
+    const [selectedAddress, setSelectedAddress] = useState<any>(null);
+    const [showManualAddress, setShowManualAddress] = useState(true);
+    const [addressesKey, setAddressesKey] = useState(0);
+
     useEffect(() => {
         api.get('/pricing/public/bogo-deals').then(res => {
             const deals = res.data?.data || res.data || [];
@@ -87,6 +95,24 @@ function CheckoutForm({
             setBogoCouponCodes(codes);
         }).catch(() => { });
     }, []);
+
+    // Handle address selection
+    useEffect(() => {
+        if (selectedAddress) {
+            setFormData({
+                ...formData,
+                firstName: selectedAddress.first_name,
+                lastName: selectedAddress.last_name,
+                phone: selectedAddress.phone,
+                address: selectedAddress.address,
+                apartment: selectedAddress.apartment || '',
+                city: selectedAddress.city,
+                state: selectedAddress.state || '',
+                postalCode: selectedAddress.postal_code || '',
+                country: selectedAddress.country
+            });
+        }
+    }, [selectedAddress]);
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -150,7 +176,6 @@ function CheckoutForm({
         }
 
         if (Object.keys(newErrors).length > 0) {
-            console.warn('❌ Validation failed:', newErrors);
             toast.error(`Please fill in: ${Object.keys(newErrors).join(', ')}`, { duration: 5000 });
         }
 
@@ -160,14 +185,11 @@ function CheckoutForm({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('🚀 handleSubmit called, paymentMethod:', paymentMethod);
 
         if (!validateForm()) {
-            console.log('❌ Form validation failed');
             return;
         }
 
-        console.log('✅ Validation passed, processing order...');
         setIsProcessing(true);
 
         try {
@@ -188,8 +210,7 @@ function CheckoutForm({
                         toast.success('Account created successfully!');
                     }
                 } catch (error: any) {
-                    // If account creation fails, log but continue with order
-                    console.error('Account creation failed:', error);
+                    // If account creation fails, continue with order
                     toast.warning('Could not create account, but your order will still be processed');
                 }
             }
@@ -238,9 +259,6 @@ function CheckoutForm({
                 status: 'pending',
                 notes: formData.newsletter ? 'Customer subscribed to newsletter' : ''
             };
-
-            console.log(`🛒 Creating ${paymentMethod} order with items:`, items);
-            console.log('📦 Sending order data:', orderData);
 
             // Step 1: Create the Order in the backend (reserves stock)
             const orderResponse = await api.post('/sales/public/checkout-order', orderData);
@@ -295,10 +313,6 @@ function CheckoutForm({
                 router.push('/checkout/success');
             }
         } catch (error: any) {
-            console.error('❌ Checkout error:', error);
-            console.error('Error response:', error.response);
-            console.error('Error message:', error.message);
-
             // Show detailed error message
             const errorMessage = error.response?.data?.message ||
                 error.message ||
@@ -392,87 +406,130 @@ function CheckoutForm({
                             Shipping Address
                         </h2>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">First Name</label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.firstName ? 'border-red-500' : 'border-input'}`}
-                                    />
-                                    {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.lastName ? 'border-red-500' : 'border-input'}`}
-                                    />
-                                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Address</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.address ? 'border-red-500' : 'border-input'}`}
-                                    placeholder="Street address"
+                            {/* For logged-in customers: Show address selector */}
+                            {isAuthenticated ? (
+                                <AddressSelector
+                                    addresses={addresses}
+                                    selectedAddress={selectedAddress}
+                                    onSelectAddress={(addr) => {
+                                        setSelectedAddress(addr);
+                                    }}
+                                    onAddressesUpdate={() => setAddressesKey(prev => prev + 1)}
+                                    onFormVisibilityChange={(isFormVisible) => {
+                                        setShowManualAddress(!isFormVisible);
+                                    }}
                                 />
-                                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Apartment, suite, etc. (optional)</label>
-                                <input
-                                    type="text"
-                                    name="apartment"
-                                    value={formData.apartment}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">City</label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={formData.city}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.city ? 'border-red-500' : 'border-input'}`}
-                                    />
-                                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                            ) : null}
+
+                            {/* Divider between saved addresses and manual entry */}
+                            {isAuthenticated && !selectedAddress && (
+                                <div className="flex items-center gap-3 py-2">
+                                    <div className="flex-1 h-px bg-border"></div>
+                                    <span className="text-xs text-muted-foreground">or enter manually</span>
+                                    <div className="flex-1 h-px bg-border"></div>
+                                </div>
+                            )}
+
+                            {/* Manual Address Entry - Always available */}
+                            {(!selectedAddress || !isAuthenticated) && (
+                                <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">First Name</label>
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.firstName ? 'border-red-500' : 'border-input'}`}
+                                        />
+                                        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Last Name</label>
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.lastName ? 'border-red-500' : 'border-input'}`}
+                                        />
+                                        {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Address</label>
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.address ? 'border-red-500' : 'border-input'}`}
+                                            placeholder="Street address"
+                                        />
+                                        {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Apartment, suite, etc. (optional)</label>
+                                        <input
+                                            type="text"
+                                            name="apartment"
+                                            value={formData.apartment}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">City</label>
+                                        <input
+                                            type="text"
+                                            name="city"
+                                            value={formData.city}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.city ? 'border-red-500' : 'border-input'}`}
+                                        />
+                                        {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">State</label>
+                                        <input
+                                            type="text"
+                                            name="state"
+                                            value={formData.state}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.state ? 'border-red-500' : 'border-input'}`}
+                                        />
+                                        {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Postal Code</label>
+                                        <input
+                                            type="text"
+                                            name="postalCode"
+                                            value={formData.postalCode}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.postalCode ? 'border-red-500' : 'border-input'}`}
+                                        />
+                                        {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">State</label>
+                                    <label className="block text-sm font-medium mb-2">Country</label>
                                     <input
                                         type="text"
-                                        name="state"
-                                        value={formData.state}
+                                        name="country"
+                                        value={formData.country}
                                         onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.state ? 'border-red-500' : 'border-input'}`}
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        placeholder="United States"
                                     />
-                                    {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
+                                    {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Postal Code</label>
-                                    <input
-                                        type="text"
-                                        name="postalCode"
-                                        value={formData.postalCode}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.postalCode ? 'border-red-500' : 'border-input'}`}
-                                    />
-                                    {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                     </section>
 

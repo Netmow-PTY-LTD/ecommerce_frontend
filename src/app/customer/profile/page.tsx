@@ -2,8 +2,8 @@
 
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { 
-  User, Mail, Phone, MapPin, Building2, Globe, Hash, Save, 
+import {
+  User, Mail, Phone, MapPin, Building2, Globe, Hash, Save,
   ShieldCheck, ArrowLeft, Camera, Loader2, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,16 @@ import { cn } from '@/lib/utils';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AddressList } from '@/components/address/address-list';
+import { useAddresses } from '@/hooks/use-addresses';
 
 export default function CustomerProfilePage() {
   const { customer, loading: authLoading, isAuthenticated, updateCustomer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addresses, isLoading: loadingAddresses } = useAddresses();
+  const [addressesKey, setAddressesKey] = useState(0); // Used to refresh addresses
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -466,6 +470,16 @@ export default function CustomerProfilePage() {
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Address Management Section */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <AddressList
+              key={addressesKey}
+              addresses={addresses}
+              isLoading={loadingAddresses}
+              onUpdate={() => setAddressesKey(prev => prev + 1)}
+            />
           </div>
 
           {/* Action Buttons */}
