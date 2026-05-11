@@ -515,25 +515,7 @@ function CheckoutForm({
                             Shipping Address
                         </h2>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-                            {/* For logged-in customers: Show address selector */}
-                            {isAuthenticated ? (
-                                <AddressSelector
-                                    addresses={addresses}
-                                    selectedAddress={selectedAddress}
-                                    onSelectAddress={(addr) => {
-                                        setSelectedAddress(addr);
-                                    }}
-                                    mutateAddresses={() => mutate()}
-                                    createAddress={createAddress}
-                                    onFormVisibilityChange={(isFormVisible) => {
-                                        setShowManualAddress(!isFormVisible);
-                                    }}
-                                />
-                            ) : null}
-
-                            {/* Manual Address Entry - Only for guest checkout */}
-                            {!isAuthenticated && (
-                                <>
+                            {/* Manual Address Entry - For all users */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-2">First Name *</label>
@@ -635,8 +617,6 @@ function CheckoutForm({
                                     />
                                     {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
                                 </div>
-                                </>
-                            )}
                         </div>
                     </section>
 
