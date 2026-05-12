@@ -49,18 +49,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth] Attempting login for:', email);
+      }
+      
       const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data.data;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth] Login response received:', response.data);
+      }
+      
+      // Handle various API response structures
+      const responseData = response.data.data || response.data;
+      const user = responseData.user || responseData.data?.user;
+      const token = responseData.token || responseData.access_token || responseData.data?.token;
 
+      if (!token) {
+        console.error('[Auth] Token missing in response:', responseData);
+        throw new Error('Login response did not include an authentication token');
+      }
+
+      // Explicitly set in state and localStorage
       setUser(user);
       setToken(token);
       localStorage.setItem('admin_token', token);
       localStorage.setItem('admin_user', JSON.stringify(user));
 
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Auth] Admin token set in localStorage:', token.substring(0, 10) + '...');
+      }
+
       // Redirect to admin dashboard
       router.push('/admin/dashboard');
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.error('[Auth] Login error details:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Login failed');
     }
   };
 

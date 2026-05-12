@@ -55,38 +55,27 @@ export default function AdminDashboardPage() {
       // Fetch all stats in parallel for better performance
       const [
         productsRes,
-        ordersRes,
-        customersRes,
-        imagesRes
+        // customersRes,
+        imagesRes,
+        summaryRes
       ] = await Promise.all([
-        api.get('/products?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
-        api.get('/sales/orders?limit=1').catch(() => ({ data: { pagination: { total: 0 }, data: [] } })),
-        api.get('/customers?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
-        api.get('/gallery?limit=1').catch(() => ({ data: { pagination: { total: 0 } } }))
+        api.get('/products?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        // api.get('/customers?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/gallery?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/reports/sales/summary', { skipAuthRedirect: true }).catch(() => ({ data: { data: { summary: { total_orders: 0, net_sales: 0 } } } }))
       ]);
 
-      // Calculate total revenue from paid orders
-      let totalRevenue = 0;
-      try {
-        // Fetch all orders to calculate revenue (using a reasonable limit)
-        const revenueRes = await api.get('/sales/orders?limit=1000');
-        const orders = revenueRes.data?.data || [];
-        totalRevenue = orders
-          .filter((order: Order) => order.payment_status === 'paid')
-          .reduce((sum: number, order: Order) => sum + (order.total_amount || order.total || 0), 0);
-      } catch (error) {
-        console.error('Failed to fetch revenue data:', error);
-      }
+      const summary = summaryRes.data?.data?.summary || summaryRes.data?.data || {};
 
       setStats({
         totalProducts: productsRes.data?.pagination?.total || 0,
-        totalOrders: ordersRes.data?.pagination?.total || 0,
-        totalCustomers: customersRes.data?.pagination?.total || 0,
-        totalRevenue,
+        totalOrders: summary.total_orders || 0,
+        totalCustomers: 0,
+        totalRevenue: summary.net_sales || 0,
         totalImages: imagesRes.data?.pagination?.total || 0,
       });
     } catch (error: unknown) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to fetch dashboard stats:', error);
     } finally {
       setLoadingStats(false);
     }
