@@ -141,7 +141,7 @@ export default function AdminOrderInvoicePage() {
             <div className="flex flex-col md:flex-row print:flex-row justify-between items-start gap-8 print:gap-4">
               <div className="flex items-center gap-3">
                 {settings.logo_url
-                  ? <img src={settings.logo_url} alt={settings.company_name} className="h-10 object-contain" />
+                  ? <img src={settings.logo_url} alt={settings.company_name} className="h-12 object-contain" />
                   : <h1 className="text-xl font-bold text-slate-900 uppercase">{settings.company_name || 'INVOICE'}</h1>
                 }
               </div>

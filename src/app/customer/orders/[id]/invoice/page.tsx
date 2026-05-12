@@ -117,7 +117,7 @@ export default function OrderInvoicePage() {
       <div className="flex items-center justify-between mb-6 print:hidden">
         <Link
           href={`/customer/orders/${id}`}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Order
         </Link>
@@ -138,7 +138,7 @@ export default function OrderInvoicePage() {
           <div className="flex flex-col md:flex-row print:flex-row justify-between items-start gap-8 print:gap-4">
             <div className="flex items-center gap-3">
               {settings.logo_url ?
-                <img src={settings.logo_url} alt={settings.company_name} className="h-full w-full object-cover" /> : <h1 className="text-xl font-bold text-slate-900 uppercase">{settings.company_name || 'INVOICE'}</h1>
+                <img src={settings.logo_url} alt={settings.company_name} className="h-12 object-contain" /> : <h1 className="text-xl font-bold text-slate-900 uppercase">{settings.company_name || 'INVOICE'}</h1>
               }
             </div>
             <div className="text-left md:text-right">

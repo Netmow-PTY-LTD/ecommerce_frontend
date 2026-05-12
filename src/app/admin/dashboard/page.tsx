@@ -55,12 +55,20 @@ export default function AdminDashboardPage() {
       // Fetch all stats in parallel for better performance
       const [
         productsRes,
-        // customersRes,
+        customersRes,
         imagesRes,
         summaryRes
       ] = await Promise.all([
         api.get('/products?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
-        // api.get('/customers?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/customers?limit=1', { skipAuthRedirect: true })
+          .then(res => {
+            console.log('[Dashboard] Customers fetched successfully', res.data);
+            return res;
+          })
+          .catch(err => {
+            console.error('[Dashboard] Customers fetch failed', err.response?.status, err.response?.data);
+            return { data: { pagination: { total: 0 } } };
+          }),
         api.get('/gallery?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
         api.get('/reports/sales/summary', { skipAuthRedirect: true }).catch(() => ({ data: { data: { summary: { total_orders: 0, net_sales: 0 } } } }))
       ]);
@@ -70,7 +78,7 @@ export default function AdminDashboardPage() {
       setStats({
         totalProducts: productsRes.data?.pagination?.total || 0,
         totalOrders: summary.total_orders || 0,
-        totalCustomers: 0,
+        totalCustomers: customersRes.data?.pagination?.total || 0,
         totalRevenue: summary.net_sales || 0,
         totalImages: imagesRes.data?.pagination?.total || 0,
       });
