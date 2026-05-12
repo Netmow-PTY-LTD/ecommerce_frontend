@@ -40,9 +40,9 @@ function CheckoutForm({
     removeCoupon
 }: {
     formData: any;
-    setFormData: (data: any) => void;
+    setFormData: React.Dispatch<React.SetStateAction<any>>;
     errors: Record<string, string>;
-    setErrors: (errors: Record<string, string>) => void;
+    setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     isProcessing: boolean;
     setIsProcessing: (processing: boolean) => void;
     finalTotal: number;
@@ -123,9 +123,20 @@ function CheckoutForm({
             ...formData,
             [name]: type === 'checkbox' ? checked : value
         });
+
+        // Clear password errors when switching to guest checkout
+        if (name === 'guestCheckout' && checked === true) {
+            setErrors((prev: Record<string, string>) => {
+                const newErrors = { ...prev };
+                delete newErrors.password;
+                delete newErrors.confirmPassword;
+                return newErrors;
+            });
+        }
+
         // Clear error when user starts typing
         if (errors[name]) {
-            setErrors({ ...errors, [name]: '' });
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
