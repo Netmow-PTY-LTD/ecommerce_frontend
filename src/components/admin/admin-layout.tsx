@@ -57,6 +57,8 @@ import { useSettingsContext } from '@/contexts/SettingsContext';
 interface AdminLayoutProps {
   children: ReactNode;
   defaultSidebarCollapsed?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 interface NavItem {
@@ -138,7 +140,9 @@ const navigation: NavItem[] = [
 
 export default function AdminLayout({
   children,
-  defaultSidebarCollapsed = false
+  defaultSidebarCollapsed = false,
+  title,
+  subtitle
 }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -448,8 +452,21 @@ export default function AdminLayout({
                 <Menu className="h-5 w-5" />
               </button>
 
-              {/* Breadcrumb / Title Area (Now managed by individual pages) */}
-              <div className="flex-1 min-w-0"></div>
+              {/* Breadcrumb / Title Area */}
+              <div className="flex-1 min-w-0">
+                {title && (
+                  <div className="flex flex-col">
+                    <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                      {title}
+                    </h1>
+                    {subtitle && (
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Header Actions */}
