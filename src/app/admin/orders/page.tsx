@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -55,7 +55,7 @@ interface Pagination {
   totalPage: number;
 }
 
-export default function AdminOrdersPage() {
+function OrdersContent() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -291,8 +291,7 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-5 overflow-hidden">
+    <div className="space-y-5 overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Sales Orders</h1>
@@ -607,12 +606,22 @@ export default function AdminOrdersPage() {
             }}
             onPageChange={(page) => setCurrentPage(page)}
             loading={loadingOrders}
-            emptyMessage="No orders found."
-            columnVisibility={columnVisibility}
-            onColumnVisibilityChange={setColumnVisibility}
           />
         </Card>
       </div>
+  );
+}
+
+export default function AdminOrdersPage() {
+  return (
+    <AdminLayout>
+      <Suspense fallback={
+        <div className="h-[60vh] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      }>
+        <OrdersContent />
+      </Suspense>
     </AdminLayout>
   );
 }
