@@ -596,9 +596,9 @@ export default function OrderDetailPage() {
                 {(order.payment_method.toLowerCase().includes('stripe') ||
                   order.payment_method.toLowerCase().includes('online') ||
                   order.payment_method.toLowerCase().includes('card')) &&
-                  order.payment_status === 'paid' ? (
+                  (order.payment_status === 'paid' || order.payment_status === 'refunded') ? (
                   <>
-                    {order.payment_status !== 'refunded' && (
+                    {order.payment_status === 'paid' && (
                       <button
                         onClick={() => setShowRefundModal(true)}
                         className="w-full px-6 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 transition-all flex items-center justify-center"
