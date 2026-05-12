@@ -108,6 +108,7 @@ export function Hero() {
                             src="/hero-product.png"
                             alt="Premium Selection"
                             fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
                             className="object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.5)]"
                             priority
                         />

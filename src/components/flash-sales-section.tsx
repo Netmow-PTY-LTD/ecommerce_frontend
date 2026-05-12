@@ -52,12 +52,13 @@ export function FlashSalesSection() {
                     }
                   </div>
                 )}
-                <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
+                <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block relative aspect-square bg-secondary/30">
                   {sale.banner_image ? (
                     <Image
                       src={sale.banner_image}
                       alt={sale.name}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
