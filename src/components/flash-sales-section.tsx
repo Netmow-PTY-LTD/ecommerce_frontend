@@ -44,13 +44,18 @@ export function FlashSalesSection() {
                 <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
                   FLASH SALE
                 </div>
-                <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
-                  {sale.discount_percentage}% OFF
-                </div>
-                <Link href={`/flash-sale/${sale.slug}`} className="block aspect-square bg-secondary/30">
-                  {sale.image_url ? (
+                {sale.discount_percentage > 0 && (
+                  <div className="absolute top-3 right-3 bg-white dark:bg-zinc-900 text-red-600 text-xs font-bold px-2 py-1 rounded-full z-10">
+                    {sale.discount_min !== null && sale.discount_min !== sale.discount_percentage
+                      ? `Up to ${sale.discount_percentage}% OFF`
+                      : `${sale.discount_percentage}% OFF`
+                    }
+                  </div>
+                )}
+                <Link href={`/flash-sale/${sale.slug || sale.id}`} className="block aspect-square bg-secondary/30">
+                  {sale.banner_image ? (
                     <Image
-                      src={sale.image_url}
+                      src={sale.banner_image}
                       alt={sale.name}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300"
@@ -93,7 +98,7 @@ export function FlashSalesSection() {
                 </div>
 
                 <Link
-                  href={`/flash-sale/${sale.slug}`}
+                  href={`/flash-sale/${sale.slug || sale.id}`}
                   className="block w-full bg-primary text-primary-foreground text-center py-2 rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
                 >
                   View Deal

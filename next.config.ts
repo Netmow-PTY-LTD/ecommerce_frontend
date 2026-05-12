@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.digitaloceanspaces.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.freepik.com',
+      },
     ],
   },
 };
