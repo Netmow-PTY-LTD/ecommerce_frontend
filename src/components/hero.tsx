@@ -1,132 +1,189 @@
 "use client";
 
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Play, ArrowRight, ShieldCheck, Zap, Clock } from 'lucide-react';
-import { useRef } from 'react';
+import { ShoppingCart, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+const slides = [
+    {
+        id: 1,
+        subtitle: "Super Delicious",
+        title: "THE BEST WAY TO STUFF YOUR WALLET.",
+        deal: "Today's Best Deal",
+        discount: "50% OFF",
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop", // High quality headphone
+        accent: "#ff4d4d"
+    },
+    {
+        id: 2,
+        subtitle: "Premium Sound",
+        title: "EXPERIENCE PURE AUDIO BLISS.",
+        deal: "Limited Time Offer",
+        discount: "30% OFF",
+        image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=1000&auto=format&fit=crop", // Another headphone/speaker
+        accent: "#ff4d4d"
+    }
+];
 
 export function Hero() {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end start"]
-    });
+    const [currentSlide, setCurrentSlide] = useState(0);
 
-    const yBackground = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-    const opacityBackground = useTransform(scrollYProgress, [0, 1], [1, 0.5]);
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 8000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const slide = slides[currentSlide];
 
     return (
-        <section ref={containerRef} className="relative min-h-[90vh] w-full overflow-hidden flex items-center bg-black pt-20">
-            {/* Mesh Gradient Background */}
-            <motion.div
-                style={{ y: yBackground, opacity: opacityBackground }}
-                className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
-            >
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute top-[20%] right-[-5%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
-                <div className="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse delay-1000" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] brightness-100 contrast-150 pointer-events-none mix-blend-overlay" />
-            </motion.div>
-
-            <div className="container relative z-10 px-6 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                {/* Text Content */}
-                <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="space-y-8 max-w-2xl"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-[10px] md:text-xs font-semibold text-white/80 tracking-wider uppercase">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        New Collection 2026
-                    </div>
-
-                    <h1 className="text-5xl md:text-7xl xl:text-8xl font-black text-white leading-[1.1] tracking-tight">
-                        Elevate Your <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
-                            Lifestyle
-                        </span>
-                    </h1>
-
-                    <p className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-lg">
-                        Discover a curated selection of premium products designed to enhance your everyday life. Quality, style, and innovation in every detail.
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-4 pt-4">
-                        <Link href="/shop">
-                            <Button size="lg" className="h-14 px-8 text-base rounded-full bg-blue-600 hover:bg-blue-500 transition-all duration-300 group shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)]">
-                                Shop Now
-                                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </Link>
-                        <Link href="/about">
-                            <Button size="lg" variant="outline" className="h-14 px-8 text-base rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all duration-300">
-                                Learn More
-                            </Button>
-                        </Link>
-                    </div>
-
-                    {/* Trust Signals */}
-                    {/* <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/5">
-                        <div className="space-y-1">
-                            <p className="text-2xl font-bold text-white uppercase">4.9/5</p>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Rating</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-2xl font-bold text-white uppercase">2Y+</p>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Warranty</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-2xl font-bold text-white uppercase">50K+</p>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Users</p>
-                        </div>
-                    </div> */}
-                </motion.div>
-
-                {/* Imagery */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                    className="relative h-[400px] md:h-[500px] lg:h-[600px] flex items-center justify-center"
-                >
-                    {/* Floating Glows */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-500/10 rounded-full blur-[100px]" />
-
-                    {/* Placeholder for Product Visual */}
-                    <motion.div
-                        animate={{ y: [0, -20, 0] }}
-                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative z-10 w-full h-full"
-                    >
-                        <Image
-                            src="/hero-product.png"
-                            alt="Premium Selection"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.5)]"
-                            priority
-                        />
-                    </motion.div>
-                </motion.div>
+        <section className="relative min-h-[670px] w-full overflow-hidden bg-[#f3f4f6] py-20 flex items-center z-10">
+            {/* Background Image (Common for all slides) */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?q=80&w=2000&auto=format&fit=crop"
+                    alt="Keyboard Background"
+                    fill
+                    className="object-cover opacity-20 grayscale brightness-125"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent" />
             </div>
 
-            {/* Scroll Indicator */}
-            <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-                className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer z-20 group"
-            >
-                <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] group-hover:text-blue-400 transition-colors">Scroll</p>
-                <div className="w-[1px] h-12 bg-gradient-to-b from-blue-500 to-transparent group-hover:h-16 transition-all duration-500" />
-            </motion.button>
+            <div className="container h-full mx-auto px-4 sm:px-6 lg:px-8">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSlide}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="flex flex-col lg:flex-row items-center justify-between h-full py-12 lg:py-0"
+                    >
+                        {/* Text Content */}
+                        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left pr-40">
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-[#ff4d4d] font-bold text-lg md:text-xl tracking-tight"
+                            >
+                                {slide.subtitle}
+                            </motion.p>
+
+                            <motion.h1
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="text-4xl md:text-3xl lg:text-5xl font-black text-slate-900 leading-[1.1] tracking-tighter"
+                            >
+                                {slide.title.split(' ').map((word, i) => (
+                                    <span key={i} className="inline-block mr-3">
+                                        {word === "Buy" ? (
+                                            <span className="text-slate-400 font-light flex items-center gap-2">
+                                                <ShoppingCart className="w-8 h-8 md:w-12 md:h-12" /> Buy
+                                            </span>
+                                        ) : word}
+                                    </span>
+                                ))}
+                            </motion.h1>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="flex flex-col sm:flex-row items-center gap-6"
+                            >
+                                <div className="space-y-4">
+                                    <p className="text-[#ff4d4d] font-medium text-lg italic">
+                                        {slide.deal}
+                                    </p>
+                                    <Link href="/shop">
+                                        <Button
+                                            size="lg"
+                                            className="h-14 px-10 text-sm font-bold rounded-full bg-[#ff4d4d] hover:bg-[#e6342a] text-white shadow-xl shadow-red-500/20 uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95"
+                                        >
+                                            Order Now
+                                        </Button>
+                                    </Link>
+                                </div>
+
+                                {/* Discount Badge */}
+                                <motion.div
+                                    initial={{ scale: 0, rotate: -20 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.6 }}
+                                    className="relative flex items-center justify-center w-32 h-32 md:w-40 md:h-40"
+                                >
+                                    <svg viewBox="0 0 200 200" className="absolute w-full h-full text-slate-900 fill-none">
+                                        <path
+                                            d="M 100, 100 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0"
+                                            className="stroke-2"
+                                            stroke="currentColor"
+                                            strokeDasharray="10 5"
+                                        />
+                                        <path
+                                            d="M 100, 100 m -65, 0 a 65,65 0 1,0 130,0 a 65,65 0 1,0 -130,0"
+                                            className="stroke-1"
+                                            stroke="currentColor"
+                                            strokeOpacity="0.2"
+                                        />
+                                    </svg>
+                                    <div className="text-center z-10">
+                                        <span className="block text-3xl md:text-4xl font-black text-[#ff4d4d] leading-none">50%</span>
+                                        <span className="block text-lg md:text-xl font-bold text-slate-800 leading-none mt-1">OFF</span>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        </div>
+
+                        {/* Image Content */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, x: 50 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, x: 50 }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
+                            className="w-full lg:w-1/2 relative h-[300px] md:h-[450px] lg:h-[550px] mt-8 lg:mt-0 flex items-center justify-center"
+                        >
+                            <motion.div
+                                animate={{ y: [0, -15, 0] }}
+                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                className="relative w-full h-full"
+                            >
+                                <Image
+                                    src={slide.image}
+                                    alt={slide.title}
+                                    fill
+                                    className="object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.15)]"
+                                    priority
+                                    unoptimized
+                                />
+                            </motion.div>
+                            {/* Decorative Elements */}
+                            <div className="absolute -z-10 w-[70%] h-[70%] bg-white/50 rounded-full blur-3xl" />
+                        </motion.div>
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Slider Navigation */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
+                    {slides.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentSlide(i)}
+                            className={`transition-all duration-300 rounded-full cursor-pointer ${currentSlide === i
+                                ? "w-8 h-2.5 bg-[#ff4d4d]"
+                                : "w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400"
+                                }`}
+                            aria-label={`Go to slide ${i + 1}`}
+                        />
+                    ))}
+                </div>
+            </div>
         </section>
     );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, X, Search, Heart, GitCompare, Building2, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ShoppingCart, Menu, X, Search, Heart, GitCompare, Building2, User, Phone, Loader2, ShoppingBag } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import api from '@/lib/api';
 import { useCartStore, useWishlistStore, useCompareStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,12 +28,59 @@ export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const cartItems = useCartStore((state) => state.items);
     const wishlistItems = useWishlistStore((state) => state.items);
     const compareItems = useCompareStore((state) => state.items);
     const router = useRouter();
     const { settings, isLoading } = useSettings();
+    const { formatCurrency } = useCurrency();
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/shop?search=${encodeURIComponent(searchQuery)}`);
+            setShowDropdown(false);
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const searchProducts = async () => {
+            if (searchQuery.trim().length >= 2) {
+                setIsSearching(true);
+                setShowDropdown(true);
+                try {
+                    const response = await api.get(`/ecommerce/products?search=${encodeURIComponent(searchQuery)}&limit=6`);
+                    setSearchResults(response.data.data || []);
+                } catch (error) {
+                    console.error('Search error:', error);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+                setShowDropdown(false);
+            }
+        };
+
+        const timeoutId = setTimeout(searchProducts, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
 
     const isAuthenticated = isCustomerAuthenticated || isAdminAuthenticated;
     const currentUser = customer || user;
@@ -87,11 +135,44 @@ export function Navbar() {
     return (
         <header
             className={cn(
-                'fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-white'
+                'sticky top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-white shadow-sm'
             )}
         >
+            {/* Top Bar */}
+            <div className="bg-white border-b border-slate-50 hidden md:block">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                    <div className="flex items-center space-x-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={cn(
+                                    'transition-all duration-200 hover:text-[#ff3b30]',
+                                    pathname === link.href ? 'text-[#ff3b30]' : 'text-slate-500'
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 pr-4 border-r border-slate-200">
+                            <Phone className="h-3 w-3 text-[#ff3b30]" />
+                            <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-[#ff3b30] font-bold">{settings.phone || '+123 456 789'}</span></span>
+                        </div>
+                        <div className="flex items-center gap-4 pl-1">
+                            {isCustomerAuthenticated || isAdminAuthenticated ? (
+                                <Link href={`/${currentUser?.role?.name === 'Superadmin' ? 'admin' : 'customer'}/orders`} className="hover:text-[#ff3b30] transition-colors">Track Order</Link>
+                            ) : (
+                                <Link href="/login" className="hover:text-[#ff3b30] transition-colors">Track Order</Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-between h-20 py-4">
                     {/* Logo */}
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/" className="flex items-center gap-3">
@@ -114,27 +195,101 @@ export function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation */}
-                    <nav className="hidden md:flex space-x-8">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    'text-sm font-medium transition-colors hover:text-primary',
-                                    pathname === link.href ? 'text-primary' : 'text-muted-foreground'
-                                )}
+                    {/* Search Bar (Desktop) */}
+                    <div className="hidden md:flex flex-1 max-w-xl mx-8 relative" ref={searchRef}>
+                        <form onSubmit={handleSearchSubmit} className="relative w-full group">
+                            <input
+                                type="text"
+                                placeholder="Search For items..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => searchQuery.trim().length >= 2 && setShowDropdown(true)}
+                                className="w-full h-11 pl-4 pr-14 rounded-lg border-2 border-[#ff3b30] focus:outline-none transition-all placeholder:text-slate-400 text-sm font-medium"
+                            />
+                            <button
+                                type="submit"
+                                className="absolute right-0 top-0 h-full w-12 bg-[#ff3b30] flex items-center justify-center rounded-r-[6px] text-white hover:bg-[#e6342a] transition-all duration-200 active:scale-95"
                             >
-                                {link.label}
-                            </Link>
-                        ))}
-                    </nav>
+                                {isSearching ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <Search className="h-5 w-5 stroke-[2.5px]" />
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Live Results Dropdown */}
+                        {showDropdown && (
+                            <div className="absolute top-full left-0 right-0 bg-white mt-2 rounded-xl shadow-2xl border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                {isSearching ? (
+                                    <div className="p-8 flex flex-col items-center justify-center gap-3">
+                                        <Loader2 className="h-8 w-8 text-[#ff3b30] animate-spin" />
+                                        <p className="text-xs text-slate-500 font-medium tracking-wide">Searching products...</p>
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="p-2">
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {searchResults.map((product) => (
+                                                <Link
+                                                    key={product.id}
+                                                    href={`/product/${product.slug || product.id}`}
+                                                    onClick={() => setShowDropdown(false)}
+                                                    className="flex items-center gap-4 p-2.5 rounded-lg hover:bg-slate-50 transition-colors group"
+                                                >
+                                                    <div className="relative h-14 w-14 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
+                                                        <Image
+                                                            src={product.image_url || product.thumb_url || '/placeholder.png'}
+                                                            alt={product.name}
+                                                            fill
+                                                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                                            unoptimized
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-[#ff3b30] mb-0.5">
+                                                            {product.category?.name || 'Category'}
+                                                        </p>
+                                                        <h4 className="text-sm font-bold text-slate-800 truncate leading-tight group-hover:text-[#ff3b30] transition-colors">
+                                                            {product.name}
+                                                        </h4>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-sm font-black text-slate-900">
+                                                                {formatCurrency(product.sale_price || product.price)}
+                                                            </span>
+                                                            {(product.sale_price && product.price > product.sale_price) && (
+                                                                <span className="text-xs text-slate-400 line-through">
+                                                                    {formatCurrency(product.price)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 p-2 border-t border-slate-50">
+                                            <Link
+                                                href={`/shop?search=${encodeURIComponent(searchQuery)}`}
+                                                onClick={() => setShowDropdown(false)}
+                                                className="block w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-[#ff3b30] transition-colors uppercase tracking-widest"
+                                            >
+                                                View All Results →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center">
+                                        <ShoppingBag className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                                        <p className="text-sm font-bold text-slate-600">No products found</p>
+                                        <p className="text-xs text-slate-400 mt-1">Try a different search term</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Actions */}
                     <div className="hidden md:flex items-center space-x-4">
-                        <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
-                            <Search className="h-5 w-5" />
-                        </Button>
+                        {/* Actions for Desktop - Search is handled by the expanded bar */}
                         <Link href="/wishlist">
                             <Button variant="ghost" size="icon" className="relative">
                                 <Heart className="h-5 w-5" />
@@ -192,7 +347,10 @@ export function Navbar() {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <div className="md:hidden flex items-center space-x-2">
+                    <div className="md:hidden flex items-center space-x-1">
+                        <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
+                            <Search className="h-5 w-5" />
+                        </Button>
                         <Link href="/wishlist">
                             <Button variant="ghost" size="icon" className="relative">
                                 <Heart className="h-5 w-5" />
