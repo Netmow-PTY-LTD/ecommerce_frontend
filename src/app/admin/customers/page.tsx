@@ -115,10 +115,13 @@ export default function AdminCustomersPage() {
         page: currentPage.toString(),
         limit: '10',
       });
+
+      console.log("Customer Params", params);
+
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
 
-      const response = await api.get(`/customers?${params}`);
+      const response = await api.get(`/customers?${params}`, { skipAuthRedirect: true });
       const data = response.data;
 
       setCustomers(data.data || []);

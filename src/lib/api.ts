@@ -26,19 +26,27 @@ const getAuthToken = () => {
   // Admin routes specifically start with /admin
   const isAdminRoute = pathname.startsWith('/admin');
 
-  // For admin routes, prefer admin_token, fallback to customer_token if needed
+  // For admin routes, prefer admin_token
   // For other routes, prefer customer_token
   let token = null;
+  let usedKey = '';
+
   if (isAdminRoute) {
     token = localStorage.getItem('admin_token');
+    usedKey = 'admin_token';
   } else {
     token = localStorage.getItem('customer_token');
+    usedKey = 'customer_token';
   }
 
-  // If we're on an admin route but have no admin_token, try customer_token just in case 
-  // (though usually they are separate)
-  if (!token && isAdminRoute) {
-    token = localStorage.getItem('customer_token');
+  // Robust check for various falsy or invalid values
+  if (!token || token === 'undefined' || token === 'null' || token === '') {
+    token = null;
+  }
+
+  // Debugging log for development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[API Auth] Route: ${pathname}, Using: ${usedKey}, Token valid: ${!!token}`);
   }
 
   return token;
@@ -50,9 +58,9 @@ api.interceptors.request.use(
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      // Log for debugging (remove in production)
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url} - Auth token added`);
+        const authHeader = config.headers.Authorization as string;
+        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url} - Token: ${authHeader ? authHeader.substring(0, 20) + '...' : 'none'}`);
       }
     } else {
       if (process.env.NODE_ENV === 'development') {
@@ -73,6 +81,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (process.env.NODE_ENV === 'development') {
         console.error(`[API 401 Error] ${error.config?.method?.toUpperCase()} ${error.config?.url} - Unauthorized`);
+        console.error('[API 401 Details]', {
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
       }
 
       // Check if the request specifically asked to skip the redirect
