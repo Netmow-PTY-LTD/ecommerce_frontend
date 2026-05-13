@@ -206,20 +206,20 @@ export default function SalesAnalyticsPage() {
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
               />
               <span className="text-slate-500">to</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
               />
             </div>
             <select
               value={granularity}
               onChange={e => setGranularity(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent"
             >
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
@@ -279,7 +279,7 @@ export default function SalesAnalyticsPage() {
             <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-slate-600">Avg Order Value</p>
-                <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+                <div className="bg-brand/10 p-2 rounded-xl text-brand">
                   <TrendingUp size={18} />
                 </div>
               </div>
@@ -324,7 +324,7 @@ export default function SalesAnalyticsPage() {
           </div>
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <p className="text-sm font-medium text-slate-600 mb-2">Tax Collected</p>
-            <p className="text-xl font-bold text-purple-600">
+            <p className="text-xl font-bold text-brand">
               {formatCurrency(salesSummary?.total_tax || 0)}
             </p>
           </div>
@@ -354,7 +354,7 @@ export default function SalesAnalyticsPage() {
                     <div className="flex-1 flex items-center gap-4">
                       <div className="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
+                          className="bg-brand h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${(trend.net_sales / Math.max(...salesTrends.map(t => t.net_sales))) * 100}%`
                           }}
@@ -426,7 +426,7 @@ export default function SalesAnalyticsPage() {
                 {topCustomers.map((c, idx) => (
                   <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
                     <span className="text-sm font-bold text-slate-400 w-6">#{idx + 1}</span>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white text-sm font-bold shrink-0">
                       {(c.name || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">

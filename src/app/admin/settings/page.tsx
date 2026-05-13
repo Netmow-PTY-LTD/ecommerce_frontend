@@ -264,7 +264,7 @@ export default function SettingsPage() {
     if (loading || loadingProfile) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
         );
     }
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('company')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'company'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('contact')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'contact'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -324,7 +324,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('financial')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'financial'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('shipping')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'shipping'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -346,7 +346,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('payment')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'payment'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -362,9 +362,9 @@ export default function SettingsPage() {
                     {activeTab === 'company' && (
                         <>
                             <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
-                                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-2 border-b-1 gap-0 flex items-center">
+                                <div className="bg-brand/5 px-6 py-3 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                        <Building2 className="w-5 h-5 mr-2 text-indigo-600" />
+                                        <Building2 className="w-5 h-5 mr-2 text-brand" />
                                         Company Information
                                     </h2>
                                 </div>
@@ -403,7 +403,7 @@ export default function SettingsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowGalleryModal(true)}
-                                                        className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
+                                                        className="px-4 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand/90 transition-all shadow-lg flex items-center"
                                                     >
                                                         <ImageIcon className="w-4 h-4 mr-2" />
                                                         Select from Gallery
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                                             required
                                             value={companyProfile.company_name || ''}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                             placeholder="e.g., ABC Corporation"
                                         />
                                     </div>
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                                             value={companyProfile.description || ''}
                                             onChange={handleInputChange}
                                             rows={3}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none"
                                             placeholder="Brief description of your company..."
                                         />
                                     </div>
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                                                 name="website"
                                                 value={companyProfile.website || ''}
                                                 onChange={handleInputChange}
-                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                 placeholder="https://www.company.com"
                                             />
                                         </div>
@@ -544,9 +544,9 @@ export default function SettingsPage() {
                     {activeTab === 'contact' && (
                         <>
                             <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-2 border-b-1 gap-0 flex items-center">
+                                <div className="bg-brand/5 px-6 py-3 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                        <Headphones className="w-5 h-5 mr-2 text-purple-600" />
+                                        <Headphones className="w-5 h-5 mr-2 text-brand" />
                                         Contact Page Details
                                     </h2>
                                 </div>
@@ -565,7 +565,7 @@ export default function SettingsPage() {
                                                     name="email"
                                                     value={contactDetails.email || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="contact@store.com"
                                                 />
                                             </div>
@@ -582,7 +582,7 @@ export default function SettingsPage() {
                                                     name="phone"
                                                     value={contactDetails.phone || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                                                     name="whatsapp"
                                                     value={contactDetails.whatsapp || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -616,7 +616,7 @@ export default function SettingsPage() {
                                                     name="working_hours"
                                                     value={contactDetails.working_hours || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="Mon-Fri: 9AM-6PM"
                                                 />
                                             </div>
@@ -946,7 +946,7 @@ export default function SettingsPage() {
                             type="submit"
                             disabled={saving}
                             size="lg"
-                            className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                            className="px-8 py-3 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
                         >
                             {saving ? (
                                 <span className="flex items-center">
@@ -973,7 +973,7 @@ export default function SettingsPage() {
                     setLogoPreview(image.url);
                 }}
                 title="Select Company Logo"
-                themeColor="indigo"
+                themeColor="brand"
                 initialSelection={companyProfile.logo_url}
             />
         </AdminLayout>

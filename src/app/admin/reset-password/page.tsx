@@ -59,7 +59,7 @@ function AdminResetPasswordForm() {
         </div>
         <div className="pt-4">
           <Link href="/admin/login">
-            <Button className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-sm shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2">
+            <Button className="w-full h-12 rounded-xl bg-brand hover:bg-brand/90 font-bold text-sm shadow-lg shadow-brand/10 transition-all flex items-center justify-center gap-2">
               Login to Dashboard
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -83,7 +83,7 @@ function AdminResetPasswordForm() {
         </div>
         <div className="pt-4">
           <Link href="/admin/forgot-password">
-            <Button className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-sm shadow-lg shadow-indigo-100 transition-all">
+            <Button className="w-full h-12 rounded-xl bg-brand hover:bg-brand/90 font-bold text-sm shadow-lg shadow-brand/10 transition-all">
               Request New Link
             </Button>
           </Link>
@@ -94,12 +94,12 @@ function AdminResetPasswordForm() {
 
   return (
     <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full -translate-y-1/2 translate-x-1/2" />
       
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <ShieldCheck className="h-5 w-5 text-indigo-600" />
+          <div className="h-10 w-10 rounded-xl bg-brand/10 flex items-center justify-center">
+            <ShieldCheck className="h-5 w-5 text-brand" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reset Admin Password</h1>
         </div>
@@ -108,12 +108,12 @@ function AdminResetPasswordForm() {
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">New Security Password</label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-all" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-brand transition-all" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -131,12 +131,12 @@ function AdminResetPasswordForm() {
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Confirm New Password</label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-all" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-brand transition-all" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -147,7 +147,7 @@ function AdminResetPasswordForm() {
           <Button 
             type="submit" 
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-sm shadow-lg shadow-indigo-100 transition-all"
+            className="w-full h-12 rounded-xl bg-brand hover:bg-brand/90 font-bold text-sm shadow-lg shadow-brand/10 transition-all"
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -167,7 +167,7 @@ export default function AdminResetPasswordPage() {
       <div className="max-w-md w-full">
         <Suspense fallback={
           <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200 border border-slate-100 flex items-center justify-center min-h-[300px]">
-            <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+            <Loader2 className="h-10 w-10 animate-spin text-brand" />
           </div>
         }>
           <AdminResetPasswordForm />

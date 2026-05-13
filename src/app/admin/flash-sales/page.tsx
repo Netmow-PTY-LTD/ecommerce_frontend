@@ -336,7 +336,7 @@ export default function AdminFlashSalesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand" />
       </div>
     );
   }
@@ -370,7 +370,7 @@ export default function AdminFlashSalesPage() {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Flash Sales</h1>
             <p className="text-sm text-slate-500 mt-1">{pagination.total} total flash sale events</p>
           </div>
-          <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all border-none">
+          <Button onClick={openCreateModal} className="bg-brand text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:bg-brand/90 transition-all border-none">
             <Plus className="h-4 w-4 mr-2" /> New Flash Sale
           </Button>
         </div>
@@ -381,7 +381,7 @@ export default function AdminFlashSalesPage() {
             <Zap className="h-16 w-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">No flash sales yet</h3>
             <p className="text-slate-500 mb-6">Create your first flash sale event to offer time-limited deals.</p>
-            <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg border-none px-6">
+            <Button onClick={openCreateModal} className="bg-brand text-white rounded-xl shadow-lg border-none px-6">
               <Plus className="h-4 w-4 mr-2" /> Create Flash Sale
             </Button>
           </div>
@@ -431,7 +431,7 @@ export default function AdminFlashSalesPage() {
                     <div className="border-t border-slate-200 bg-slate-50">
                       {loadingDetails ? (
                         <div className="p-8 flex justify-center">
-                          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                          <Loader2 className="h-6 w-6 animate-spin text-brand" />
                         </div>
                       ) : saleDetails ? (
                         <div className="p-6">

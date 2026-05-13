@@ -46,13 +46,13 @@ export default function AdminProfilePage() {
         {/* User Info Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6 flex items-center gap-6">
-            <div className="h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="h-20 w-20 rounded-full bg-brand flex items-center justify-center text-white text-2xl font-bold">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">{user?.name}</h2>
               <p className="text-slate-500">{user?.email}</p>
-              <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+              <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand/10 text-brand">
                 {user?.role?.name || 'Administrator'}
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function AdminProfilePage() {
                     required
                     value={passwords.oldPassword}
                     onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-sm"
                     placeholder="••••••••"
                   />
                 </div>
@@ -91,7 +91,7 @@ export default function AdminProfilePage() {
                       minLength={8}
                       value={passwords.newPassword}
                       onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-sm"
                       placeholder="••••••••"
                     />
                   </div>
@@ -102,7 +102,7 @@ export default function AdminProfilePage() {
                       required
                       value={passwords.confirmPassword}
                       onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-sm"
                       placeholder="••••••••"
                     />
                   </div>
@@ -112,7 +112,7 @@ export default function AdminProfilePage() {
                   <Button 
                     type="submit" 
                     disabled={loading}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-xl transition-all shadow-lg shadow-indigo-100"
+                    className="bg-brand hover:bg-brand/90 text-white font-bold px-6 py-2 rounded-xl transition-all shadow-lg shadow-brand/10"
                   >
                     {loading ? (
                       <>

@@ -12,7 +12,7 @@ interface ImageGalleryModalProps {
   multiple?: boolean;
   initialSelection?: string | string[]; // URLs of already selected images
   title?: string;
-  themeColor?: 'indigo' | 'cyan' | 'green' | 'violet' | 'emerald';
+  themeColor?: 'indigo' | 'cyan' | 'green' | 'violet' | 'emerald' | 'brand';
 }
 
 export function ImageGalleryModal({
@@ -22,7 +22,7 @@ export function ImageGalleryModal({
   multiple = false,
   initialSelection = [],
   title = 'Select Image',
-  themeColor = 'indigo'
+  themeColor = 'brand'
 }: ImageGalleryModalProps) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +33,13 @@ export function ImageGalleryModal({
 
   // Theme mapping
   const themes = {
+    brand: {
+      bg: 'bg-brand',
+      hover: 'hover:bg-brand/90',
+      border: 'border-brand',
+      ring: 'ring-brand/20',
+      text: 'text-brand'
+    },
     indigo: {
       bg: 'bg-indigo-600',
       hover: 'hover:bg-indigo-700',
@@ -185,14 +192,14 @@ export function ImageGalleryModal({
                 placeholder="Search images..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm shadow-sm"
               />
             </div>
             <div className="flex gap-3">
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium shadow-sm min-w-[140px]"
+                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm font-medium shadow-sm min-w-[140px]"
               >
                 <option value="">All Categories</option>
                 <option value="products">Products</option>
@@ -217,7 +224,7 @@ export function ImageGalleryModal({
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
           {loading ? (
             <div className="h-full flex flex-col items-center justify-center space-y-3">
-              <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+              <Loader2 className="w-10 h-10 animate-spin text-brand" />
               <p className="text-slate-500 font-medium">Loading gallery...</p>
             </div>
           ) : filteredImages.length === 0 ? (
