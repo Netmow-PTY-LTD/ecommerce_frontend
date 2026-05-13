@@ -76,7 +76,7 @@ export default function CustomerProfilePage() {
 
     setUploading(true);
     try {
-      const response = await api.post(`/customers/${customer?.id}/profile-image`, formData, {
+      const response = await api.post(`/customers/me/profile-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -102,7 +102,7 @@ export default function CustomerProfilePage() {
     setLoading(true);
     try {
       // In a real app, you would have a PATCH endpoint for profile update
-      const response = await api.put(`/customers/${customer?.id}`, formData);
+      const response = await api.put(`/customers/me`, formData);
 
       if (response.data.status) {
         toast.success('Profile updated successfully!');
@@ -443,7 +443,7 @@ export default function CustomerProfilePage() {
 
                     try {
                       setLoading(true);
-                      const response = await api.post('/customers/change-password', {
+                      const response = await api.post('/customers/me/change-password', {
                         oldPassword: oldPass,
                         newPassword: newPass
                       });

@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
       ] = await Promise.all([
         api.get('/products?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
         api.get('/sales/orders?limit=1').catch(() => ({ data: { pagination: { total: 0 }, data: [] } })),
-        api.get('/customers?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/customers/admin/all?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
         api.get('/gallery?limit=1').catch(() => ({ data: { pagination: { total: 0 } } }))
       ]);
 

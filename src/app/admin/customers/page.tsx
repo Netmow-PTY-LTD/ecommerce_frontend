@@ -118,7 +118,7 @@ export default function AdminCustomersPage() {
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
 
-      const response = await api.get(`/customers?${params}`);
+      const response = await api.get(`/customers/admin/all?${params}`);
       const data = response.data;
 
       setCustomers(data.data || []);
@@ -185,7 +185,7 @@ export default function AdminCustomersPage() {
 
     try {
       setIsDeleting(true);
-      await api.delete(`/customers/${customerToDelete.id}`);
+      await api.delete(`/customers/admin/${customerToDelete.id}`);
       setIsDeleteDialogOpen(false);
       setCustomerToDelete(null);
       fetchCustomers();
