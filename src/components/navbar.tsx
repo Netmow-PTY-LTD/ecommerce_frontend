@@ -331,7 +331,7 @@ export function Navbar() {
                                                     className="object-cover"
                                                 />
                                             )}
-                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                            <AvatarFallback className="bg-brand text-white text-xs font-bold">
                                                 {getInitials(currentUser.name)}
                                             </AvatarFallback>
                                         </Avatar>
@@ -392,7 +392,7 @@ export function Navbar() {
                                                     className="object-cover"
                                                 />
                                             )}
-                                            <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                                            <AvatarFallback className="bg-brand text-white text-xs font-bold">
                                                 {getInitials(currentUser.name)}
                                             </AvatarFallback>
                                         </Avatar>
@@ -455,7 +455,7 @@ export function Navbar() {
                                                     className="object-cover"
                                                 />
                                             )}
-                                            <AvatarFallback className="bg-indigo-600 text-white text-[10px] font-bold">
+                                            <AvatarFallback className="bg-brand text-white text-[10px] font-bold">
                                                 {getInitials(currentUser.name)}
                                             </AvatarFallback>
                                         </Avatar>

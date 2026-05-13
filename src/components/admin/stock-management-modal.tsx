@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { X, Package, TrendingUp, TrendingDown, Settings } from 'lucide-react';
@@ -297,3 +297,4 @@ export default function StockManagementModal({
         </div>
     );
 }
+

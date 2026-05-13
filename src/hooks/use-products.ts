@@ -6,6 +6,8 @@ export function useCategories(page = 1, limit = 100) {
     const query = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
+        with_counts: '1',
+        include_counts: '1'
     });
 
     const { data, error, isLoading } = useSWR<ApiResponse<Category[]>>(
@@ -34,7 +36,7 @@ export function useCategory(idOrSlug: string) {
     };
 }
 
-export function useProducts(page = 1, limit = 10, options?: { category_id?: number; category_slug?: string; sort?: string; search?: string }) {
+export function useProducts(page = 1, limit = 10, options?: { category_id?: number; category_slug?: string; sort?: string; search?: string; in_stock?: boolean; min_price?: number; max_price?: number }) {
     const query = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -54,6 +56,18 @@ export function useProducts(page = 1, limit = 10, options?: { category_id?: numb
 
     if (options?.search) {
         query.append('search', options.search);
+    }
+
+    if (options?.in_stock) {
+        query.append('in_stock', 'true');
+    }
+
+    if (options?.min_price !== undefined) {
+        query.append('min_price', options.min_price.toString());
+    }
+
+    if (options?.max_price !== undefined) {
+        query.append('max_price', options.max_price.toString());
     }
 
     const { data, error, isLoading } = useSWR<ApiResponse<Product[]>>(
