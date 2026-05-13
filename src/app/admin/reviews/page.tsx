@@ -371,7 +371,7 @@ export default function AdminReviewsPage() {
               {Array.from({ length: pagination.totalPage }, (_, i) => i + 1).map((page) => (
                 <Button
                   key={page}
-                  variant={page === currentPage ? 'brand' : 'outline'}
+                  variant={page === currentPage ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setCurrentPage(page)}
                 >
