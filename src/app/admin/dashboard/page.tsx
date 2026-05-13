@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
   if (loading || loadingStats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Products */}
-          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 overflow-hidden shadow-lg rounded-xl hover:shadow-xl transition-shadow">
+          <div className="bg-brand overflow-hidden shadow-lg rounded-xl hover:shadow-xl transition-shadow">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0 bg-white/20 rounded-lg p-3">
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-indigo-100 truncate">Total Products</dt>
+                    <dt className="text-sm font-medium text-white/80 truncate">Total Products</dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl 2xl:text-3xl font-semibold text-white">{stats.totalProducts}</div>
                     </dd>

@@ -170,7 +170,7 @@ export default function StockManagementPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
         );
     }
@@ -255,7 +255,7 @@ export default function StockManagementPage() {
                                         placeholder="Search by name, SKU, or barcode..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                     />
                                 </div>
                             </div>
@@ -346,7 +346,7 @@ export default function StockManagementPage() {
                                         <tr>
                                             <td colSpan={6} className="px-6 py-20 text-center">
                                                 <div className="flex flex-col items-center justify-center space-y-2">
-                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
                                                     <span className="text-sm text-muted-foreground">Loading products...</span>
                                                 </div>
                                             </td>

@@ -138,7 +138,7 @@ function SortableProductRow({
         <span className="text-gray-300">|</span>
         <a
           href={`/admin/product/${product.id}/edit`}
-          className="text-indigo-600 hover:text-indigo-900"
+          className="text-brand hover:text-brand/80"
         >
           Edit
         </a>
@@ -265,7 +265,7 @@ export default function AdminProductsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -315,7 +315,7 @@ export default function AdminProductsPage() {
                 placeholder="Search by name, SKU, or barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
               />
             </div>
             <div>
@@ -325,7 +325,7 @@ export default function AdminProductsPage() {
                   setSelectedCategory(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium appearance-none min-w-[180px]"
+                className="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm font-medium appearance-none min-w-[180px]"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -343,7 +343,7 @@ export default function AdminProductsPage() {
             </button>
             <a
               href="/admin/product/add-new"
-              className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
+              className="px-6 py-2.5 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand/90 transition-all shadow-lg flex items-center"
             >
               <span className="mr-2">+</span> Add Product
             </a>
@@ -391,7 +391,7 @@ export default function AdminProductsPage() {
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center space-y-2">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
                           <span className="text-sm text-muted-foreground">Loading products...</span>
                         </div>
                       </td>

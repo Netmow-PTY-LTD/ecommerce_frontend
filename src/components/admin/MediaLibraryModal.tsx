@@ -142,7 +142,7 @@ export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibrary
             <div className={`flex items-center gap-2 h-10 px-4 rounded-md font-medium text-sm transition-colors ${
               uploading 
                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' 
-                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                : 'bg-brand text-white hover:bg-brand/90 shadow-sm'
             }`}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
               {uploading ? 'Uploading...' : 'Upload'}
@@ -154,7 +154,7 @@ export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibrary
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-[50vh] overflow-y-auto">
           {loading && images.length === 0 ? (
             <div className="h-full flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand" />
             </div>
           ) : images.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2">
@@ -167,7 +167,7 @@ export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibrary
                 <div
                   key={img.id}
                   onClick={() => handleSelect(img)}
-                  className="group relative aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:border-transparent transition-all"
+                  className="group relative aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-brand hover:border-transparent transition-all"
                 >
                   <img
                     src={img.url}
