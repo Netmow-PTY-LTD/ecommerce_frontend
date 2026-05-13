@@ -70,7 +70,7 @@ export function Hero() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="text-[#ff4d4d] font-bold text-lg md:text-xl tracking-tight"
+                                className="text-brand font-bold text-lg md:text-xl tracking-tight"
                             >
                                 {slide.subtitle}
                             </motion.p>
@@ -79,7 +79,7 @@ export function Hero() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
-                                className="text-4xl md:text-3xl lg:text-5xl font-black text-slate-900 leading-[1.1] tracking-tighter"
+                                className="text-3xl lg:text-5xl font-black text-slate-900 leading-[1.1] tracking-tighter"
                             >
                                 {slide.title.split(' ').map((word, i) => (
                                     <span key={i} className="inline-block mr-3">
@@ -99,13 +99,13 @@ export function Hero() {
                                 className="flex flex-col sm:flex-row items-center gap-6"
                             >
                                 <div className="space-y-4">
-                                    <p className="text-[#ff4d4d] font-medium text-lg italic">
+                                    <p className="text-brand font-medium text-lg italic">
                                         {slide.deal}
                                     </p>
                                     <Link href="/shop">
                                         <Button
                                             size="lg"
-                                            className="h-14 px-10 text-sm font-bold rounded-full bg-[#ff4d4d] hover:bg-[#e6342a] text-white shadow-xl shadow-red-500/20 uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95"
+                                            className="h-14 px-10 text-sm font-bold rounded-full bg-brand hover:opacity-90 text-white shadow-xl shadow-brand/20 uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95"
                                         >
                                             Order Now
                                         </Button>
@@ -134,7 +134,7 @@ export function Hero() {
                                         />
                                     </svg>
                                     <div className="text-center z-10">
-                                        <span className="block text-3xl md:text-4xl font-black text-[#ff4d4d] leading-none">50%</span>
+                                        <span className="block text-3xl md:text-4xl font-black text-brand leading-none">50%</span>
                                         <span className="block text-lg md:text-xl font-bold text-slate-800 leading-none mt-1">OFF</span>
                                     </div>
                                 </motion.div>
@@ -176,7 +176,7 @@ export function Hero() {
                             key={i}
                             onClick={() => setCurrentSlide(i)}
                             className={`transition-all duration-300 rounded-full cursor-pointer ${currentSlide === i
-                                ? "w-8 h-2.5 bg-[#ff4d4d]"
+                                ? "w-8 h-2.5 bg-brand"
                                 : "w-2.5 h-2.5 bg-slate-300 hover:bg-slate-400"
                                 }`}
                             aria-label={`Go to slide ${i + 1}`}

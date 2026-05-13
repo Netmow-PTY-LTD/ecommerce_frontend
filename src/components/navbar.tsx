@@ -147,8 +147,8 @@ export function Navbar() {
                                 key={link.href}
                                 href={link.href}
                                 className={cn(
-                                    'transition-all duration-200 hover:text-[#ff3b30]',
-                                    pathname === link.href ? 'text-[#ff3b30]' : 'text-slate-500'
+                                    'transition-all duration-200 hover:text-brand',
+                                    pathname === link.href ? 'text-brand' : 'text-slate-500'
                                 )}
                             >
                                 {link.label}
@@ -157,14 +157,14 @@ export function Navbar() {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 pr-4 border-r border-slate-200">
-                            <Phone className="h-3 w-3 text-[#ff3b30]" />
-                            <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-[#ff3b30] font-bold">{settings.phone || '+123 456 789'}</span></span>
+                            <Phone className="h-3 w-3 text-brand" />
+                            <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-brand font-bold">{settings.phone || '+123 456 789'}</span></span>
                         </div>
                         <div className="flex items-center gap-4 pl-1">
                             {isCustomerAuthenticated || isAdminAuthenticated ? (
-                                <Link href={`/${currentUser?.role?.name === 'Superadmin' ? 'admin' : 'customer'}/orders`} className="hover:text-[#ff3b30] transition-colors">Track Order</Link>
+                                <Link href={`/${currentUser?.role?.name === 'Superadmin' ? 'admin' : 'customer'}/orders`} className="hover:text-brand transition-colors">Track Order</Link>
                             ) : (
-                                <Link href="/login" className="hover:text-[#ff3b30] transition-colors">Track Order</Link>
+                                <Link href="/login" className="hover:text-brand transition-colors">Track Order</Link>
                             )}
                         </div>
                     </div>
@@ -204,11 +204,11 @@ export function Navbar() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => searchQuery.trim().length >= 2 && setShowDropdown(true)}
-                                className="w-full h-11 pl-4 pr-14 rounded-lg border-2 border-[#ff3b30] focus:outline-none transition-all placeholder:text-slate-400 text-sm font-medium"
+                                className="w-full h-11 pl-4 pr-14 rounded-lg border-2 border-brand focus:outline-none transition-all placeholder:text-slate-400 text-sm font-medium"
                             />
                             <button
                                 type="submit"
-                                className="absolute right-0 top-0 h-full w-12 bg-[#ff3b30] flex items-center justify-center rounded-r-[6px] text-white hover:bg-[#e6342a] transition-all duration-200 active:scale-95"
+                                className="absolute right-0 top-0 h-full w-12 bg-brand flex items-center justify-center rounded-r-[6px] text-white hover:opacity-90 transition-all duration-200 active:scale-95"
                             >
                                 {isSearching ? (
                                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -223,7 +223,7 @@ export function Navbar() {
                             <div className="absolute top-full left-0 right-0 bg-white mt-2 rounded-xl shadow-2xl border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                 {isSearching ? (
                                     <div className="p-8 flex flex-col items-center justify-center gap-3">
-                                        <Loader2 className="h-8 w-8 text-[#ff3b30] animate-spin" />
+                                        <Loader2 className="h-8 w-8 text-brand animate-spin" />
                                         <p className="text-xs text-slate-500 font-medium tracking-wide">Searching products...</p>
                                     </div>
                                 ) : searchResults.length > 0 ? (
@@ -246,10 +246,10 @@ export function Navbar() {
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-[#ff3b30] mb-0.5">
+                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-brand mb-0.5">
                                                             {product.category?.name || 'Category'}
                                                         </p>
-                                                        <h4 className="text-sm font-bold text-slate-800 truncate leading-tight group-hover:text-[#ff3b30] transition-colors">
+                                                        <h4 className="text-sm font-bold text-slate-800 truncate leading-tight group-hover:text-brand transition-colors">
                                                             {product.name}
                                                         </h4>
                                                         <div className="flex items-center gap-2 mt-1">
@@ -270,7 +270,7 @@ export function Navbar() {
                                             <Link
                                                 href={`/shop?search=${encodeURIComponent(searchQuery)}`}
                                                 onClick={() => setShowDropdown(false)}
-                                                className="block w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-[#ff3b30] transition-colors uppercase tracking-widest"
+                                                className="block w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-brand transition-colors uppercase tracking-widest"
                                             >
                                                 View All Results →
                                             </Link>

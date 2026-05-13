@@ -112,15 +112,15 @@ const navigation: NavItem[] = [
       { name: 'Answer Guide', href: '/admin/chat/answer-guide', icon: BookOpen },
     ],
   },
-  {
-    name: 'Email',
-    icon: Mail,
-    subitems: [
-      { name: 'Templates', href: '/admin/email/templates', icon: FileText },
-      // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
-      // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
-    ],
-  },
+  // {
+  //   name: 'Email',
+  //   icon: Mail,
+  //   subitems: [
+  //     { name: 'Templates', href: '/admin/email/templates', icon: FileText },
+  //     // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
+  //     // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
+  //   ],
+  // },
   {
     name: 'Analytics',
     icon: BarChart3,
@@ -276,9 +276,9 @@ export default function AdminLayout({
             )}>
               {settings?.logo_url ? (
                 <div className="h-8 w-auto max-w-[140px] flex items-center overflow-hidden">
-                  <img 
-                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                    alt="Logo" 
+                  <img
+                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                    alt="Logo"
                     className="h-full w-auto object-contain"
                   />
                 </div>
@@ -575,9 +575,9 @@ export default function AdminLayout({
                 <div className="flex items-center transition-all duration-300 ease-in-out">
                   {settings?.logo_url ? (
                     <div className="h-8 w-auto max-w-[120px] flex items-center overflow-hidden">
-                      <img 
-                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                        alt="Logo" 
+                      <img
+                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                        alt="Logo"
                         className="h-full w-auto object-contain"
                       />
                     </div>

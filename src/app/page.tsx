@@ -22,12 +22,12 @@ export default function Home() {
             <div className="hidden md:flex items-end justify-center h-full pt-4">
               <svg viewBox="0 0 220 200" className="w-48 h-48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 {/* Shopping bag body */}
-                <rect x="40" y="80" width="140" height="110" rx="10" fill="#cc0000" stroke="#333" strokeWidth="2.5" />
+                <rect x="40" y="80" width="140" height="110" rx="10" className="fill-brand" stroke="#333" strokeWidth="2.5" />
                 {/* Bag handle */}
                 <path d="M80 80 Q80 45 110 45 Q140 45 140 80" stroke="#333" strokeWidth="3" fill="none" strokeLinecap="round" />
                 {/* Recycle icon */}
                 <circle cx="110" cy="140" r="22" fill="white" opacity="0.9" />
-                <text x="110" y="147" textAnchor="middle" fontSize="20" fill="#cc0000">♻</text>
+                <text x="110" y="147" textAnchor="middle" fontSize="20" className="fill-brand">♻</text>
                 {/* Vegetables poking out */}
                 <ellipse cx="70" cy="78" rx="14" ry="18" fill="#4caf50" stroke="#333" strokeWidth="1.5" />
                 <ellipse cx="95" cy="70" rx="12" ry="16" fill="#ff9800" stroke="#333" strokeWidth="1.5" />
@@ -52,7 +52,7 @@ export default function Home() {
                 Get early access to drops, special discounts, and more.
               </p>
               <div className="flex justify-center">
-                <Link href="/shop" className="bg-[#cc0000] hover:bg-[#aa0000] active:scale-95 text-white px-8 py-2.5 rounded text-sm font-bold transition-all duration-200 shadow-md shadow-red-900/20">
+                <Link href="/shop" className="bg-brand hover:opacity-90 active:scale-95 text-white px-8 py-2.5 rounded text-sm font-bold transition-all duration-200 shadow-md shadow-brand/20">
                   Shop Now                </Link>
               </div>
             </div>
