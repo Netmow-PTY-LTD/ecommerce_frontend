@@ -102,3 +102,17 @@ export interface ApiResponse<T> {
     data: T;
     pagination?: Pagination;
 }
+
+export interface GalleryImage {
+    id: number;
+    filename: string;
+    originalName: string;
+    url: string;
+    size: number;
+    width?: number;
+    height?: number;
+    mimeType?: string;
+    category: string;
+    created_at?: string;
+    updated_at?: string;
+}

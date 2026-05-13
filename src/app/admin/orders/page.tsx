@@ -291,7 +291,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="space-y-5 overflow-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Sales Orders</h1>
@@ -300,87 +300,81 @@ function OrdersContent() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-indigo-100 text-sm font-medium">Total Orders</p>
-                  <h3 className="text-2xl font-bold mt-1">{pagination.total}</h3>
-                </div>
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-indigo-100/50"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">Total Orders</p>
+                <p className="text-2xl font-bold mt-1 text-slate-900">{pagination.total}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                <Package className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-yellow-100 text-sm font-medium">Pending Orders</p>
-                  <h3 className="text-2xl font-bold mt-1">{stats.pending}</h3>
-                </div>
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <Clock className="h-6 w-6 text-white" />
-                </div>
+          <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-yellow-100/50"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">Pending</p>
+                <p className="text-2xl font-bold mt-1 text-slate-900">{stats.pending}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl">
+                <Clock className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Processing</p>
-                  <h3 className="text-2xl font-bold mt-1">{stats.processing}</h3>
-                </div>
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
+          <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-blue-100/50"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">Processing</p>
+                <p className="text-2xl font-bold mt-1 text-slate-900">{stats.processing}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <Package className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Shipped</p>
-                  <h3 className="text-2xl font-bold mt-1">{stats.shipped}</h3>
-                </div>
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <Truck className="h-6 w-6 text-white" />
-                </div>
+          <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-purple-100/50"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">Shipped</p>
+                <p className="text-2xl font-bold mt-1 text-slate-900">{stats.shipped}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                <Truck className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
 
-          <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 md:p-6 transition-all hover:scale-[1.02] cursor-default">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-emerald-100 text-sm font-medium">Delivered</p>
-                  <h3 className="text-2xl font-bold mt-1">{stats.delivered}</h3>
-                </div>
-                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                  <CheckCircle2 className="h-6 w-6 text-white" />
-                </div>
+          <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-emerald-100/50"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">Delivered</p>
+                <p className="text-2xl font-bold mt-1 text-slate-900">{stats.delivered}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filters Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <div className="p-4 md:p-6 bg-white border-b border-slate-100">
+        <div className="bg-white rounded-2xl border overflow-hidden shadow-none p-6">
             <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-4">
               <div className="relative flex-1 min-w-[200px]">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Search..."
-                  className="pl-10 h-11 bg-slate-50 border-slate-200 focus:bg-white transition-all"
+                  placeholder="Search by order ID or customer..."
+                  className="pl-10 h-11 bg-slate-50 border-slate-300 rounded-xl focus:bg-white transition-all text-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -388,7 +382,7 @@ function OrdersContent() {
               <Select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full sm:w-[160px] h-11 bg-slate-50 border-slate-200"
+                className="w-full sm:w-[180px] h-11 bg-slate-50 border-slate-300 rounded-xl text-sm"
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -399,24 +393,28 @@ function OrdersContent() {
                 <option value="returned">Returned</option>
               </Select>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button type="submit" className="flex-1 sm:flex-none h-11 px-6 bg-slate-900 hover:bg-slate-800 text-white transition-all">
+                <Button type="submit" className="flex-1 sm:flex-none h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white transition-all rounded-xl font-semibold shadow-lg">
                   Apply
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 px-4 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  className="h-11 px-4 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl"
                   onClick={handleClearSearch}
                 >
                   Reset
                 </Button>
               </div>
             </form>
-          </div>
-        </Card>
+        </div>
 
         {/* Orders Table */}
-        <Card className="border-none shadow-sm overflow-hidden p-0 sm:p-4 md:p-6">
+        <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+          <div className="bg-slate-50/50 px-6 py-2 border-b-1 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Orders List</h2>
+            <span className="text-xs text-slate-500">{pagination.total} Total Orders</span>
+          </div>
+          <div className="p-0 sm:p-2">
           <DataTable<Order>
             data={orders}
             columns={[
@@ -607,7 +605,8 @@ function OrdersContent() {
             onPageChange={(page) => setCurrentPage(page)}
             loading={loadingOrders}
           />
-        </Card>
+          </div>
+        </div>
       </div>
   );
 }
