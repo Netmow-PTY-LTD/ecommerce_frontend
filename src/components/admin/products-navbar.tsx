@@ -22,7 +22,7 @@ export default function ProductsNavbar() {
               href={item.href}
               className={`px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${
                 item.active
-                  ? 'bg-indigo-100 text-indigo-700'
+                  ? 'bg-brand/10 text-brand'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >

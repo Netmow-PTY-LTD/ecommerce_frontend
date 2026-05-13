@@ -285,7 +285,7 @@ function OrdersContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -302,13 +302,13 @@ function OrdersContent() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-white rounded-2xl p-6 border shadow-none relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-indigo-100/50"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-brand/10"></div>
             <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-slate-500 text-sm font-medium">Total Orders</p>
                 <p className="text-2xl font-bold mt-1 text-slate-900">{pagination.total}</p>
               </div>
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+              <div className="p-3 bg-brand/10 text-brand rounded-xl">
                 <Package className="h-6 w-6" />
               </div>
             </div>
@@ -393,7 +393,7 @@ function OrdersContent() {
                 <option value="returned">Returned</option>
               </Select>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button type="submit" className="flex-1 sm:flex-none h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white transition-all rounded-xl font-semibold shadow-lg">
+                <Button type="submit" className="flex-1 sm:flex-none h-11 px-8 bg-brand hover:bg-brand/90 text-white transition-all rounded-xl font-semibold shadow-lg">
                   Apply
                 </Button>
                 <Button
@@ -569,7 +569,7 @@ function OrdersContent() {
                       </div>
                       <div className="flex justify-between text-sm font-bold pt-1 border-t border-slate-200">
                         <span className="text-slate-900">Total:</span>
-                        <span className="text-indigo-600">{formatCurrency(order.total)}</span>
+                        <span className="text-brand font-bold">{formatCurrency(order.total)}</span>
                       </div>
                     </div>
                   </div>
@@ -616,7 +616,7 @@ export default function AdminOrdersPage() {
     <AdminLayout>
       <Suspense fallback={
         <div className="h-[60vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
         </div>
       }>
         <OrdersContent />

@@ -328,7 +328,7 @@ export default function AddNewProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -375,7 +375,7 @@ export default function AddNewProductPage() {
           <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-2 border-b-1 gap-0">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Basic Information
@@ -392,7 +392,7 @@ export default function AddNewProductPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   placeholder="e.g., Wireless Mouse"
                 />
               </div>
@@ -403,7 +403,7 @@ export default function AddNewProductPage() {
                   type="text"
                   value={formData.sku}
                   onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   placeholder="Leave empty for auto-generation"
                 />
               </div>
@@ -416,7 +416,7 @@ export default function AddNewProductPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none"
                   placeholder="Product description..."
                 />
               </div>
@@ -429,7 +429,7 @@ export default function AddNewProductPage() {
                   value={formData.specification}
                   onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
                   rows={2}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none"
                   placeholder="e.g., Color: Black, DPI: 1600, Wireless: Yes"
                 />
               </div>
@@ -440,7 +440,7 @@ export default function AddNewProductPage() {
           <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l-2.714 2.714a1 1 0 01-1.414 0l-2.714-2.714C3.785 2.195 3.265 2 5 2h14c1.735 0 2.215.195 2.785 2.586l-2.714 2.714a1 1 0 01-1.414 0l-2.714-2.714C13.215 2.195 12.735 2 11 2H7z" />
                 </svg>
                 Classification
@@ -456,7 +456,7 @@ export default function AddNewProductPage() {
                   required
                   value={formData.category_id}
                   onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium appearance-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm font-medium appearance-none"
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
@@ -475,7 +475,7 @@ export default function AddNewProductPage() {
                   required
                   value={formData.unit_id}
                   onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium appearance-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm font-medium appearance-none"
                 >
                   <option value="">Select Unit</option>
                   {units.map((unit) => (
@@ -492,7 +492,7 @@ export default function AddNewProductPage() {
           <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 2 3-1.343 2-3-.895-3-3-3 0-1.657.895-3 3-1.343 2-3 3-3 0 1.657-.895 3-3 3zm0 2c-.528 0-1.056-.18-1.586-.534l-3.262 3.262C7.628 15.828 11 18.668 11 21.014c0 2.346-3.372 5.186-7.848 5.186C7.058 26.2 3.72 23.36 3.262 20.48l3.262-3.262C5.722 22.18 6.472 21 7.5 21z" />
                 </svg>
                 Pricing
@@ -512,7 +512,7 @@ export default function AddNewProductPage() {
                     required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm"
+                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                     placeholder="0.00"
                   />
                 </div>
@@ -527,7 +527,7 @@ export default function AddNewProductPage() {
                     step="0.01"
                     value={formData.cost}
                     onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm"
+                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                     placeholder="0.00"
                   />
                 </div>
@@ -540,7 +540,7 @@ export default function AddNewProductPage() {
                   step="0.01"
                   value={formData.sales_tax}
                   onChange={(e) => setFormData({ ...formData, sales_tax: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   placeholder="0.00"
                 />
               </div>
@@ -551,7 +551,7 @@ export default function AddNewProductPage() {
           <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
             <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7h16" />
                 </svg>
                 Stock Management
@@ -611,7 +611,7 @@ export default function AddNewProductPage() {
           <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Additional Details
@@ -751,7 +751,7 @@ export default function AddNewProductPage() {
                   <button
                     type="button"
                     onClick={() => setShowThumbnailModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
+                    className="px-4 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand/90 transition-all shadow-lg flex items-center"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -766,7 +766,7 @@ export default function AddNewProductPage() {
                     <img
                       src={formData.thumb_url}
                       alt="Selected thumbnail"
-                      className="h-32 w-32 object-cover rounded-xl border-2 border-indigo-300 shadow-lg"
+                      className="h-32 w-32 object-cover rounded-xl border-2 border-brand/30 shadow-lg"
                     />
                     <button
                       type="button"
@@ -1087,7 +1087,7 @@ export default function AddNewProductPage() {
                   type="text"
                   value={formData.meta_title}
                   onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   placeholder="SEO title for search engines"
                 />
               </div>
@@ -1098,7 +1098,7 @@ export default function AddNewProductPage() {
                   value={formData.meta_description}
                   onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   placeholder="Brief description for search engine results..."
                 />
               </div>
