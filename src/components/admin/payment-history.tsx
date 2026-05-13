@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
@@ -88,7 +88,7 @@ export default function PaymentHistory({ orderId, orderTotal, onRefresh }: Payme
     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
       <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-slate-200">
         <h3 className="text-lg font-semibold text-slate-900 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
           Payment History
@@ -99,7 +99,7 @@ export default function PaymentHistory({ orderId, orderTotal, onRefresh }: Payme
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             <p className="text-sm text-slate-600">Loading payment history...</p>
           </div>
         )}
@@ -191,3 +191,4 @@ export default function PaymentHistory({ orderId, orderTotal, onRefresh }: Payme
     </div>
   );
 }
+

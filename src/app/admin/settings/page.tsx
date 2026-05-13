@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -636,7 +636,7 @@ export default function SettingsPage() {
                                                     name="support_email"
                                                     value={contactDetails.support_email || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="support@store.com"
                                                 />
                                             </div>
@@ -650,7 +650,7 @@ export default function SettingsPage() {
                                                     name="support_phone"
                                                     value={contactDetails.support_phone || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -670,7 +670,7 @@ export default function SettingsPage() {
                                                     name="address"
                                                     value={contactDetails.address || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="123 Contact Street"
                                                 />
                                             </div>
@@ -685,7 +685,7 @@ export default function SettingsPage() {
                                                         name="city"
                                                         value={contactDetails.city || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="New York"
                                                     />
                                                 </div>
@@ -699,7 +699,7 @@ export default function SettingsPage() {
                                                         name="state"
                                                         value={contactDetails.state || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="NY"
                                                     />
                                                 </div>
@@ -713,7 +713,7 @@ export default function SettingsPage() {
                                                         name="postal_code"
                                                         value={contactDetails.postal_code || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="10001"
                                                     />
                                                 </div>
@@ -728,7 +728,7 @@ export default function SettingsPage() {
                                                     name="country"
                                                     value={contactDetails.country || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="United States"
                                                 />
                                             </div>
@@ -745,7 +745,7 @@ export default function SettingsPage() {
                                             value={contactDetails.map_embed_code || ''}
                                             onChange={handleContactChange}
                                             rows={4}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm resize-none font-mono"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none font-mono"
                                             placeholder='<iframe src="https://www.google.com/maps/embed?..." width="600" height="450" ...></iframe>'
                                         />
                                         <p className="text-xs text-slate-500 mt-2">
@@ -768,7 +768,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.facebook || ''}
                                                     onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://facebook.com/yourstore"
                                                 />
                                             </div>
@@ -781,7 +781,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.twitter || ''}
                                                     onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://twitter.com/yourstore"
                                                 />
                                             </div>
@@ -794,7 +794,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.instagram || ''}
                                                     onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://instagram.com/yourstore"
                                                 />
                                             </div>
@@ -807,7 +807,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.linkedin || ''}
                                                     onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://linkedin.com/company/yourstore"
                                                 />
                                             </div>
@@ -820,7 +820,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.youtube || ''}
                                                     onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://youtube.com/@yourstore"
                                                 />
                                             </div>
@@ -912,13 +912,13 @@ export default function SettingsPage() {
                                                 </p>
                                                 <div className="space-y-2 font-mono text-xs">
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_SECRET_KEY</span>=sk_test_...
+                                                        <span className="text-brand">STRIPE_SECRET_KEY</span>=sk_test_...
                                                     </div>
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_WEBHOOK_SECRET</span>=whsec_test_...
+                                                        <span className="text-brand">STRIPE_WEBHOOK_SECRET</span>=whsec_test_...
                                                     </div>
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_PUBLIC_KEY</span>=pk_test_...
+                                                        <span className="text-brand">STRIPE_PUBLIC_KEY</span>=pk_test_...
                                                     </div>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-3">
@@ -979,3 +979,4 @@ export default function SettingsPage() {
         </AdminLayout>
     );
 }
+

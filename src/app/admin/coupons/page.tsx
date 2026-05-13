@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,7 +97,7 @@ export default function AdminCouponsPage() {
 
   const typeBadge: Record<string, string> = {
     percentage: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    fixed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    fixed: 'bg-brand/10 text-purple-800 dark:bg-purple-900/30 dark:text-brand/80',
     free_shipping: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
     bogo: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   };
@@ -201,7 +201,7 @@ export default function AdminCouponsPage() {
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         coupon.visibility === 'public'
-                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                          ? 'bg-brand/10 text-purple-800 dark:bg-purple-900/30 dark:text-brand/80'
                           : coupon.visibility === 'restricted'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                             : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
@@ -259,3 +259,4 @@ export default function AdminCouponsPage() {
     </AdminLayout>
   );
 }
+
