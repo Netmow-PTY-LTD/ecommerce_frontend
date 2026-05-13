@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
@@ -30,12 +30,12 @@ const statusConfig: Record<string, { label: string; color: string; icon: string 
   },
   processing: {
     label: 'Processing',
-    color: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+    color: 'bg-brand/10 text-brand border-brand/30',
     icon: '⚙️'
   },
   shipped: {
     label: 'Shipped',
-    color: 'bg-purple-100 text-purple-800 border-purple-300',
+    color: 'bg-brand/10 text-purple-800 border-purple-300',
     icon: '📦'
   },
   in_transit: {
@@ -216,3 +216,4 @@ export default function OrderTimeline({ orderId }: OrderTimelineProps) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -179,7 +179,7 @@ export default function AdminGalleryPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-brand border-t-transparent mx-auto"></div>
           <p className="mt-4 text-slate-600 font-medium">Loading Gallery...</p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function AdminGalleryPage() {
             {/* Upload Section */}
             <div className="p-6 lg:p-8">
               <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-brand/90 flex items-center justify-center mr-3 shadow-lg">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -254,7 +254,7 @@ export default function AdminGalleryPage() {
                   <select
                     value={uploadCategory}
                     onChange={(e) => setUploadCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm font-medium"
                   >
                     <option value="general">📁 General</option>
                     <option value="products">🛍️ Products</option>
@@ -273,7 +273,7 @@ export default function AdminGalleryPage() {
                     value={uploadTags}
                     onChange={(e) => setUploadTags(e.target.value)}
                     placeholder="e.g. product, electronics, new"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                   />
                 </div>
 
@@ -289,19 +289,19 @@ export default function AdminGalleryPage() {
                   />
                   <div
                     className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${uploading
-                      ? 'border-indigo-300 bg-indigo-50 cursor-not-allowed'
-                      : 'border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 cursor-pointer'
+                      ? 'border-brand/30 bg-brand/10 cursor-not-allowed'
+                      : 'border-slate-300 hover:border-brand/40 hover:bg-brand/10/50 cursor-pointer'
                       }`}
                   >
                     {uploading ? (
                       <div className="space-y-3">
-                        <div className="w-12 h-12 mx-auto border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                        <p className="text-sm font-medium text-indigo-600">Uploading to DigitalOcean Spaces...</p>
+                        <div className="w-12 h-12 mx-auto border-4 border-brand/20 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <p className="text-sm font-medium text-brand">Uploading to DigitalOcean Spaces...</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="w-14 h-14 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-14 h-14 mx-auto bg-gradient-to-br from-brand to-brand/90 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <svg className="w-7 h-7 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
                         </div>
@@ -335,7 +335,7 @@ export default function AdminGalleryPage() {
                 <div className="bg-white rounded-xl p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Total Images</span>
-                    <span className="text-2xl font-bold text-indigo-600">{pagination.total}</span>
+                    <span className="text-2xl font-bold text-brand">{pagination.total}</span>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -421,7 +421,7 @@ export default function AdminGalleryPage() {
             {!searchTerm && (
               <button
                 onClick={() => document.getElementById('image-upload')?.click()}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                className="px-6 py-3 bg-gradient-to-r from-brand to-brand/90 text-white rounded-xl font-medium hover:from-brand/90 hover:to-brand/80 transition-all shadow-lg hover:shadow-xl"
               >
                 Upload Images
               </button>
@@ -446,7 +446,7 @@ export default function AdminGalleryPage() {
                       {/* Category Badge */}
                       {image.category && (
                         <div className="absolute top-3 left-3">
-                          <span className="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-brand to-brand/90 text-white text-xs font-semibold rounded-full shadow-lg">
                             {image.category}
                           </span>
                         </div>
@@ -560,7 +560,7 @@ export default function AdminGalleryPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-brand to-brand/90 text-brand">
                             {image.category || 'general'}
                           </span>
                         </td>
@@ -574,7 +574,7 @@ export default function AdminGalleryPage() {
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => setSelectedImage(image)}
-                              className="text-indigo-600 hover:text-indigo-900 font-medium"
+                              className="text-brand hover:text-brand font-medium"
                             >
                               View
                             </button>
@@ -618,7 +618,7 @@ export default function AdminGalleryPage() {
                   <button
                     onClick={() => setCurrentPage((prev) => prev + 1)}
                     disabled={currentPage >= pagination.totalPage}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                    className="px-4 py-2 bg-gradient-to-r from-brand to-brand/90 text-white rounded-xl text-sm font-medium hover:from-brand/90 hover:to-brand/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
                   >
                     Next
                   </button>
@@ -717,3 +717,4 @@ export default function AdminGalleryPage() {
     </AdminLayout>
   );
 }
+

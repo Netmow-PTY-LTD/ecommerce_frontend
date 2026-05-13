@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
@@ -41,11 +41,11 @@ export function ImageGalleryModal({
       text: 'text-brand'
     },
     indigo: {
-      bg: 'bg-indigo-600',
-      hover: 'hover:bg-indigo-700',
-      border: 'border-indigo-500',
-      ring: 'ring-indigo-200',
-      text: 'text-indigo-600'
+      bg: 'bg-brand',
+      hover: 'hover:bg-brand',
+      border: 'border-brand',
+      ring: 'ring-brand',
+      text: 'text-brand'
     },
     cyan: {
       bg: 'bg-cyan-600',
@@ -303,3 +303,4 @@ export function ImageGalleryModal({
 }
 
 export default ImageGalleryModal;
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -304,7 +304,7 @@ export default function StockManagementPage() {
                             </div>
                             <button
                                 type="submit"
-                                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg"
+                                className="px-6 py-2.5 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand transition-all shadow-lg"
                             >
                                 Search
                             </button>
@@ -485,3 +485,4 @@ export default function StockManagementPage() {
         </AdminLayout>
     );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
@@ -117,7 +117,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-slate-200 rounded-t-2xl">
           <h3 className="text-lg font-semibold text-slate-900 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Add Payment
@@ -181,7 +181,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
                 <button
                   type="button"
                   onClick={() => setAmount(remainingBalance.toString())}
-                  className="text-xs font-semibold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg transition-colors"
+                  className="text-xs font-semibold text-brand hover:text-brand bg-brand/10 hover:bg-brand/10 px-2 py-1 rounded-lg transition-colors"
                 >
                   Pay Full Remaining ({formatCurrency(remainingBalance)})
                 </button>
@@ -196,7 +196,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               min="0.01"
               max={orderTotal}
               placeholder="Enter amount"
-              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all text-sm"
               required
             />
           </div>
@@ -210,7 +210,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               id="paymentMethod"
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all text-sm"
               required
             >
               <option value="cod">Cash on Delivery</option>
@@ -231,7 +231,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               id="paymentDate"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all text-sm"
               required
             />
           </div>
@@ -247,7 +247,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value)}
               placeholder="e.g., CHK123456, TXN789012"
-              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all text-sm"
             />
           </div>
 
@@ -260,7 +260,7 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value as 'pending' | 'completed')}
-              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm"
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all text-sm"
               required
             >
               <option value="completed">Completed</option>
@@ -301,3 +301,4 @@ export default function AddPaymentModal({ isOpen, onClose, orderId, orderTotal, 
     </div>
   );
 }
+

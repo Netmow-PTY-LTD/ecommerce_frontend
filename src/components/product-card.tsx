@@ -150,7 +150,7 @@ export function ProductCard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="group relative bg-white rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden"
+            className="group relative bg-white rounded-2xl border hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden"
         >
             {/* Image Container (Full Width) */}
             <div className="relative aspect-[5/4] w-full bg-gray-50/50 flex items-center justify-center overflow-hidden">
@@ -294,8 +294,8 @@ export function ProductCard({
                     onClick={handleAddToCart}
                     disabled={isAdding || !product.stock_quantity || product.stock_quantity === 0}
                     className={`w-full py-5 rounded-lg border flex items-center justify-center gap-2 font-bold text-xs transition-all duration-300 ${isAdding
-                            ? 'bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white border-brand text-brand hover:bg-brand hover:text-white group/btn'
+                        ? 'bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white border-brand text-brand hover:bg-brand hover:text-white group/btn'
                         }`}
                 >
                     {isAdding ? (
