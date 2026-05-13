@@ -348,7 +348,7 @@ export default function AdminFlashSalesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Alerts */}
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl flex items-center">
+          <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
             <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -356,9 +356,9 @@ export default function AdminFlashSalesPage() {
           </div>
         )}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl flex items-center">
+          <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
             <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
             {error}
           </div>
@@ -367,21 +367,21 @@ export default function AdminFlashSalesPage() {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Flash Sales</h2>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Flash Sales</h1>
             <p className="text-sm text-slate-500 mt-1">{pagination.total} total flash sale events</p>
           </div>
-          <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+          <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all border-none">
             <Plus className="h-4 w-4 mr-2" /> New Flash Sale
           </Button>
         </div>
 
         {/* Flash Sales List */}
         {flashSales.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow border border-slate-200 p-16 text-center">
+          <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-none">
             <Zap className="h-16 w-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">No flash sales yet</h3>
             <p className="text-slate-500 mb-6">Create your first flash sale event to offer time-limited deals.</p>
-            <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600">
+            <Button onClick={openCreateModal} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg border-none px-6">
               <Plus className="h-4 w-4 mr-2" /> Create Flash Sale
             </Button>
           </div>
@@ -392,7 +392,7 @@ export default function AdminFlashSalesPage() {
               const isExpanded = expandedSale === sale.id;
 
               return (
-                <div key={sale.id} className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div key={sale.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-none">
                   {/* Sale Card Header */}
                   <div
                     className="px-6 py-5 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -548,9 +548,9 @@ export default function AdminFlashSalesPage() {
 
         {/* --- Create/Edit Flash Sale Modal --- */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200 rounded-t-2xl flex items-center justify-between">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-2 border-b border-slate-200 rounded-t-2xl flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 flex items-center">
                   <Zap className="w-5 h-5 mr-2 text-amber-600" />
                   {editingSale ? 'Edit Flash Sale' : 'New Flash Sale'}
@@ -705,9 +705,9 @@ export default function AdminFlashSalesPage() {
 
         {/* --- Add Item Modal --- */}
         {showItemModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200 rounded-t-2xl flex items-center justify-between">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-2 border-b border-slate-200 rounded-t-2xl flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 flex items-center">
                   <Plus className="w-5 h-5 mr-2 text-green-600" />
                   Add Product to Flash Sale

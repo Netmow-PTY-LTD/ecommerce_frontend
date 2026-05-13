@@ -18,16 +18,11 @@ interface Unit {
   symbol: string;
 }
 
-interface GalleryImage {
-  id: number;
-  filename: string;
-  originalName: string;
-  url: string;
-  size: number;
-  width?: number;
-  height?: number;
-  category: string;
-}
+import { ImageGalleryModal } from '@/components/admin/ImageGalleryModal';
+import { GalleryImage } from '@/types';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface Attribute {
   id: string;
@@ -56,7 +51,6 @@ export default function AddNewProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
-  const [filteredGalleryImages, setFilteredGalleryImages] = useState<GalleryImage[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -90,8 +84,6 @@ export default function AddNewProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [gallerySearchTerm, setGallerySearchTerm] = useState('');
-  const [selectedGalleryCategory, setSelectedGalleryCategory] = useState('');
 
   // Gallery modal states
   const [showThumbnailModal, setShowThumbnailModal] = useState(false);
@@ -129,20 +121,6 @@ export default function AddNewProductPage() {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (gallerySearchTerm || selectedGalleryCategory) {
-      const filtered = galleryImages.filter((img) => {
-        const matchesSearch = !gallerySearchTerm ||
-          img.filename.toLowerCase().includes(gallerySearchTerm.toLowerCase()) ||
-          img.originalName?.toLowerCase().includes(gallerySearchTerm.toLowerCase());
-        const matchesCategory = !selectedGalleryCategory || img.category === selectedGalleryCategory;
-        return matchesSearch && matchesCategory;
-      });
-      setFilteredGalleryImages(filtered);
-    } else {
-      setFilteredGalleryImages(galleryImages);
-    }
-  }, [gallerySearchTerm, selectedGalleryCategory, galleryImages]);
 
   useEffect(() => {
     if (productSearchTerm || productCategoryFilter) {
@@ -195,41 +173,14 @@ export default function AddNewProductPage() {
     }
   };
 
-  const handleSelectThumbnail = (image: GalleryImage) => {
-    setSelectedThumbnail(image);
-    setFormData({ ...formData, thumb_url: image.url });
-    setShowThumbnailModal(false);
-  };
-
   const handleRemoveThumbnail = () => {
     setSelectedThumbnail(null);
     setFormData({ ...formData, thumb_url: '' });
   };
 
-  const handleSelectMainImage = (image: GalleryImage) => {
-    setSelectedMainImage(image);
-    setFormData({ ...formData, image_url: image.url });
-    setShowMainImageModal(false);
-  };
-
   const handleRemoveMainImage = () => {
     setSelectedMainImage(null);
     setFormData({ ...formData, image_url: '' });
-  };
-
-  const handleToggleGalleryImage = (image: GalleryImage) => {
-    const isSelected = selectedGalleryImages.some(img => img.id === image.id);
-    if (isSelected) {
-      setSelectedGalleryImages(selectedGalleryImages.filter(img => img.id !== image.id));
-    } else {
-      setSelectedGalleryImages([...selectedGalleryImages, image]);
-    }
-  };
-
-  const handleConfirmGallerySelection = () => {
-    const urls = selectedGalleryImages.map(img => img.url);
-    setFormData({ ...formData, gallery_items: urls });
-    setShowGalleryModal(false);
   };
 
   const handleRemoveGalleryItem = (url: string) => {
@@ -387,11 +338,19 @@ export default function AddNewProductPage() {
   }
 
   return (
-    <AdminLayout
-      title="Add New Product"
-      subtitle="Create a new product listing"
-    >
+    <AdminLayout>
       <div className="w-full max-w-5xl mx-auto py-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Add New Product</h1>
+            <p className="text-slate-500 text-sm">Add a new product</p>
+          </div>
+          <Link href="/admin/products" className="gap-2 flex items-center bg-white px-4 py-2 rounded-md">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Products
+          </Link>
+        </div>
+
         {/* Alert Messages */}
         {success && (
           <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
@@ -411,10 +370,10 @@ export default function AddNewProductPage() {
         )}
 
         {/* Product Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-2 border-b-1 gap-0">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -423,7 +382,7 @@ export default function AddNewProductPage() {
               </h2>
             </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Product Name <span className="text-red-500">*</span>
@@ -445,9 +404,8 @@ export default function AddNewProductPage() {
                   value={formData.sku}
                   onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-                  placeholder="e.g., WM-001 (Auto-generated if empty)"
+                  placeholder="Leave empty for auto-generation"
                 />
-                <p className="mt-1 text-xs text-slate-500">Leave empty for auto-generation</p>
               </div>
 
               <div className="md:col-span-2">
@@ -479,8 +437,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Classification */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l-2.714 2.714a1 1 0 01-1.414 0l-2.714-2.714C3.785 2.195 3.265 2 5 2h14c1.735 0 2.215.195 2.785 2.586l-2.714 2.714a1 1 0 01-1.414 0l-2.714-2.714C13.215 2.195 12.735 2 11 2H7z" />
@@ -531,8 +489,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Pricing */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 2 3-1.343 2-3-.895-3-3-3 0-1.657.895-3 3-1.343 2-3 3-3 0 1.657-.895 3-3 3zm0 2c-.528 0-1.056-.18-1.586-.534l-3.262 3.262C7.628 15.828 11 18.668 11 21.014c0 2.346-3.372 5.186-7.848 5.186C7.058 26.2 3.72 23.36 3.262 20.48l3.262-3.262C5.722 22.18 6.472 21 7.5 21z" />
@@ -590,8 +548,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Stock Management */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7h16" />
@@ -650,8 +608,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Additional Details */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -723,8 +681,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Images Section */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -883,8 +841,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Attributes */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-rose-50 to-pink-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-rose-50 to-pink-50 px-6 py-2 border-b-1 gap-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1010,8 +968,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Similar Products */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-violet-50 to-purple-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-violet-50 to-purple-50 px-6 py-2 border-b-1 gap-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1087,8 +1045,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Status */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1112,8 +1070,8 @@ export default function AddNewProductPage() {
           </div>
 
           {/* SEO / Meta */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-slate-200">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-2 border-b-1 gap-0 flex items-center">
               <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1191,7 +1149,7 @@ export default function AddNewProductPage() {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl shadow-xl border border-slate-200">
+          <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border shadow-none">
             <a
               href="/admin/products"
               className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
@@ -1249,313 +1207,46 @@ export default function AddNewProductPage() {
         </form>
 
         {/* Thumbnail Selection Modal */}
-        {showThumbnailModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Select Thumbnail</h3>
-                  <p className="text-sm text-slate-500">Choose an image from your gallery</p>
-                </div>
-                <button
-                  onClick={() => setShowThumbnailModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-all"
-                >
-                  <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+        {/* Image Selection Modals */}
+        <ImageGalleryModal
+          isOpen={showThumbnailModal}
+          onClose={() => setShowThumbnailModal(false)}
+          onSelect={(selected: GalleryImage | GalleryImage[]) => {
+            const img = selected as GalleryImage;
+            setSelectedThumbnail(img);
+            setFormData({ ...formData, thumb_url: img.url });
+          }}
+          title="Select Thumbnail"
+          themeColor="indigo"
+          initialSelection={formData.thumb_url}
+        />
 
-              {/* Search and Filter */}
-              <div className="p-6 border-b border-slate-200 space-y-4">
-                <input
-                  type="text"
-                  placeholder="Search images..."
-                  value={gallerySearchTerm}
-                  onChange={(e) => setGallerySearchTerm(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-                />
-                <select
-                  value={selectedGalleryCategory}
-                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium"
-                >
-                  <option value="">All Categories</option>
-                  <option value="products">Products</option>
-                  <option value="general">General</option>
-                  <option value="banner">Banner</option>
-                </select>
-              </div>
+        <ImageGalleryModal
+          isOpen={showMainImageModal}
+          onClose={() => setShowMainImageModal(false)}
+          onSelect={(selected: GalleryImage | GalleryImage[]) => {
+            const img = selected as GalleryImage;
+            setSelectedMainImage(img);
+            setFormData({ ...formData, image_url: img.url });
+          }}
+          title="Select Main Product Image"
+          themeColor="emerald"
+          initialSelection={formData.image_url}
+        />
 
-              {/* Images Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {filteredGalleryImages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-slate-500">No images found</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredGalleryImages.map((image) => (
-                      <div
-                        key={image.id}
-                        onClick={() => handleSelectThumbnail(image)}
-                        className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
-                          selectedThumbnail?.id === image.id
-                            ? 'border-indigo-500 ring-2 ring-indigo-200'
-                            : 'border-slate-200 hover:border-indigo-300 hover:shadow-lg'
-                        }`}
-                      >
-                        <img
-                          src={image.url}
-                          alt={image.originalName || image.filename}
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-xs font-medium text-white truncate">
-                            {image.originalName || image.filename}
-                          </p>
-                          {image.size && (
-                            <p className="text-xs text-slate-300">
-                              {(image.size / 1024).toFixed(1)} KB
-                            </p>
-                          )}
-                        </div>
-                        {selectedThumbnail?.id === image.id && (
-                          <div className="absolute top-2 right-2">
-                            <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Image Selection Modal */}
-        {showMainImageModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Select Main Product Image</h3>
-                  <p className="text-sm text-slate-500">Choose an image from your gallery</p>
-                </div>
-                <button
-                  onClick={() => setShowMainImageModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-all"
-                >
-                  <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Search and Filter */}
-              <div className="p-6 border-b border-slate-200 space-y-4">
-                <input
-                  type="text"
-                  placeholder="Search images..."
-                  value={gallerySearchTerm}
-                  onChange={(e) => setGallerySearchTerm(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
-                />
-                <select
-                  value={selectedGalleryCategory}
-                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm font-medium"
-                >
-                  <option value="">All Categories</option>
-                  <option value="products">Products</option>
-                  <option value="general">General</option>
-                  <option value="banner">Banner</option>
-                </select>
-              </div>
-
-              {/* Gallery Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {filteredGalleryImages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-slate-500">No images found in gallery</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredGalleryImages.map((image) => (
-                      <div
-                        key={image.id}
-                        onClick={() => handleSelectMainImage(image)}
-                        className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
-                          selectedMainImage?.id === image.id || formData.image_url === image.url
-                            ? 'border-green-500 ring-2 ring-green-200'
-                            : 'border-slate-200 hover:border-green-300 hover:shadow-lg'
-                        }`}
-                      >
-                        <img
-                          src={image.url}
-                          alt={image.originalName || image.filename}
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-xs font-medium text-white truncate">
-                            {image.originalName || image.filename}
-                          </p>
-                          {image.size && (
-                            <p className="text-xs text-slate-300">
-                              {(image.size / 1024).toFixed(1)} KB
-                            </p>
-                          )}
-                        </div>
-                        {(selectedMainImage?.id === image.id || formData.image_url === image.url) && (
-                          <div className="absolute top-2 right-2">
-                            <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gallery Images Selection Modal */}
-        {showGalleryModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Select Gallery Images</h3>
-                  <p className="text-sm text-slate-500">Choose multiple images from your gallery</p>
-                </div>
-                <button
-                  onClick={() => setShowGalleryModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-all"
-                >
-                  <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Search and Filter */}
-              <div className="p-6 border-b border-slate-200 space-y-4">
-                <input
-                  type="text"
-                  placeholder="Search images..."
-                  value={gallerySearchTerm}
-                  onChange={(e) => setGallerySearchTerm(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-sm"
-                />
-                <select
-                  value={selectedGalleryCategory}
-                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-sm font-medium"
-                >
-                  <option value="">All Categories</option>
-                  <option value="products">Products</option>
-                  <option value="general">General</option>
-                  <option value="banner">Banner</option>
-                </select>
-              </div>
-
-              {/* Images Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {filteredGalleryImages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-slate-500">No images found</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredGalleryImages.map((image) => (
-                      <div
-                        key={image.id}
-                        onClick={() => handleToggleGalleryImage(image)}
-                        className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
-                          selectedGalleryImages.some(img => img.id === image.id)
-                            ? 'border-cyan-500 ring-2 ring-cyan-200'
-                            : 'border-slate-200 hover:border-cyan-300 hover:shadow-lg'
-                        }`}
-                      >
-                        <img
-                          src={image.url}
-                          alt={image.originalName || image.filename}
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute top-2 left-2">
-                          {selectedGalleryImages.some(img => img.id === image.id) && (
-                            <div className="w-6 h-6 bg-cyan-600 rounded-full flex items-center justify-center shadow-lg">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-xs font-medium text-white truncate">
-                            {image.originalName || image.filename}
-                          </p>
-                          {image.size && (
-                            <p className="text-xs text-slate-300">
-                              {(image.size / 1024).toFixed(1)} KB
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer with Selected Count and Confirm */}
-              <div className="p-6 border-t border-slate-200 flex items-center justify-between">
-                <div className="text-sm text-slate-600">
-                  {selectedGalleryImages.length} image{selectedGalleryImages.length !== 1 ? 's' : ''} selected
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      setShowGalleryModal(false);
-                      setSelectedGalleryImages([]);
-                    }}
-                    className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmGallerySelection}
-                    className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl text-sm font-medium hover:from-cyan-700 hover:to-blue-700 transition-all shadow-lg"
-                  >
-                    Confirm Selection
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <ImageGalleryModal
+          isOpen={showGalleryModal}
+          onClose={() => setShowGalleryModal(false)}
+          multiple={true}
+          onSelect={(selected: GalleryImage | GalleryImage[]) => {
+            const imgs = selected as GalleryImage[];
+            setSelectedGalleryImages(imgs);
+            setFormData({ ...formData, gallery_items: imgs.map(img => img.url) });
+          }}
+          title="Select Gallery Images"
+          themeColor="cyan"
+          initialSelection={formData.gallery_items}
+        />
 
         {/* Similar Products Selection Modal */}
         {showSimilarProductsModal && (
@@ -1616,11 +1307,10 @@ export default function AddNewProductPage() {
                         <div
                           key={product.id}
                           onClick={() => handleToggleSimilarProduct(product)}
-                          className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
-                            isSelected
-                              ? 'border-violet-500 ring-2 ring-violet-200 bg-violet-50'
-                              : 'border-slate-200 hover:border-violet-300 hover:shadow-lg bg-white'
-                          }`}
+                          className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${isSelected
+                            ? 'border-violet-500 ring-2 ring-violet-200 bg-violet-50'
+                            : 'border-slate-200 hover:border-violet-300 hover:shadow-lg bg-white'
+                            }`}
                         >
                           <div className="p-4">
                             <div className="flex items-start space-x-3">
@@ -1692,102 +1382,18 @@ export default function AddNewProductPage() {
           </div>
         )}
 
-        {/* Meta Image Selection Modal */}
-        {showMetaImageModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Select Meta Image</h3>
-                  <p className="text-sm text-slate-500">Choose an image from your gallery</p>
-                </div>
-                <button
-                  onClick={() => setShowMetaImageModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-all"
-                >
-                  <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="p-6 border-b border-slate-200 space-y-4">
-                <input
-                  type="text"
-                  placeholder="Search images..."
-                  value={gallerySearchTerm}
-                  onChange={(e) => setGallerySearchTerm(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-                />
-                <select
-                  value={selectedGalleryCategory}
-                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium"
-                >
-                  <option value="">All Categories</option>
-                  <option value="products">Products</option>
-                  <option value="general">General</option>
-                  <option value="banner">Banner</option>
-                </select>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                {filteredGalleryImages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-slate-500">No images found</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredGalleryImages.map((image) => (
-                      <div
-                        key={image.id}
-                        onClick={() => {
-                          setSelectedMetaImage(image);
-                          setFormData({ ...formData, meta_image: image.url });
-                          setShowMetaImageModal(false);
-                        }}
-                        className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
-                          selectedMetaImage?.id === image.id || formData.meta_image === image.url
-                            ? 'border-emerald-500 ring-2 ring-emerald-200'
-                            : 'border-slate-200 hover:border-emerald-300 hover:shadow-lg'
-                        }`}
-                      >
-                        <img
-                          src={image.url}
-                          alt={image.originalName || image.filename}
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-xs font-medium text-white truncate">
-                            {image.originalName || image.filename}
-                          </p>
-                          {image.size && (
-                            <p className="text-xs text-slate-300">
-                              {(image.size / 1024).toFixed(1)} KB
-                            </p>
-                          )}
-                        </div>
-                        {(selectedMetaImage?.id === image.id || formData.meta_image === image.url) && (
-                          <div className="absolute top-2 right-2">
-                            <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <ImageGalleryModal
+          isOpen={showMetaImageModal}
+          onClose={() => setShowMetaImageModal(false)}
+          onSelect={(selected: GalleryImage | GalleryImage[]) => {
+            const img = selected as GalleryImage;
+            setSelectedMetaImage(img);
+            setFormData({ ...formData, meta_image: img.url });
+          }}
+          title="Select Meta Image"
+          themeColor="indigo"
+          initialSelection={formData.meta_image}
+        />
       </div>
     </AdminLayout>
   );

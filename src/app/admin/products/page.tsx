@@ -290,26 +290,32 @@ export default function AdminProductsPage() {
         <ProductsNavbar />
 
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
             {error}
           </div>
         )}
 
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-card shadow rounded-lg p-6 mb-6">
+        <div className="bg-white rounded-2xl border overflow-hidden shadow-none p-6 mb-6">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-64">
+            <div className="flex-1 min-w-[300px]">
               <input
                 type="text"
                 placeholder="Search by name, SKU, or barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               />
             </div>
             <div>
@@ -319,7 +325,7 @@ export default function AdminProductsPage() {
                   setSelectedCategory(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
+                className="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium appearance-none min-w-[180px]"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -331,15 +337,15 @@ export default function AdminProductsPage() {
             </div>
             <button
               type="submit"
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200"
+              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-sm"
             >
               Search
             </button>
             <a
               href="/admin/product/add-new"
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 inline-block text-center"
+              className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
             >
-              + Add Product
+              <span className="mr-2">+</span> Add Product
             </a>
           </form>
         </div>
@@ -350,10 +356,14 @@ export default function AdminProductsPage() {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div className="bg-white dark:bg-card shadow rounded-lg overflow-hidden">
+          <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+            <div className="bg-gray-50/50 px-6 py-2 border-b-1 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Product List</h2>
+              <span className="text-xs text-slate-500">{pagination.total} Total Products</span>
+            </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-border">
-                <thead className="bg-gray-50 dark:bg-muted">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50/30">
                   <tr>
                     <th className="px-3 py-3 w-10"></th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -412,25 +422,25 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="bg-white dark:bg-card px-4 py-3 border-t border-gray-200 dark:border-border sm:px-6">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
-                  <span className="font-medium">{pagination.total}</span> results
+            <div className="bg-white px-6 py-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-slate-500">
+                  Showing <span className="font-semibold text-slate-900">{((currentPage - 1) * 10) + 1}</span> to{' '}
+                  <span className="font-semibold text-slate-900">{Math.min(currentPage * 10, pagination.total)}</span> of{' '}
+                  <span className="font-semibold text-slate-900">{pagination.total}</span> products
                 </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setCurrentPage((prev) => prev + 1)}
                     disabled={currentPage >= pagination.totalPage}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     Next
                   </button>
