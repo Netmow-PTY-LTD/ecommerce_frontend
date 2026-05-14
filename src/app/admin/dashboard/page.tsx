@@ -59,18 +59,10 @@ export default function AdminDashboardPage() {
         imagesRes,
         summaryRes
       ] = await Promise.all([
-        api.get('/products?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
-        api.get('/customers?limit=1', { skipAuthRedirect: true })
-          .then(res => {
-            console.log('[Dashboard] Customers fetched successfully', res.data);
-            return res;
-          })
-          .catch(err => {
-            console.error('[Dashboard] Customers fetch failed', err.response?.status, err.response?.data);
-            return { data: { pagination: { total: 0 } } };
-          }),
-        api.get('/gallery?limit=1', { skipAuthRedirect: true }).catch(() => ({ data: { pagination: { total: 0 } } })),
-        api.get('/reports/sales/summary', { skipAuthRedirect: true }).catch(() => ({ data: { data: { summary: { total_orders: 0, net_sales: 0 } } } }))
+        api.get('/products?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/sales/orders?limit=1').catch(() => ({ data: { pagination: { total: 0 }, data: [] } })),
+        api.get('/customers/admin/all?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
+        api.get('/gallery?limit=1').catch(() => ({ data: { pagination: { total: 0 } } }))
       ]);
 
       const summary = summaryRes.data?.data?.summary || summaryRes.data?.data || {};

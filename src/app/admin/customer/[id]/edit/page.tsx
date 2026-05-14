@@ -61,7 +61,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   const fetchCustomer = async () => {
     try {
       setLoadingCustomer(true);
-      const response = await api.get(`/customers/${id}`);
+      const response = await api.get(`/customers/admin/${id}`);
       const customerData = response.data.data;
       setCustomer(customerData);
       setFormData({
@@ -107,7 +107,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
       if (formData.postal_code) payload.postal_code = formData.postal_code;
       if (formData.password) payload.password = formData.password;
 
-      await api.put(`/customers/${id}`, payload);
+      await api.put(`/customers/admin/${id}`, payload);
       setSuccess('Customer updated successfully!');
 
       setTimeout(() => {

@@ -13,19 +13,11 @@ import AdminLayout from '@/components/admin/admin-layout';
 import { DataTable } from '@/components/ui/data-table';
 import {
   User, Mail, Phone, MapPin,
-  History, Edit, Trash2, Eye,
+  History, Edit, Eye,
   Users, UserPlus, Building, Search,
-  CheckCircle2
+  CheckCircle2, Power, PowerOff
 } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 interface Customer {
   id: number;
@@ -69,11 +61,6 @@ export default function AdminCustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [error, setError] = useState('');
-
-  // Delete Confirmation State
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
@@ -121,7 +108,7 @@ export default function AdminCustomersPage() {
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
 
-      const response = await api.get(`/customers?${params}`, { skipAuthRedirect: true });
+      const response = await api.get(`/customers/admin/all?${params}`);
       const data = response.data;
 
       setCustomers(data.data || []);
@@ -178,24 +165,13 @@ export default function AdminCustomersPage() {
     setCurrentPage(1);
   };
 
-  const initiateDelete = (customer: Customer) => {
-    setCustomerToDelete(customer);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!customerToDelete) return;
-
+  const toggleStatus = async (customer: Customer) => {
+    const newStatus = customer.status === 'active' ? 'inactive' : 'active';
     try {
-      setIsDeleting(true);
-      await api.delete(`/customers/${customerToDelete.id}`);
-      setIsDeleteDialogOpen(false);
-      setCustomerToDelete(null);
+      await api.patch(`/customers/admin/${customer.id}/status`, { status: newStatus });
       fetchCustomers();
     } catch (error) {
-      alert('Failed to delete customer');
-    } finally {
-      setIsDeleting(false);
+      alert(`Failed to ${newStatus === 'active' ? 'activate' : 'deactivate'} customer`);
     }
   };
 
@@ -423,11 +399,15 @@ export default function AdminCustomersPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                      onClick={() => initiateDelete(customer)}
-                      title="Delete Customer"
+                      className={`h-8 w-8 p-0 transition-colors ${
+                        customer.status === 'active'
+                          ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
+                          : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                      }`}
+                      onClick={() => toggleStatus(customer)}
+                      title={customer.status === 'active' ? 'Deactivate Customer' : 'Activate Customer'}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {customer.status === 'active' ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
                     </Button>
                   </div>
                 )
@@ -489,10 +469,15 @@ export default function AdminCustomersPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-9 px-4 text-xs gap-2 rounded-lg border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition-all"
-                    onClick={() => initiateDelete(customer)}
+                    className={`h-9 px-4 text-xs gap-2 rounded-lg transition-all ${
+                      customer.status === 'active'
+                        ? 'border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300'
+                        : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300'
+                    }`}
+                    onClick={() => toggleStatus(customer)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete Customer
+                    {customer.status === 'active' ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
+                    {customer.status === 'active' ? 'Deactivate' : 'Activate'}
                   </Button>
                 </div>
               </div>
@@ -513,26 +498,6 @@ export default function AdminCustomersPage() {
           />
         </Card>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <span className="font-bold text-slate-900">{customerToDelete?.name}</span>? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete Customer'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 }

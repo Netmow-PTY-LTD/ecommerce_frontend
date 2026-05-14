@@ -251,14 +251,29 @@ export function ProductCard({
                     <span className="text-[10px] text-gray-400">({rating.toFixed(1)})</span>
                 </div>
 
-                {/* Price Section */}
-                <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-lg font-bold text-brand">
-                        {formatCurrency(product.sale_price || product.price * (1 - (discountPercentage || 0) / 100))}
-                    </span>
-                    {(product.sale_price || discountPercentage > 0) && (
-                        <span className="text-xs text-gray-400 line-through">
-                            {formatCurrency(product.price)}
+                {/* Price and Stock */}
+                <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-baseline gap-2">
+                        {product.sale_price && product.sale_price < product.price ? (
+                            <>
+                                <span className="text-2xl font-bold text-foreground">
+                                    {formatCurrency(product.sale_price)}
+                                </span>
+                                <span className="text-sm text-muted-foreground line-through">
+                                    {formatCurrency(product.price)}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-2xl font-bold text-foreground">
+                                {formatCurrency(product.price)}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Low Stock Warning */}
+                    {(product.stock_quantity || 0) > 0 && (product.stock_quantity || 0) <= 5 && (
+                        <span className="text-xs font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-full whitespace-nowrap">
+                            Only {product.stock_quantity} left
                         </span>
                     )}
                 </div>
