@@ -52,6 +52,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/notifications';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 
 interface AdminLayoutProps {
@@ -482,36 +483,7 @@ export default function AdminLayout({
               </div>
 
               {/* Notifications */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5 text-gray-600" />
-                    <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="max-h-64 overflow-y-auto">
-                    <DropdownMenuItem>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium">New order received</p>
-                        <p className="text-xs text-gray-500">2 minutes ago</p>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium">Customer registered</p>
-                        <p className="text-xs text-gray-500">1 hour ago</p>
-                      </div>
-                    </DropdownMenuItem>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-center text-sm text-brand font-semibold cursor-pointer">
-                    View all notifications
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <NotificationBell userType="admin" />
 
               {/* User Menu */}
               <DropdownMenu>

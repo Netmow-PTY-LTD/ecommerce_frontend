@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LayoutDashboard, ShoppingCart, Users, Package, Settings, LogOut, Menu, Bell, FileText } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Settings, LogOut, Menu, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { NotificationBell } from '@/components/notifications';
 
 interface AdminHeaderProps {
   title: string;
@@ -95,10 +96,7 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         {/* Right side actions */}
         <div className="flex items-center space-x-2">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-          </Button>
+          <NotificationBell userType="admin" />
 
           {/* User menu */}
           <DropdownMenu>

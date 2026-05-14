@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LoginModal } from '@/components/auth/login-modal';
 import { useCurrency, getCurrencySymbol } from '@/contexts/CurrencyContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { NotificationBell } from '@/components/notifications';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -320,6 +321,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
+                        {isAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
@@ -381,6 +383,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
+                        {isAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
