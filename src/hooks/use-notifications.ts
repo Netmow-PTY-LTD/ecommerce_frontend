@@ -1,10 +1,27 @@
 'use client';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
+import { usePathname } from 'next/navigation';
+
+// Helper function to determine user type based on current route
+const getUserType = (pathname: string): 'admin' | 'customer' => {
+  if (pathname?.startsWith('/admin')) {
+    return 'admin';
+  }
+  // Default to customer for public routes and customer routes
+  return 'customer';
+};
 
 export function useNotifications(page = 1, limit = 20) {
+  const pathname = usePathname();
+  const userType = getUserType(pathname);
+
+  const endpoint = userType === 'customer'
+    ? `/notifications/customer/?page=${page}&limit=${limit}`
+    : `/notifications?page=${page}&limit=${limit}`;
+
   const { data, error, isLoading, mutate } = useSWR(
-    `/notifications?page=${page}&limit=${limit}`,
+    endpoint,
     fetcher
   );
   return {
@@ -17,8 +34,15 @@ export function useNotifications(page = 1, limit = 20) {
 }
 
 export function useUnreadCount() {
+  const pathname = usePathname();
+  const userType = getUserType(pathname);
+
+  const endpoint = userType === 'customer'
+    ? '/notifications/customer/unread-count'
+    : '/notifications/unread-count';
+
   const { data, error, isLoading, mutate } = useSWR(
-    '/notifications/unread-count',
+    endpoint,
     fetcher,
     { refreshInterval: 30000 }
   );
