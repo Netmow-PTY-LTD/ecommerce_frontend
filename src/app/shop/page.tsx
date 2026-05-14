@@ -25,11 +25,11 @@ export default function ShopPageWrapper() {
 
 // ─── Sort options ─────────────────────────────────────────────────────────────
 const SORT_OPTIONS = [
-    { value: 'newest',     label: 'Newest First'       },
-    { value: 'price_asc',  label: 'Price: Low to High' },
+    { value: 'newest', label: 'Newest First' },
+    { value: 'price_asc', label: 'Price: Low to High' },
     { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'name_asc',   label: 'Name: A to Z'       },
-    { value: 'name_desc',  label: 'Name: Z to A'       },
+    { value: 'name_asc', label: 'Name: A to Z' },
+    { value: 'name_desc', label: 'Name: Z to A' },
 ];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ function ShopPage() {
                         {/* ════════════════ SIDEBAR (Mobile Overlay + Desktop Sidebar) ════════════════ */}
                         {/* Overlay for mobile */}
                         {isSidebarOpen && (
-                            <div 
+                            <div
                                 className="fixed inset-0 bg-black/50 z-[999] lg:hidden animate-in fade-in duration-300"
                                 onClick={() => setIsSidebarOpen(false)}
                             />
@@ -224,7 +224,7 @@ function ShopPage() {
                                                     </span>
                                                 </div>
                                                 <span className="text-[11px] text-gray-500 font-bold bg-gray-50 rounded-full px-2.5 py-1 border border-gray-100">
-                                                    {(cat as any).product_count || (cat as any).products_count || 0}
+                                                    {(cat as any).total_products}
                                                 </span>
                                             </label>
                                         </li>
@@ -292,7 +292,7 @@ function ShopPage() {
                                                 <span className="text-sm font-bold text-gray-900">{currencySymbol}{priceMax}</span>
                                             </div>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={handlePriceFilter}
                                             className="w-full bg-slate-900 text-white font-bold py-2.5 rounded-xl hover:bg-brand transition-all shadow-md active:scale-[0.98]"
                                         >
@@ -331,12 +331,12 @@ function ShopPage() {
 
                             {/* ── Toolbar ───────────────────────────────────── */}
                             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 md:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 md:mb-8">
-                                
+
                                 {/* Mobile Filter Toggle + Results Count */}
                                 <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                                    <button 
+                                    <button
                                         onClick={() => setIsSidebarOpen(true)}
-                                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-bold text-gray-700 transition-all active:scale-95"
+                                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-bold text-gray-700 transition-all active:scale-95 cursor-pointer"
                                     >
                                         <Filter className="h-4 w-4" />
                                         Filters
@@ -353,7 +353,7 @@ function ShopPage() {
                                         <button
                                             onClick={() => setViewMode('grid')}
                                             className={cn(
-                                                "p-2 rounded-lg transition-all",
+                                                "p-2 rounded-lg transition-all cursor-pointer",
                                                 viewMode === 'grid'
                                                     ? 'text-white bg-brand shadow-md scale-110'
                                                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
@@ -364,7 +364,7 @@ function ShopPage() {
                                         <button
                                             onClick={() => setViewMode('list')}
                                             className={cn(
-                                                "p-2 rounded-lg transition-all",
+                                                "p-2 rounded-lg transition-all cursor-pointer",
                                                 viewMode === 'list'
                                                     ? 'text-white bg-brand shadow-md scale-110'
                                                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
@@ -418,7 +418,7 @@ function ShopPage() {
                                     </div>
                                     <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-3 tracking-tight">No products found</h3>
                                     <p className="text-gray-500 text-sm md:text-base max-w-md mx-auto">We couldn't find any items matching your current filters. Try broadening your search or resetting everything.</p>
-                                    <button 
+                                    <button
                                         onClick={() => router.push(pathname)}
                                         className="mt-10 px-8 py-3 bg-brand text-white font-bold rounded-2xl hover:bg-brand/90 transition-all shadow-xl shadow-brand/20 active:scale-95"
                                     >

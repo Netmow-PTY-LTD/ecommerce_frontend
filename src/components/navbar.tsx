@@ -187,6 +187,7 @@ export function Navbar() {
                                     height={100}
                                     className="rounded-lg w-20 h-auto"
                                     priority
+                                    loading="eager"
                                 />
                             ) : (
                                 <span className="font-bold text-2xl tracking-tighter text-primary hidden sm:inline">
