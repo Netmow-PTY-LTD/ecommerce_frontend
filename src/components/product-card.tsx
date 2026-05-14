@@ -380,15 +380,6 @@ export function ProductCard({
                                     {formatCurrency(product.price)}
                                 </span>
                             </>
-                        ) : hasDiscount ? (
-                            <>
-                                <span className="text-2xl font-bold text-foreground">
-                                    {formatCurrency(product.price * (1 - (discountPercentage || 20) / 100))}
-                                </span>
-                                <span className="text-sm text-muted-foreground line-through">
-                                    {formatCurrency(product.price)}
-                                </span>
-                            </>
                         ) : (
                             <span className="text-2xl font-bold text-foreground">
                                 {formatCurrency(product.price)}

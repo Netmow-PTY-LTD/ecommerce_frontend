@@ -356,7 +356,7 @@ function CheckoutForm({
                     country: formData.country
                 }),
                 subtotal: cartTotals.cartTotal,
-                tax_amount: Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08,
+                tax_amount: effectiveTax,
                 shipping_cost: cartTotals.shippingCost,
                 total_amount: finalTotal,
                 discount_amount: Math.min(discountAmount, cartTotals.cartTotal),
@@ -929,7 +929,7 @@ function CheckoutForm({
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Tax</span>
-                                <span className="font-medium">{formatCurrency(Math.max(0, cartTotals.cartTotal - Math.min(discountAmount, cartTotals.cartTotal)) * 0.08)}</span>
+                                <span className="font-medium">{formatCurrency(effectiveTax)}</span>
                             </div>
                             <div className="border-t border-border pt-3 flex justify-between items-center text-base font-bold">
                                 <span>Total</span>
@@ -1090,8 +1090,13 @@ function CheckoutPageContent() {
         // Calculate totals
         const cartTotal = total();
         const shippingCost = freeShipping || cartTotal >= shippingRules.free_shipping_threshold ? 0 : shippingRules.flat_rate;
-        const taxRate = 0.08; // 8% tax
-        const tax = cartTotal * taxRate;
+
+        // Calculate tax based on each product's sales_tax rate
+        const tax = items.reduce((totalTax, item) => {
+            const itemSubtotal = (item.sale_price || item.price) * item.quantity;
+            const taxRate = (item.sales_tax || 0) / 100; // Use product's sales_tax rate
+            return totalTax + (itemSubtotal * taxRate);
+        }, 0);
 
         setCartTotals({
             cartTotal,
@@ -1154,7 +1159,15 @@ function CheckoutPageContent() {
 
     const effectiveDiscount = Math.min(discountAmount, cartTotals.cartTotal);
     const discountedSubtotal = Math.max(0, cartTotals.cartTotal - effectiveDiscount);
-    const effectiveTax = discountedSubtotal * 0.08;
+
+    // Calculate tax based on discounted subtotal using each product's sales_tax rate proportionally
+    const effectiveTax = items.reduce((totalTax, item) => {
+        const itemSubtotal = (item.sale_price || item.price) * item.quantity;
+        const discountedItemSubtotal = Math.max(0, itemSubtotal - (itemSubtotal / cartTotals.cartTotal) * effectiveDiscount);
+        const taxRate = (item.sales_tax || 0) / 100;
+        return totalTax + (discountedItemSubtotal * taxRate);
+    }, 0);
+
     const effectiveShipping = freeShipping ? 0 : cartTotals.shippingCost;
     const finalTotal = Math.max(0, discountedSubtotal + effectiveShipping + effectiveTax);
 

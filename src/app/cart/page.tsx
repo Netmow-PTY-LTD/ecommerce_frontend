@@ -76,7 +76,14 @@ export default function CartPage() {
     const effectiveDiscount = Math.min(discountAmount, cartTotal);
     const shipping = freeShipping || cartTotal >= shippingRules.free_shipping_threshold ? 0 : shippingRules.flat_rate;
     const discountedSubtotal = Math.max(0, cartTotal - effectiveDiscount);
-    const tax = discountedSubtotal * 0.08;
+
+    // Calculate tax based on each product's sales_tax rate
+    const tax = items.reduce((totalTax, item) => {
+        const itemSubtotal = (item.sale_price || item.price) * item.quantity;
+        const taxRate = (item.sales_tax || 0) / 100; // Use product's sales_tax rate
+        return totalTax + (itemSubtotal * taxRate);
+    }, 0);
+
     const finalTotal = Math.max(0, discountedSubtotal + shipping + tax);
 
     const handleApplyCoupon = async () => {
