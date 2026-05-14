@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Plus, GripVertical } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import {
   DndContext,
   closestCenter,
@@ -114,6 +115,9 @@ export default function AdminUnitsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [dataLoading, setDataLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [modalError, setModalError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
@@ -197,18 +201,27 @@ export default function AdminUnitsPage() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this unit?')) return;
+  const handleDeleteClick = (id: number) => {
+    setUnitToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!unitToDelete) return;
 
     try {
-      await api.delete(`/products/units/${id}`);
+      setIsDeleting(true);
+      await api.delete(`/products/units/${unitToDelete}`);
       setSuccess('Unit deleted successfully');
       fetchUnits();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setError(err.response?.data?.message || 'Failed to delete unit');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to delete unit');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setUnitToDelete(null);
     }
   };
 
@@ -308,7 +321,7 @@ export default function AdminUnitsPage() {
                     key={unit.id}
                     unit={unit}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -397,6 +410,15 @@ export default function AdminUnitsPage() {
           </div>
         </div>
       </FormModal>
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Delete Unit"
+        description="Are you sure you want to delete this unit of measurement? This might affect products using this unit."
+        confirmText="Delete Unit"
+      />
     </AdminLayout>
   );
 }
