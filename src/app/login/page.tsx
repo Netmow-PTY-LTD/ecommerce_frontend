@@ -7,8 +7,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Eye, EyeOff, ShoppingBag, Mail, Lock, ArrowRight,
-  ShieldCheck, Truck, RefreshCcw
+  ShieldCheck, Truck, RefreshCcw, Loader2
 } from 'lucide-react';
+import { useSettings } from '@/hooks/use-settings';
+import Image from 'next/image';
+
 
 function CustomerLoginPageContent() {
   const searchParams = useSearchParams();
@@ -19,7 +22,9 @@ function CustomerLoginPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const { login, loading, isAuthenticated: isCustomerAuthenticated } = useCustomerAuth();
   const { isAuthenticated: isAdminAuthenticated, user } = useAuth();
+  const { settings, isLoading: settingsLoading } = useSettings();
   const router = useRouter();
+
 
   const isAuthenticated = isCustomerAuthenticated || isAdminAuthenticated;
 
@@ -44,10 +49,11 @@ function CustomerLoginPageContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand/10 border-t-brand"></div>
       </div>
     );
   }
+
 
   if (isAuthenticated) return null;
 
@@ -71,12 +77,30 @@ function CustomerLoginPageContent() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 transition-transform group-hover:scale-105">
-              <ShoppingBag className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">YourStore</span>
+            {settingsLoading ? (
+              <div className="w-10 h-10 rounded-xl bg-slate-100 animate-pulse" />
+            ) : settings.logo_url ? (
+              <Image
+                src={settings.logo_url}
+                alt={settings.company_name || 'Store Logo'}
+                width={120}
+                height={40}
+                className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+                priority
+              />
+            ) : (
+              <>
+                <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shadow-lg shadow-brand/20 transition-transform group-hover:scale-105">
+                  <ShoppingBag className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-slate-900 tracking-tight">
+                  {settings.company_name || 'YourStore'}
+                </span>
+              </>
+            )}
           </Link>
         </div>
+
 
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 sm:p-10">
@@ -106,7 +130,7 @@ function CustomerLoginPageContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 />
               </div>
             </div>
@@ -114,7 +138,8 @@ function CustomerLoginPageContent() {
             <div>
               <div className="flex justify-between items-center mb-1.5 ml-1">
                 <label className="text-sm font-semibold text-slate-700">Password</label>
-                <Link href="/forgot-password" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                <Link href="/forgot-password" className="text-xs text-brand hover:opacity-80 font-medium">
+
                   Forgot?
                 </Link>
               </div>
@@ -126,7 +151,7 @@ function CustomerLoginPageContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 />
                 <button
                   type="button"
@@ -141,21 +166,13 @@ function CustomerLoginPageContent() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-4 rounded-xl text-white font-bold text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-100"
+              className="w-full py-4 rounded-xl text-white font-bold text-sm bg-brand hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-brand/10"
             >
               {submitting ? 'Signing in...' : 'Sign In'}
               {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-50 text-center">
-            <p className="text-slate-500 text-sm">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-indigo-600 font-bold hover:text-indigo-700">
-                Create one
-              </Link>
-            </p>
-          </div>
         </div>
 
         {/* Features */}
@@ -195,9 +212,10 @@ export default function CustomerLoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand/10 border-t-brand"></div>
       </div>
     }>
+
       <CustomerLoginPageContent />
     </Suspense>
   );
