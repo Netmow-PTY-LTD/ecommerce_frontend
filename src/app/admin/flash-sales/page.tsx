@@ -55,6 +55,7 @@ export default function AdminFlashSalesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Flash sale modal
   const [showModal, setShowModal] = useState(false);
@@ -91,11 +92,14 @@ export default function AdminFlashSalesPage() {
 
   const fetchFlashSales = async () => {
     try {
+      setDataLoading(true);
       const res = await api.get(`/pricing/flash-sales?page=${currentPage}&limit=20`);
       setFlashSales(res.data.data || []);
       setPagination(res.data.pagination || { total: 0, page: 1, limit: 20, totalPage: 0 });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load flash sales');
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -376,7 +380,12 @@ export default function AdminFlashSalesPage() {
         </div>
 
         {/* Flash Sales List */}
-        {flashSales.length === 0 ? (
+        {dataLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand"></div>
+            <p className="text-sm text-muted-foreground font-medium">Loading flash sales...</p>
+          </div>
+        ) : flashSales.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-none">
             <Zap className="h-16 w-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">No flash sales yet</h3>

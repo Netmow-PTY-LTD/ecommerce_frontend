@@ -9,6 +9,7 @@ import ProductsNavbar from '@/components/admin/products-navbar';
 import AdminLayout from '@/components/admin/admin-layout';
 import { Button } from '@/components/ui/button';
 import { GripVertical, Trash2 } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import {
   DndContext,
   closestCenter,
@@ -23,6 +24,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import Link from 'next/link';
 
 interface Product {
   id: number;
@@ -129,23 +131,23 @@ function SortableProductRow({
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-        <a
+        <Link
           href={`/admin/product/details/${product.id}`}
           className="text-green-600 hover:text-green-900"
         >
           View
-        </a>
+        </Link>
         <span className="text-gray-300">|</span>
-        <a
+        <Link
           href={`/admin/product/${product.id}/edit`}
           className="text-brand hover:text-brand/80"
         >
           Edit
-        </a>
+        </Link>
         <span className="text-gray-300">|</span>
         <button
           onClick={() => onDelete(product.id)}
-          className="text-red-600 hover:text-red-900"
+          className="text-red-600 hover:text-red-900 cursor-pointer"
         >
           Delete
         </button>
@@ -174,6 +176,9 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [dataLoading, setDataLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -248,17 +253,27 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteClick = (id: number) => {
+    setProductToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
 
     try {
-      await api.delete(`/products/${id}`);
+      setIsDeleting(true);
+      await api.delete(`/products/${productToDelete}`);
       setSuccess('Product deleted successfully');
       fetchProducts();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to delete product');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -412,7 +427,7 @@ export default function AdminProductsPage() {
                           key={product.id}
                           product={product}
                           formatCurrency={formatCurrency}
-                          onDelete={handleDelete}
+                          onDelete={handleDeleteClick}
                         />
                       ))}
                     </SortableContext>
@@ -449,6 +464,16 @@ export default function AdminProductsPage() {
             </div>
           </div>
         </DndContext>
+
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          isLoading={isDeleting}
+          title="Delete Product"
+          description="Are you sure you want to delete this product? This will permanently remove it from your catalog."
+          confirmText="Delete Product"
+        />
       </div>
     </AdminLayout>
   );

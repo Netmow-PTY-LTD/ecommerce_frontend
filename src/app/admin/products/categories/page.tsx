@@ -8,6 +8,7 @@ import ProductsNavbar from '@/components/admin/products-navbar';
 import AdminLayout from '@/components/admin/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Plus, GripVertical, ImageIcon } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import {
   DndContext,
   closestCenter,
@@ -123,6 +124,9 @@ export default function AdminCategoriesPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [dataLoading, setDataLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationMeta, setPaginationMeta] = useState<{
     total: number;
@@ -197,18 +201,27 @@ export default function AdminCategoriesPage() {
     router.push(`/admin/products/categories/${category.id}/edit`);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+  const handleDeleteClick = (id: number) => {
+    setCategoryToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!categoryToDelete) return;
 
     try {
-      await api.delete(`/ecommerce/categories/${id}`);
+      setIsDeleting(true);
+      await api.delete(`/ecommerce/categories/${categoryToDelete}`);
       setSuccess('Category deleted successfully');
       fetchCategories();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setError(err.response?.data?.message || 'Failed to delete category');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to delete category');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setCategoryToDelete(null);
     }
   };
 
@@ -225,6 +238,7 @@ export default function AdminCategoriesPage() {
   }
 
   return (
+    <>
     <AdminLayout>
       <div className="w-full">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
@@ -289,7 +303,7 @@ export default function AdminCategoriesPage() {
                       key={category.id}
                       category={category}
                       onEdit={handleEdit}
-                      onDelete={handleDelete}
+                      onDelete={handleDeleteClick}
                     />
                   ))}
                 </div>
@@ -314,5 +328,15 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
     </AdminLayout>
+    <ConfirmationModal
+      isOpen={isDeleteModalOpen}
+      onClose={() => setIsDeleteModalOpen(false)}
+      onConfirm={confirmDelete}
+      isLoading={isDeleting}
+      title="Delete Category"
+      description="Are you sure you want to delete this category? This will also affect products associated with it."
+      confirmText="Delete Category"
+    />
+    </>
   );
 }
