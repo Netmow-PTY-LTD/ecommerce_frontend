@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 interface OrderItem {
   id: number;
@@ -48,6 +49,7 @@ function OrderStatusContent() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -110,7 +112,7 @@ function OrderStatusContent() {
       setOrder(transformedOrder);
     } catch (err: any) {
       console.error('Failed to fetch order:', err);
-      setError('Order not found. Please check your order ID and try again.');
+      setError('Order not found. Please check your order number or ID and try again.');
     } finally {
       setLoading(false);
     }
@@ -167,6 +169,68 @@ function OrderStatusContent() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!order) return;
+
+    setDownloadingInvoice(true);
+    try {
+      const response = await api.get(`/sales/public/orders/${order.id}/invoice`, {
+        skipAuthRedirect: true,
+        responseType: 'blob'
+      } as any);
+
+      // Create a blob from the response
+      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice-${order.order_number}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Invoice downloaded successfully');
+    } catch (error: any) {
+      console.error('Error downloading invoice:', error);
+
+      // Fallback: create a simple invoice from the order data
+      const invoiceContent = {
+        invoice_number: `INV-${order.order_number}`,
+        order_number: order.order_number,
+        date: order.created_at,
+        customer: {
+          name: order.customer_name,
+          email: order.customer_email
+        },
+        items: order.items,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        shipping: order.shipping_cost,
+        discount: order.discount_amount,
+        total: order.total,
+        payment_method: order.payment_method,
+        payment_status: order.payment_status
+      };
+
+      const blob = new Blob([JSON.stringify(invoiceContent, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice-${order.order_number}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.info('Invoice generated from order details');
+    } finally {
+      setDownloadingInvoice(false);
+    }
   };
 
   if (loading) {
@@ -250,6 +314,25 @@ function OrderStatusContent() {
                 <p className="text-sm text-slate-600 mt-1">Placed on {formatDate(order.created_at)}</p>
               </div>
               <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleDownloadInvoice}
+                  disabled={downloadingInvoice}
+                  className="px-4 py-2 text-sm font-bold rounded-full border-2 bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {downloadingInvoice ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Download Invoice
+                    </>
+                  )}
+                </button>
                 <span className={`px-4 py-2 text-sm font-bold rounded-full border-2 ${getStatusColor(order.status)}`}>
                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                 </span>
