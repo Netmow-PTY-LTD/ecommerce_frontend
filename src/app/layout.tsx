@@ -12,7 +12,7 @@ import AdminNavbarProvider from "@/components/admin/admin-navbar-provider";
 import MainWrapper from "@/components/admin/main-wrapper";
 import { cn } from "@/lib/utils";
 import { ChatWidget } from "@/components/chat/chat-widget";
-import { NotificationProvider } from "@/contexts/notification-context";
+import { NotificationProviderWrapper } from "@/components/notifications/notification-provider-wrapper";
 import { ToastContainer } from "@/components/notifications";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -47,7 +47,7 @@ export default function RootLayout({
           <CurrencyProvider>
             <AuthProvider>
               <CustomerAuthProvider>
-                <NotificationProvider>
+                <NotificationProviderWrapper>
                   <AdminNavbarProvider>
                     <Navbar />
                     <MainWrapper>
@@ -58,7 +58,7 @@ export default function RootLayout({
                   </AdminNavbarProvider>
                   <ToastContainer />
                   <Toaster position="bottom-right" richColors />
-                </NotificationProvider>
+                </NotificationProviderWrapper>
               </CustomerAuthProvider>
             </AuthProvider>
           </CurrencyProvider>

@@ -25,6 +25,16 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminNotificationWrapper({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+
+  return (
+    <NotificationProvider token={token || undefined}>
+      {children}
+    </NotificationProvider>
+  );
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -32,11 +42,11 @@ export default function AdminLayout({
 }) {
   return (
     <AuthProvider>
-      <NotificationProvider>
+      <AdminNotificationWrapper>
         <AdminLayoutContent>{children}</AdminLayoutContent>
         <ToastContainer />
         <Toaster position="bottom-right" richColors />
-      </NotificationProvider>
+      </AdminNotificationWrapper>
     </AuthProvider>
   );
 }

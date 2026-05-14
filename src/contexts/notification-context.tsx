@@ -22,6 +22,7 @@ interface NotificationContextType {
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   isConnected: boolean;
+  userType?: 'admin' | 'customer';
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -29,22 +30,61 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children, token }: { children: ReactNode; token?: string }) {
   const [isConnected, setIsConnected] = useState(false);
 
+  // Detect user type from token (simple JWT decode)
+  const [userType, setUserType] = useState<'admin' | 'customer'>('admin');
+
+  useEffect(() => {
+    if (token) {
+      try {
+        // Simple JWT decode to check user type
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          setUserType(payload.type === 'customer' ? 'customer' : 'admin');
+        }
+      } catch (err) {
+        console.error('Error decoding token:', err);
+      }
+    }
+  }, [token]);
+
+  // Use different endpoints based on user type
+  const notificationsEndpoint = userType === 'customer' ? '/notifications/customer/' : '/notifications';
+  const unreadCountEndpoint = userType === 'customer' ? '/notifications/customer/unread-count' : '/notifications/unread-count';
+
   // Use SWR conditionally - only fetch when token exists
   const { data: notificationsData, mutate } = useSWR(
-    token ? '/notifications?page=1&limit=50' : null,
-    async url => {
+    token ? `${notificationsEndpoint}?page=1&limit=50` : null,
+    async (url: string) => {
+      console.log('🔔 Fetching notifications from:', url);
       const response = await api.get(url);
+      console.log('🔔 Notifications response:', response.data);
       return response.data;
+    },
+    {
+      refreshInterval: 30000, // Refresh every 30 seconds
+      revalidateOnFocus: true,
+      shouldRetryOnError: true,
+      onError: (err) => {
+        console.error('❌ Error fetching notifications:', err);
+      }
     }
   );
 
   const { data: unreadData, mutate: mutateCount } = useSWR(
-    token ? '/notifications/unread-count' : null,
-    async url => {
+    token ? unreadCountEndpoint : null,
+    async (url: string) => {
+      console.log('🔔 Fetching unread count from:', url);
       const response = await api.get(url);
+      console.log('🔔 Unread count response:', response.data);
       return response.data;
     },
-    { refreshInterval: token ? 30000 : 0 }
+    {
+      refreshInterval: token ? 10000 : 0, // Refresh every 10 seconds
+      onError: (err) => {
+        console.error('❌ Error fetching unread count:', err);
+      }
+    }
   );
 
   const notifications = notificationsData?.data || [];
@@ -91,13 +131,15 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
   }, [token, mutate, mutateCount]);
 
   const markAsRead = async (id: number) => {
-    await api.put(`/notifications/${id}/read`);
+    const endpoint = userType === 'customer' ? `/notifications/customer/${id}/read` : `/notifications/${id}/read`;
+    await api.put(endpoint);
     mutate();
     mutateCount();
   };
 
   const markAllAsRead = async () => {
-    await api.put('/notifications/read-all');
+    const endpoint = userType === 'customer' ? '/notifications/customer/read-all' : '/notifications/read-all';
+    await api.put(endpoint);
     mutate();
     mutateCount();
   };
@@ -109,7 +151,8 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
         unreadCount: count || 0,
         markAsRead,
         markAllAsRead,
-        isConnected
+        isConnected,
+        userType
       }}
     >
       {children}
