@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -102,6 +102,9 @@ export default function AdminCustomersPage() {
         page: currentPage.toString(),
         limit: '10',
       });
+
+      console.log("Customer Params", params);
+
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
       if (appliedSearch) params.append('search', appliedSearch);
 
@@ -175,7 +178,7 @@ export default function AdminCustomersPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -192,7 +195,7 @@ export default function AdminCustomersPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
+          <Card className="border-none shadow-sm bg-gradient-to-br from-brand to-brand/90 text-white p-4 transition-all hover:scale-[1.02] cursor-default">
             <CardContent className="p-0">
               <div className="flex items-center justify-between">
                 <div>
@@ -349,7 +352,7 @@ export default function AdminCustomersPage() {
                 title: 'Type',
                 render: (type): ReactNode => (
                   <Badge className={`${type === 'company'
-                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                    ? 'bg-brand/10 text-brand border-purple-200'
                     : 'bg-orange-50 text-orange-700 border-orange-200'
                     } shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
                     {type === 'company' ? 'Bus' : 'Ind'}
@@ -421,7 +424,7 @@ export default function AdminCustomersPage() {
                     <div className="space-y-1">
                       <p className="font-semibold text-slate-900">{customer.email || 'No Email'}</p>
                       <p className="text-slate-600">{customer.phone || 'No Phone'}</p>
-                      {customer.company && <p className="text-indigo-600 text-xs font-medium">@{customer.company}</p>}
+                      {customer.company && <p className="text-brand text-xs font-medium">@{customer.company}</p>}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -442,7 +445,7 @@ export default function AdminCustomersPage() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 uppercase">Total Spent</p>
-                    <p className="font-bold text-indigo-600">{formatCurrency(Number(customer.total_spent || 0))}</p>
+                    <p className="font-bold text-brand">{formatCurrency(Number(customer.total_spent || 0))}</p>
                   </div>
                 </div>
 
@@ -498,3 +501,4 @@ export default function AdminCustomersPage() {
     </AdminLayout>
   );
 }
+

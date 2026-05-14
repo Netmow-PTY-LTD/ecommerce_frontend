@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 import { getCurrencySymbol } from '@/contexts/CurrencyContext';
 import { useAdminContext } from '@/components/admin/admin-navbar-provider';
@@ -23,9 +24,23 @@ export function Footer() {
             <div className="container mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold tracking-tight text-primary">
-                            {settings.company_name || 'LuxeStore'}
-                        </h3>
+                        {/* Logo / Company Name */}
+                        <div className="mb-2">
+                            {settings.logo_url ? (
+                                <Image
+                                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                                    alt={settings.company_name || 'Logo'}
+                                    width={140}
+                                    height={48}
+                                    className="object-contain h-12 w-auto"
+                                    unoptimized
+                                />
+                            ) : (
+                                <h3 className="text-xl font-bold tracking-tight text-primary">
+                                    {settings.company_name || 'LuxeStore'}
+                                </h3>
+                            )}
+                        </div>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                             {settings.description || 'Premium products for a premium lifestyle. We curate the best items for you.'}
                         </p>

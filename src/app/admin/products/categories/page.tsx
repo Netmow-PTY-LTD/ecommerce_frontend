@@ -55,9 +55,8 @@ function SortableCategoryItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded-lg border bg-card p-4 transition-shadow ${
-        isDragging ? 'shadow-lg' : 'hover:shadow-sm'
-      }`}
+      className={`flex items-center gap-3 rounded-2xl border bg-white p-4 transition-all ${isDragging ? 'shadow-xl ring-2 ring-indigo-500/20' : 'shadow-none hover:border-slate-300'
+        }`}
     >
       <button
         {...attributes}
@@ -82,11 +81,10 @@ function SortableCategoryItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-foreground truncate">{category.name}</span>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
-            category.status === 'active'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-          }`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${category.status === 'active'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+            }`}>
             {category.status === 'active' ? 'Active' : 'Inactive'}
           </span>
           {category.show_on_home && (
@@ -227,79 +225,93 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <AdminLayout
-      title="Categories Management"
-      subtitle="Manage product categories"
-    >
-      <div className="space-y-6">
-        <ProductsNavbar />
-
-        {success && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
-            {success}
+    <AdminLayout>
+      <div className="w-full">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Categories Management</h1>
+            <p className="text-slate-500 text-sm">Manage your product categories</p>
           </div>
-        )}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Categories ({paginationMeta.total})</h2>
-          <Button onClick={() => router.push('/admin/products/categories/add')} className="gap-2">
+          <Button
+            onClick={() => router.push('/admin/products/categories/add')}
+            className="gap-2 bg-brand text-white border-none rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:bg-brand/90 transition-all"
+          >
             <Plus className="h-4 w-4" />
             Add Category
           </Button>
         </div>
+        <div className="space-y-6">
+          <ProductsNavbar />
 
-        {dataLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-            <p className="text-sm text-muted-foreground font-medium">Loading categories...</p>
+          {success && (
+            <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {success}
+            </div>
+          )}
+          {error && (
+            <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Categories ({paginationMeta.total})</h2>
           </div>
-        ) : categories.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            No categories found. Add your first category to get started.
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={categories.map((c) => c.id)}
-              strategy={verticalListSortingStrategy}
+
+          {dataLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground font-medium">Loading categories...</p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No categories found. Add your first category to get started.
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <SortableCategoryItem
-                    key={category.id}
-                    category={category}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )}
-
-        {paginationMeta.totalPage > 1 && (
-          <div className="flex justify-center gap-2 mt-4">
-            {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={page === currentPage ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handlePageChange(page)}
+              <SortableContext
+                items={categories.map((c) => c.id)}
+                strategy={verticalListSortingStrategy}
               >
-                {page}
-              </Button>
-            ))}
-          </div>
-        )}
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <SortableCategoryItem
+                      key={category.id}
+                      category={category}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+
+          {paginationMeta.totalPage > 1 && (
+            <div className="flex justify-center gap-2 mt-4">
+              {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={page === currentPage ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

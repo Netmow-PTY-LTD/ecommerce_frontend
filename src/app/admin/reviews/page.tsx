@@ -214,7 +214,7 @@ export default function AdminReviewsPage() {
               <select
                 value={filterRating}
                 onChange={(e) => { setFilterRating(e.target.value); setCurrentPage(1); }}
-                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
               >
                 <option value="">All Ratings</option>
                 <option value="5">5 Stars</option>
@@ -259,7 +259,7 @@ export default function AdminReviewsPage() {
                           {review.status}
                         </Badge>
                         {review.is_verified_purchase && (
-                          <Badge className="px-2 py-0 border border-indigo-100 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider" variant="outline">
+                          <Badge className="px-2 py-0 border border-brand/20 bg-brand/10 text-brand dark:bg-brand/20 dark:border-brand/30 dark:text-brand/80 text-[10px] font-bold uppercase tracking-wider" variant="outline">
                             Verified
                           </Badge>
                         )}
@@ -281,7 +281,7 @@ export default function AdminReviewsPage() {
 
                       {review.admin_reply && (
                         <div className="mt-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 border border-slate-100 dark:border-slate-800 text-sm">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-brand dark:text-brand/80 uppercase tracking-widest mb-1">
                             <MessageSquare className="h-3 w-3" /> Admin Response
                           </div>
                           <p className="text-slate-600 dark:text-slate-400 text-sm italic">"{review.admin_reply}"</p>
@@ -409,7 +409,7 @@ export default function AdminReviewsPage() {
               <Button variant="outline" onClick={() => setReplyModal({ open: false, reviewId: null, status: 'approved', reply: '' })}>
                 Cancel
               </Button>
-              <Button onClick={submitReply}>
+              <Button className="bg-brand hover:bg-brand/90" onClick={submitReply}>
                 {replyModal.status === 'approved' ? 'Approve' : 'Reject'}
               </Button>
             </div>

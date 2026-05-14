@@ -15,6 +15,25 @@ import { useShippingRules } from '@/hooks/use-settings';
 import { useAddresses } from '@/hooks/use-addresses';
 import { AddressSelector } from '@/components/address/address-selector';
 
+// Checkout data interface
+interface CheckoutFormData {
+    email: string;
+    phone: string;
+    firstName: string;
+    lastName: string;
+    address: string;
+    apartment: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    guestCheckout: boolean;
+    password?: string;
+    confirmPassword?: string;
+    saveInfo: boolean;
+    newsletter: boolean;
+}
+
 // CheckoutForm component
 function CheckoutForm({
     formData,
@@ -41,10 +60,10 @@ function CheckoutForm({
     applyCoupon,
     removeCoupon
 }: {
-    formData: any;
-    setFormData: (data: any) => void;
+    formData: CheckoutFormData;
+    setFormData: React.Dispatch<React.SetStateAction<CheckoutFormData>>;
     errors: Record<string, string>;
-    setErrors: (errors: Record<string, string>) => void;
+    setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     isProcessing: boolean;
     setIsProcessing: (processing: boolean) => void;
     finalTotal: number;
@@ -79,7 +98,7 @@ function CheckoutForm({
 
 
 
-    
+
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [showManualAddress, setShowManualAddress] = useState(true);
 
@@ -157,7 +176,7 @@ function CheckoutForm({
 
         // Clear error when user starts typing
         if (errors[name]) {
-            setErrors({ ...errors, [name]: '' });
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
 
         // Clear password errors when switching to guest checkout
@@ -369,7 +388,7 @@ function CheckoutForm({
 
             // Step 1: Create the Order in the backend (reserves stock)
             const orderResponse = await api.post('/sales/public/checkout-order', orderData);
-            
+
             if (!orderResponse.data || (orderResponse.data.status !== true && !orderResponse.data.data)) {
                 throw new Error(orderResponse.data?.message || 'Failed to create order');
             }
@@ -410,7 +429,7 @@ function CheckoutForm({
                 // Cash on Delivery
                 clearCart();
                 toast.success(`Order placed successfully! Order #${orderNum || 'created'}. Pay on delivery.`);
-                
+
                 if (orderId && orderId !== 'undefined') {
                     localStorage.setItem('lastOrderId', orderId);
                 }
@@ -516,107 +535,107 @@ function CheckoutForm({
                         </h2>
                         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
                             {/* Manual Address Entry - For all users */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">First Name *</label>
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.firstName ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="John"
-                                        />
-                                        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Last Name *</label>
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.lastName ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="Doe"
-                                        />
-                                        {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Address *</label>
-                                        <input
-                                            type="text"
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.address ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="123 Main Street"
-                                        />
-                                        {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Apartment, suite, etc. (optional)</label>
-                                        <input
-                                            type="text"
-                                            name="apartment"
-                                            value={formData.apartment}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                            placeholder="Apt 4B"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">City *</label>
-                                        <input
-                                            type="text"
-                                            name="city"
-                                            value={formData.city}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.city ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="New York"
-                                        />
-                                        {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">State</label>
-                                        <input
-                                            type="text"
-                                            name="state"
-                                            value={formData.state}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.state ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="NY"
-                                        />
-                                        {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Postal Code</label>
-                                        <input
-                                            type="text"
-                                            name="postalCode"
-                                            value={formData.postalCode}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.postalCode ? 'border-red-500' : 'border-input'}`}
-                                            placeholder="10001"
-                                        />
-                                        {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
-                                    </div>
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Country *</label>
+                                    <label className="block text-sm font-medium mb-2">First Name *</label>
                                     <input
                                         type="text"
-                                        name="country"
-                                        value={formData.country}
+                                        name="firstName"
+                                        value={formData.firstName}
                                         onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.country ? 'border-red-500' : 'border-input'}`}
-                                        placeholder="United States"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.firstName ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="John"
                                     />
-                                    {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                                    {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Last Name *</label>
+                                    <input
+                                        type="text"
+                                        name="lastName"
+                                        value={formData.lastName}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.lastName ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="Doe"
+                                    />
+                                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Address *</label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.address ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="123 Main Street"
+                                    />
+                                    {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Apartment, suite, etc. (optional)</label>
+                                    <input
+                                        type="text"
+                                        name="apartment"
+                                        value={formData.apartment}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        placeholder="Apt 4B"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">City *</label>
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.city ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="New York"
+                                    />
+                                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">State</label>
+                                    <input
+                                        type="text"
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.state ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="NY"
+                                    />
+                                    {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Postal Code</label>
+                                    <input
+                                        type="text"
+                                        name="postalCode"
+                                        value={formData.postalCode}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.postalCode ? 'border-red-500' : 'border-input'}`}
+                                        placeholder="10001"
+                                    />
+                                    {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Country *</label>
+                                <input
+                                    type="text"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleInputChange}
+                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.country ? 'border-red-500' : 'border-input'}`}
+                                    placeholder="United States"
+                                />
+                                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                            </div>
                         </div>
                     </section>
 
@@ -648,65 +667,65 @@ function CheckoutForm({
                                 {/* Account Creation (Optional) */}
                                 {!formData.guestCheckout && (
                                     <>
-                                    <div className="border-t border-border pt-4 space-y-4">
-                                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                            <Mail className="h-4 w-4" />
-                                            <span>Create account with checkout email (Optional)</span>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Password</label>
-                                            <input
-                                                type="password"
-                                                name="password"
-                                                value={formData.password || ''}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.password ? 'border-red-500' : 'border-input'}`}
-                                                placeholder="Create a password for your account"
-                                            />
-                                            {errors.password && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                                            )}
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Minimum 8 characters, must contain letters and numbers. Leave empty to skip account creation.
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Confirm Password</label>
-                                            <input
-                                                type="password"
-                                                name="confirmPassword"
-                                                value={formData.confirmPassword || ''}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.confirmPassword ? 'border-red-500' : 'border-input'}`}
-                                                placeholder="Confirm your password"
-                                            />
-                                            {errors.confirmPassword && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Guest Checkout Option */}
-                                    <div className="border-t border-border pt-4">
-                                        <div className="flex items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                id="guestCheckout"
-                                                name="guestCheckout"
-                                                checked={formData.guestCheckout}
-                                                onChange={handleInputChange}
-                                                className="w-4 h-4 mt-1"
-                                            />
-                                            <div className="flex-1">
-                                                <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
-                                                    Continue as Guest (No account required)
-                                                </label>
+                                        <div className="border-t border-border pt-4 space-y-4">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                                <Mail className="h-4 w-4" />
+                                                <span>Create account with checkout email (Optional)</span>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">Password</label>
+                                                <input
+                                                    type="password"
+                                                    name="password"
+                                                    value={formData.password || ''}
+                                                    onChange={handleInputChange}
+                                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.password ? 'border-red-500' : 'border-input'}`}
+                                                    placeholder="Create a password for your account"
+                                                />
+                                                {errors.password && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                                                )}
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    Check this to skip account creation and checkout as a guest
+                                                    Minimum 8 characters, must contain letters and numbers. Leave empty to skip account creation.
                                                 </p>
                                             </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-2">Confirm Password</label>
+                                                <input
+                                                    type="password"
+                                                    name="confirmPassword"
+                                                    value={formData.confirmPassword || ''}
+                                                    onChange={handleInputChange}
+                                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${errors.confirmPassword ? 'border-red-500' : 'border-input'}`}
+                                                    placeholder="Confirm your password"
+                                                />
+                                                {errors.confirmPassword && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+
+                                        {/* Guest Checkout Option */}
+                                        <div className="border-t border-border pt-4">
+                                            <div className="flex items-start gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    id="guestCheckout"
+                                                    name="guestCheckout"
+                                                    checked={formData.guestCheckout}
+                                                    onChange={handleInputChange}
+                                                    className="w-4 h-4 mt-1"
+                                                />
+                                                <div className="flex-1">
+                                                    <label htmlFor="guestCheckout" className="text-sm font-medium cursor-pointer">
+                                                        Continue as Guest (No account required)
+                                                    </label>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Check this to skip account creation and checkout as a guest
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </>
                                 )}
 
@@ -1050,7 +1069,7 @@ function CheckoutPageContent() {
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CheckoutFormData>({
         // Contact
         email: '',
         phone: '',

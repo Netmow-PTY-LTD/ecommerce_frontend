@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -65,7 +65,7 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
 
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand to-brand/90 flex items-center justify-center">
             <span className="text-white font-bold text-sm">E</span>
           </div>
           <span className="hidden md:inline-block font-bold text-xl">Admin Panel</span>
@@ -105,7 +105,7 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-brand to-brand/90 text-white">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -172,3 +172,4 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
     </header>
   );
 }
+

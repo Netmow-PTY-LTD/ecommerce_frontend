@@ -57,6 +57,8 @@ import { useSettingsContext } from '@/contexts/SettingsContext';
 interface AdminLayoutProps {
   children: ReactNode;
   defaultSidebarCollapsed?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 interface NavItem {
@@ -110,15 +112,15 @@ const navigation: NavItem[] = [
       { name: 'Answer Guide', href: '/admin/chat/answer-guide', icon: BookOpen },
     ],
   },
-  {
-    name: 'Email',
-    icon: Mail,
-    subitems: [
-      { name: 'Templates', href: '/admin/email/templates', icon: FileText },
-      // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
-      // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
-    ],
-  },
+  // {
+  //   name: 'Email',
+  //   icon: Mail,
+  //   subitems: [
+  //     { name: 'Templates', href: '/admin/email/templates', icon: FileText },
+  //     // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
+  //     // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
+  //   ],
+  // },
   {
     name: 'Analytics',
     icon: BarChart3,
@@ -138,7 +140,9 @@ const navigation: NavItem[] = [
 
 export default function AdminLayout({
   children,
-  defaultSidebarCollapsed = false
+  defaultSidebarCollapsed = false,
+  title,
+  subtitle
 }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -272,16 +276,16 @@ export default function AdminLayout({
             )}>
               {settings?.logo_url ? (
                 <div className="h-8 w-auto max-w-[140px] flex items-center overflow-hidden">
-                  <img 
-                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                    alt="Logo" 
+                  <img
+                    src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                    alt="Logo"
                     className="h-full w-auto object-contain"
                   />
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                    <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+                  <div className="h-8 w-8 rounded-lg bg-brand flex items-center justify-center shrink-0">
+                    <LayoutDashboard className="h-4 w-4 text-white" />
                   </div>
                   <span className="font-semibold text-lg text-foreground whitespace-nowrap">
                     {settings?.company_name || 'Admin'}
@@ -337,7 +341,7 @@ export default function AdminLayout({
                           {item.name}
                         </span>
                         {item.badge && !sidebarCollapsed && (
-                          <span className="ml-auto bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                          <span className="ml-auto bg-brand/10 text-brand text-xs px-2 py-0.5 rounded-full">
                             {item.badge}
                           </span>
                         )}
@@ -398,7 +402,7 @@ export default function AdminLayout({
                               {SubIcon && <SubIcon className="h-4 w-4 shrink-0" />}
                               <span className="flex-1 whitespace-nowrap">{subitem.name}</span>
                               {isSubActive && (
-                                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                <div className="h-1.5 w-1.5 rounded-full bg-brand" />
                               )}
                             </Link>
                           );
@@ -418,7 +422,7 @@ export default function AdminLayout({
               sidebarCollapsed ? 'justify-center' : 'justify-start'
             )}>
               <Avatar className="h-8 w-8 shrink-0">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                <AvatarFallback className="bg-brand text-white text-xs">
                   {getInitials(user?.name)}
                 </AvatarFallback>
               </Avatar>
@@ -448,8 +452,21 @@ export default function AdminLayout({
                 <Menu className="h-5 w-5" />
               </button>
 
-              {/* Breadcrumb / Title Area (Now managed by individual pages) */}
-              <div className="flex-1 min-w-0"></div>
+              {/* Breadcrumb / Title Area */}
+              <div className="flex-1 min-w-0">
+                {title && (
+                  <div className="flex flex-col">
+                    <h1 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                      {title}
+                    </h1>
+                    {subtitle && (
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Header Actions */}
@@ -490,7 +507,7 @@ export default function AdminLayout({
                     </DropdownMenuItem>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-center text-sm text-indigo-600">
+                  <DropdownMenuItem className="text-center text-sm text-brand font-semibold cursor-pointer">
                     View all notifications
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -501,7 +518,7 @@ export default function AdminLayout({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-indigo-600 text-white text-sm">
+                      <AvatarFallback className="bg-brand text-white text-sm">
                         {getInitials(user?.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -558,16 +575,16 @@ export default function AdminLayout({
                 <div className="flex items-center transition-all duration-300 ease-in-out">
                   {settings?.logo_url ? (
                     <div className="h-8 w-auto max-w-[120px] flex items-center overflow-hidden">
-                      <img 
-                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                        alt="Logo" 
+                      <img
+                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                        alt="Logo"
                         className="h-full w-auto object-contain"
                       />
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                        <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+                      <div className="h-8 w-8 rounded-lg bg-brand flex items-center justify-center shrink-0">
+                        <LayoutDashboard className="h-4 w-4 text-white" />
                       </div>
                       <span className="font-semibold text-lg text-foreground">
                         {settings?.company_name || 'Admin'}
@@ -614,7 +631,7 @@ export default function AdminLayout({
                             )} />
                             <span className="flex-1 whitespace-nowrap">{item.name}</span>
                             {item.badge && (
-                              <span className="ml-auto bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                              <span className="ml-auto bg-brand/10 text-brand text-xs px-2 py-0.5 rounded-full">
                                 {item.badge}
                               </span>
                             )}
@@ -668,7 +685,7 @@ export default function AdminLayout({
                                   {SubIcon && <SubIcon className="h-4 w-4 shrink-0" />}
                                   <span className="flex-1 whitespace-nowrap">{subitem.name}</span>
                                   {isSubActive && (
-                                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                    <div className="h-1.5 w-1.5 rounded-full bg-brand" />
                                   )}
                                 </Link>
                               );
@@ -685,7 +702,7 @@ export default function AdminLayout({
               <div className="p-3 border-t border-border">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="bg-brand text-white text-xs">
                       {getInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>

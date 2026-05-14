@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -60,14 +60,8 @@ interface ContactDetails {
     };
 }
 
-interface GalleryImage {
-    id: number;
-    filename: string;
-    originalName: string;
-    url: string;
-    size: number;
-    category: string;
-}
+import { ImageGalleryModal } from '@/components/admin/ImageGalleryModal';
+import { GalleryImage } from '@/types';
 
 export default function SettingsPage() {
     const { isAuthenticated, loading } = useAuth();
@@ -115,12 +109,7 @@ export default function SettingsPage() {
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-    // Gallery states
-    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
-    const [filteredGalleryImages, setFilteredGalleryImages] = useState<GalleryImage[]>([]);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
-    const [gallerySearchTerm, setGallerySearchTerm] = useState('');
-    const [selectedGalleryCategory, setSelectedGalleryCategory] = useState('');
 
     useEffect(() => {
         if (!loading && !isAuthenticated) {
@@ -131,26 +120,11 @@ export default function SettingsPage() {
     useEffect(() => {
         if (isAuthenticated) {
             fetchCompanyProfile();
-            fetchGalleryImages();
             fetchShippingRules();
             fetchContactDetails();
         }
     }, [isAuthenticated]);
 
-    useEffect(() => {
-        if (gallerySearchTerm || selectedGalleryCategory) {
-            const filtered = galleryImages.filter((img) => {
-                const matchesSearch = !gallerySearchTerm ||
-                    img.filename.toLowerCase().includes(gallerySearchTerm.toLowerCase()) ||
-                    img.originalName?.toLowerCase().includes(gallerySearchTerm.toLowerCase());
-                const matchesCategory = !selectedGalleryCategory || img.category === selectedGalleryCategory;
-                return matchesSearch && matchesCategory;
-            });
-            setFilteredGalleryImages(filtered);
-        } else {
-            setFilteredGalleryImages(galleryImages);
-        }
-    }, [gallerySearchTerm, selectedGalleryCategory, galleryImages]);
 
     const fetchCompanyProfile = async () => {
         try {
@@ -210,14 +184,6 @@ export default function SettingsPage() {
         }
     };
 
-    const fetchGalleryImages = async () => {
-        try {
-            const response = await api.get('/gallery?limit=100');
-            setGalleryImages(response.data.data || []);
-        } catch (error) {
-            console.error('Failed to fetch gallery images:', error);
-        }
-    };
 
     const fetchShippingRules = async () => {
         try {
@@ -298,7 +264,7 @@ export default function SettingsPage() {
     if (loading || loadingProfile) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
         );
     }
@@ -336,7 +302,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('company')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'company'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -347,7 +313,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('contact')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'contact'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -358,7 +324,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('financial')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'financial'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -369,7 +335,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('shipping')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'shipping'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -380,7 +346,7 @@ export default function SettingsPage() {
                                 type="button"
                                 onClick={() => setActiveTab('payment')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'payment'
-                                    ? 'border-indigo-600 text-indigo-600'
+                                    ? 'border-brand text-brand'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                                     }`}
                             >
@@ -395,13 +361,12 @@ export default function SettingsPage() {
                     {/* Company Information Tab */}
                     {activeTab === 'company' && (
                         <>
-                            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-4 border-b border-slate-200">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-brand/5 px-6 py-3 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                        <Building2 className="w-5 h-5 mr-2 text-indigo-600" />
+                                        <Building2 className="w-5 h-5 mr-2 text-brand" />
                                         Company Information
                                     </h2>
-                                    <p className="text-sm text-slate-600 mt-1">Basic details about your business</p>
                                 </div>
 
                                 <div className="p-6 space-y-6">
@@ -438,7 +403,7 @@ export default function SettingsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowGalleryModal(true)}
-                                                        className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg flex items-center"
+                                                        className="px-4 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand/90 transition-all shadow-lg flex items-center"
                                                     >
                                                         <ImageIcon className="w-4 h-4 mr-2" />
                                                         Select from Gallery
@@ -467,7 +432,7 @@ export default function SettingsPage() {
                                             required
                                             value={companyProfile.company_name || ''}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                             placeholder="e.g., ABC Corporation"
                                         />
                                     </div>
@@ -482,7 +447,7 @@ export default function SettingsPage() {
                                             value={companyProfile.description || ''}
                                             onChange={handleInputChange}
                                             rows={3}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none"
                                             placeholder="Brief description of your company..."
                                         />
                                     </div>
@@ -499,7 +464,7 @@ export default function SettingsPage() {
                                                 name="website"
                                                 value={companyProfile.website || ''}
                                                 onChange={handleInputChange}
-                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                 placeholder="https://www.company.com"
                                             />
                                         </div>
@@ -512,13 +477,12 @@ export default function SettingsPage() {
                     {/* Financial Settings Tab */}
                     {activeTab === 'financial' && (
                         <>
-                            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-2 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                                         <DollarSign className="w-5 h-5 mr-2 text-amber-600" />
                                         Financial Settings
                                     </h2>
-                                    <p className="text-sm text-slate-600 mt-1">Currency and tax information</p>
                                 </div>
 
                                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -579,13 +543,12 @@ export default function SettingsPage() {
                     {/* Contact Details Tab */}
                     {activeTab === 'contact' && (
                         <>
-                            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-brand/5 px-6 py-3 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
-                                        <Headphones className="w-5 h-5 mr-2 text-purple-600" />
+                                        <Headphones className="w-5 h-5 mr-2 text-brand" />
                                         Contact Page Details
                                     </h2>
-                                    <p className="text-sm text-slate-600 mt-1">Information displayed on the public contact page</p>
                                 </div>
 
                                 <div className="p-6 space-y-6">
@@ -602,7 +565,7 @@ export default function SettingsPage() {
                                                     name="email"
                                                     value={contactDetails.email || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="contact@store.com"
                                                 />
                                             </div>
@@ -619,7 +582,7 @@ export default function SettingsPage() {
                                                     name="phone"
                                                     value={contactDetails.phone || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -636,7 +599,7 @@ export default function SettingsPage() {
                                                     name="whatsapp"
                                                     value={contactDetails.whatsapp || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -653,7 +616,7 @@ export default function SettingsPage() {
                                                     name="working_hours"
                                                     value={contactDetails.working_hours || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="Mon-Fri: 9AM-6PM"
                                                 />
                                             </div>
@@ -673,7 +636,7 @@ export default function SettingsPage() {
                                                     name="support_email"
                                                     value={contactDetails.support_email || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="support@store.com"
                                                 />
                                             </div>
@@ -687,7 +650,7 @@ export default function SettingsPage() {
                                                     name="support_phone"
                                                     value={contactDetails.support_phone || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="+1 (555) 000-0000"
                                                 />
                                             </div>
@@ -707,7 +670,7 @@ export default function SettingsPage() {
                                                     name="address"
                                                     value={contactDetails.address || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="123 Contact Street"
                                                 />
                                             </div>
@@ -722,7 +685,7 @@ export default function SettingsPage() {
                                                         name="city"
                                                         value={contactDetails.city || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="New York"
                                                     />
                                                 </div>
@@ -736,7 +699,7 @@ export default function SettingsPage() {
                                                         name="state"
                                                         value={contactDetails.state || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="NY"
                                                     />
                                                 </div>
@@ -750,7 +713,7 @@ export default function SettingsPage() {
                                                         name="postal_code"
                                                         value={contactDetails.postal_code || ''}
                                                         onChange={handleContactChange}
-                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                         placeholder="10001"
                                                     />
                                                 </div>
@@ -765,7 +728,7 @@ export default function SettingsPage() {
                                                     name="country"
                                                     value={contactDetails.country || ''}
                                                     onChange={handleContactChange}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="United States"
                                                 />
                                             </div>
@@ -782,7 +745,7 @@ export default function SettingsPage() {
                                             value={contactDetails.map_embed_code || ''}
                                             onChange={handleContactChange}
                                             rows={4}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm resize-none font-mono"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm resize-none font-mono"
                                             placeholder='<iframe src="https://www.google.com/maps/embed?..." width="600" height="450" ...></iframe>'
                                         />
                                         <p className="text-xs text-slate-500 mt-2">
@@ -805,7 +768,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.facebook || ''}
                                                     onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://facebook.com/yourstore"
                                                 />
                                             </div>
@@ -818,7 +781,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.twitter || ''}
                                                     onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://twitter.com/yourstore"
                                                 />
                                             </div>
@@ -831,7 +794,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.instagram || ''}
                                                     onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://instagram.com/yourstore"
                                                 />
                                             </div>
@@ -844,7 +807,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.linkedin || ''}
                                                     onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://linkedin.com/company/yourstore"
                                                 />
                                             </div>
@@ -857,7 +820,7 @@ export default function SettingsPage() {
                                                     type="url"
                                                     value={contactDetails.social_links?.youtube || ''}
                                                     onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
-                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all text-sm"
                                                     placeholder="https://youtube.com/@yourstore"
                                                 />
                                             </div>
@@ -871,13 +834,12 @@ export default function SettingsPage() {
                     {/* Shipping Settings Tab */}
                     {activeTab === 'shipping' && (
                         <>
-                            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                                <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-2 border-b-1 gap-0 flex items-center">
                                     <h2 className="text-lg font-semibold text-slate-900 flex items-center">
                                         <Truck className="w-5 h-5 mr-2 text-teal-600" />
                                         Shipping Settings
                                     </h2>
-                                    <p className="text-sm text-slate-600 mt-1">Configure global shipping rates and thresholds</p>
                                 </div>
 
                                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -930,14 +892,16 @@ export default function SettingsPage() {
                     {/* Payment Configuration Tab */}
                     {activeTab === 'payment' && (
                         <>
-                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 py-2 border-b-1 gap-0 flex items-center">
+                                    <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                                        <CreditCard className="w-5 h-5 mr-2 text-slate-600" />
+                                        Stripe Payment Configuration
+                                    </h2>
+                                </div>
                                 <div className="p-6">
                                     <div className="flex items-start space-x-4">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                            <CreditCard className="w-6 h-6 text-white" />
-                                        </div>
                                         <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-slate-900 mb-2">Stripe Payment Configuration</h3>
                                             <p className="text-sm text-slate-600 mb-4">
                                                 Stripe payment integration is configured via environment variables for security.
                                             </p>
@@ -948,13 +912,13 @@ export default function SettingsPage() {
                                                 </p>
                                                 <div className="space-y-2 font-mono text-xs">
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_SECRET_KEY</span>=sk_test_...
+                                                        <span className="text-brand">STRIPE_SECRET_KEY</span>=sk_test_...
                                                     </div>
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_WEBHOOK_SECRET</span>=whsec_test_...
+                                                        <span className="text-brand">STRIPE_WEBHOOK_SECRET</span>=whsec_test_...
                                                     </div>
                                                     <div className="bg-slate-50 px-3 py-2 rounded-lg">
-                                                        <span className="text-purple-700">STRIPE_PUBLIC_KEY</span>=pk_test_...
+                                                        <span className="text-brand">STRIPE_PUBLIC_KEY</span>=pk_test_...
                                                     </div>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-3">
@@ -968,13 +932,21 @@ export default function SettingsPage() {
                         </>
                     )}
 
-                    {/* Save Button */}
-                    <div className="flex justify-end">
+                    {/* Form Actions */}
+                    <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border shadow-none">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => window.history.back()}
+                            className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
+                        >
+                            Cancel
+                        </Button>
                         <Button
                             type="submit"
                             disabled={saving}
                             size="lg"
-                            className="px-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg"
+                            className="px-8 py-3 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
                         >
                             {saving ? (
                                 <span className="flex items-center">
@@ -992,99 +964,19 @@ export default function SettingsPage() {
                 </form>
             </div>
 
-            {/* Gallery Selection Modal */}
-            {showGalleryModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-                        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Select Company Logo</h3>
-                                <p className="text-sm text-slate-500">Choose an image from your gallery</p>
-                            </div>
-                            <button
-                                onClick={() => setShowGalleryModal(false)}
-                                className="p-2 hover:bg-slate-100 rounded-xl transition-all"
-                            >
-                                <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Search and Filter */}
-                        <div className="p-6 border-b border-slate-200 space-y-4">
-                            <input
-                                type="text"
-                                placeholder="Search images..."
-                                value={gallerySearchTerm}
-                                onChange={(e) => setGallerySearchTerm(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-                            />
-                            <select
-                                value={selectedGalleryCategory}
-                                onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium"
-                            >
-                                <option value="">All Categories</option>
-                                <option value="general">General</option>
-                                <option value="products">Products</option>
-                                <option value="banner">Banner</option>
-                            </select>
-                        </div>
-
-                        {/* Images Grid */}
-                        <div className="flex-1 overflow-y-auto p-6">
-                            {filteredGalleryImages.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <svg className="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <p className="text-slate-500">No images found in gallery</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {filteredGalleryImages.map((image) => (
-                                        <div
-                                            key={image.id}
-                                            onClick={() => handleSelectLogo(image)}
-                                            className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${companyProfile.logo_url === image.url
-                                                ? 'border-indigo-500 ring-2 ring-indigo-200'
-                                                : 'border-slate-200 hover:border-indigo-300 hover:shadow-lg'
-                                                }`}
-                                        >
-                                            <img
-                                                src={image.url}
-                                                alt={image.originalName || image.filename}
-                                                className="w-full h-32 object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                            <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                <p className="text-xs font-medium text-white truncate">
-                                                    {image.originalName || image.filename}
-                                                </p>
-                                                {image.size && (
-                                                    <p className="text-xs text-slate-300">
-                                                        {(image.size / 1024).toFixed(1)} KB
-                                                    </p>
-                                                )}
-                                            </div>
-                                            {companyProfile.logo_url === image.url && (
-                                                <div className="absolute top-2 right-2">
-                                                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ImageGalleryModal
+                isOpen={showGalleryModal}
+                onClose={() => setShowGalleryModal(false)}
+                onSelect={(selected: GalleryImage | GalleryImage[]) => {
+                    const image = selected as GalleryImage;
+                    setCompanyProfile(prev => ({ ...prev, logo_url: image.url }));
+                    setLogoPreview(image.url);
+                }}
+                title="Select Company Logo"
+                themeColor="brand"
+                initialSelection={companyProfile.logo_url}
+            />
         </AdminLayout>
     );
 }
+

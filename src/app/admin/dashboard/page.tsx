@@ -55,9 +55,9 @@ export default function AdminDashboardPage() {
       // Fetch all stats in parallel for better performance
       const [
         productsRes,
-        ordersRes,
         customersRes,
-        imagesRes
+        imagesRes,
+        summaryRes
       ] = await Promise.all([
         api.get('/products?limit=1').catch(() => ({ data: { pagination: { total: 0 } } })),
         api.get('/sales/orders?limit=1').catch(() => ({ data: { pagination: { total: 0 }, data: [] } })),
@@ -65,28 +65,17 @@ export default function AdminDashboardPage() {
         api.get('/gallery?limit=1').catch(() => ({ data: { pagination: { total: 0 } } }))
       ]);
 
-      // Calculate total revenue from paid orders
-      let totalRevenue = 0;
-      try {
-        // Fetch all orders to calculate revenue (using a reasonable limit)
-        const revenueRes = await api.get('/sales/orders?limit=1000');
-        const orders = revenueRes.data?.data || [];
-        totalRevenue = orders
-          .filter((order: Order) => order.payment_status === 'paid')
-          .reduce((sum: number, order: Order) => sum + (order.total_amount || order.total || 0), 0);
-      } catch (error) {
-        console.error('Failed to fetch revenue data:', error);
-      }
+      const summary = summaryRes.data?.data?.summary || summaryRes.data?.data || {};
 
       setStats({
         totalProducts: productsRes.data?.pagination?.total || 0,
-        totalOrders: ordersRes.data?.pagination?.total || 0,
+        totalOrders: summary.total_orders || 0,
         totalCustomers: customersRes.data?.pagination?.total || 0,
-        totalRevenue,
+        totalRevenue: summary.net_sales || 0,
         totalImages: imagesRes.data?.pagination?.total || 0,
       });
     } catch (error: unknown) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to fetch dashboard stats:', error);
     } finally {
       setLoadingStats(false);
     }
@@ -95,7 +84,7 @@ export default function AdminDashboardPage() {
   if (loading || loadingStats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
       </div>
     );
   }
@@ -118,7 +107,7 @@ export default function AdminDashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Products */}
-          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 overflow-hidden shadow-lg rounded-xl hover:shadow-xl transition-shadow">
+          <div className="bg-brand overflow-hidden shadow-lg rounded-xl hover:shadow-xl transition-shadow">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0 bg-white/20 rounded-lg p-3">
@@ -128,7 +117,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-indigo-100 truncate">Total Products</dt>
+                    <dt className="text-sm font-medium text-white/80 truncate">Total Products</dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl 2xl:text-3xl font-semibold text-white">{stats.totalProducts}</div>
                     </dd>

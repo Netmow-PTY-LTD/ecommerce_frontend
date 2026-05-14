@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,13 +97,13 @@ export default function AdminCouponsPage() {
 
   const typeBadge: Record<string, string> = {
     percentage: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    fixed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    fixed: 'bg-brand/10 text-purple-800 dark:bg-purple-900/30 dark:text-brand/80',
     free_shipping: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
     bogo: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   };
 
   const CouponSkeleton = () => (
-    <div className="bg-card border rounded-lg p-4 animate-pulse">
+    <div className="bg-white border rounded-2xl p-4 shadow-none">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-2">
@@ -130,24 +130,40 @@ export default function AdminCouponsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="w-full max-w-5xl mx-auto py-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Coupons Management</h1>
+            <p className="text-slate-500 text-sm">Manage discount codes and promotions</p>
+          </div>
+          <Button
+            onClick={() => router.push('/admin/coupons/new')}
+            className="gap-2 bg-brand text-white border-none rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:bg-brand/90 transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            Add Coupon
+          </Button>
+        </div>
+
         {success && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
             {success}
           </div>
         )}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
             {error}
           </div>
         )}
 
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-foreground">Coupons ({pagination.total})</h2>
-          <Button onClick={() => router.push('/admin/coupons/new')} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Coupon
-          </Button>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Coupons ({pagination.total})</h2>
         </div>
 
         {fetchingCoupons ? (
@@ -165,9 +181,9 @@ export default function AdminCouponsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {coupons.map((coupon) => (
-              <div key={coupon.id} className="bg-card border rounded-lg p-4">
+              <div key={coupon.id} className="bg-white border rounded-2xl p-4 shadow-none hover:border-slate-300 transition-all group">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -185,7 +201,7 @@ export default function AdminCouponsPage() {
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         coupon.visibility === 'public'
-                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                          ? 'bg-brand/10 text-purple-800 dark:bg-purple-900/30 dark:text-brand/80'
                           : coupon.visibility === 'restricted'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                             : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
@@ -243,3 +259,4 @@ export default function AdminCouponsPage() {
     </AdminLayout>
   );
 }
+
