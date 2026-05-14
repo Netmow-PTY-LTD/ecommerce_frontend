@@ -38,7 +38,8 @@ import {
   Globe,
   DollarSign,
   Layers,
-  Box
+  Box,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -67,15 +68,23 @@ interface NavItem {
   href?: string;
   icon: LucideIcon;
   badge?: number;
+  isExternal?: boolean;
   subitems?: {
     name: string;
     href: string;
     icon?: LucideIcon;
+    isExternal?: boolean;
   }[];
 }
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  {
+    name: 'Visit Store',
+    href: '/',
+    icon: Globe,
+    isExternal: true
+  },
   {
     name: 'Media Library',
     href: '/admin/gallery',
@@ -325,6 +334,7 @@ export default function AdminLayout({
                         className={cn(
                           'group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
                           'hover:bg-accent hover:text-accent-foreground',
+                          item.isExternal ? 'text-brand hover:bg-brand/10 hover:text-brand/90' : '',
                           (isItemActive || hasActiveSubitem)
                             ? 'bg-accent text-accent-foreground'
                             : 'text-muted-foreground',
@@ -333,7 +343,8 @@ export default function AdminLayout({
                       >
                         <Icon className={cn(
                           'h-4 w-4 shrink-0',
-                          (isItemActive || hasActiveSubitem) ? 'text-foreground' : 'text-muted-foreground'
+                          (isItemActive || hasActiveSubitem) ? 'text-foreground' : 'text-muted-foreground',
+                          item.isExternal && 'text-brand'
                         )} />
                         <span className={cn(
                           'flex-1 whitespace-nowrap transition-all duration-300',
@@ -341,6 +352,9 @@ export default function AdminLayout({
                         )}>
                           {item.name}
                         </span>
+                        {item.isExternal && !sidebarCollapsed && (
+                          <ExternalLink className="h-3 w-3 text-brand/70" />
+                        )}
                         {item.badge && !sidebarCollapsed && (
                           <span className="ml-auto bg-brand/10 text-brand text-xs px-2 py-0.5 rounded-full">
                             {item.badge}
@@ -513,6 +527,14 @@ export default function AdminLayout({
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/" className="cursor-pointer">
+                      <Globe className="h-4 w-4 mr-2" />
+                      Visit Store
+                      <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -592,6 +614,7 @@ export default function AdminLayout({
                             className={cn(
                               'group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
                               'hover:bg-accent hover:text-accent-foreground',
+                              item.isExternal ? 'text-brand hover:bg-brand/10' : '',
                               (isItemActive || hasActiveSubitem)
                                 ? 'bg-accent text-accent-foreground'
                                 : 'text-muted-foreground'
@@ -599,9 +622,11 @@ export default function AdminLayout({
                           >
                             <Icon className={cn(
                               'h-4 w-4 shrink-0',
-                              (isItemActive || hasActiveSubitem) ? 'text-foreground' : 'text-muted-foreground'
+                              (isItemActive || hasActiveSubitem) ? 'text-foreground' : 'text-muted-foreground',
+                              item.isExternal && 'text-brand'
                             )} />
                             <span className="flex-1 whitespace-nowrap">{item.name}</span>
+                            {item.isExternal && <ExternalLink className="h-3 w-3 text-brand/70" />}
                             {item.badge && (
                               <span className="ml-auto bg-brand/10 text-brand text-xs px-2 py-0.5 rounded-full">
                                 {item.badge}
