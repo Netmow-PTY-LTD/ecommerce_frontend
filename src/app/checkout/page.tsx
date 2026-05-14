@@ -59,8 +59,8 @@ function CheckoutForm({
     freeShipping,
     applyCoupon,
     removeCoupon,
-    effectiveTax
-
+    effectiveTax,
+    effectiveShipping
 }: {
     formData: CheckoutFormData;
     setFormData: React.Dispatch<React.SetStateAction<CheckoutFormData>>;
@@ -86,7 +86,7 @@ function CheckoutForm({
     applyCoupon: (coupon: any, discountAmount: number, freeShipping: boolean) => void;
     removeCoupon: () => void;
     effectiveTax: number;
-
+    effectiveShipping: number;
 }) {
     const router = useRouter();
     const [couponCode, setCouponCode] = useState('');
@@ -1270,6 +1270,7 @@ function CheckoutPageContent() {
                         applyCoupon={applyCoupon}
                         removeCoupon={removeCoupon}
                         effectiveTax={effectiveTax}
+                        effectiveShipping={effectiveShipping}
                     />
                 </div>
             </section>
