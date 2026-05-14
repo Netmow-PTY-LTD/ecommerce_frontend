@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { initSocket, getSocket } from '@/lib/socket';
-import { useNotifications, useUnreadCount } from '@/hooks/use-notifications';
+import useSWR from 'swr';
 import api from '@/lib/api';
 
 interface Notification {
@@ -28,8 +28,27 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children, token }: { children: ReactNode; token?: string }) {
   const [isConnected, setIsConnected] = useState(false);
-  const { notifications, mutate, isLoading } = useNotifications(1, 50);
-  const { count, mutate: mutateCount } = useUnreadCount();
+
+  // Use SWR conditionally - only fetch when token exists
+  const { data: notificationsData, mutate } = useSWR(
+    token ? '/notifications?page=1&limit=50' : null,
+    async url => {
+      const response = await api.get(url);
+      return response.data;
+    }
+  );
+
+  const { data: unreadData, mutate: mutateCount } = useSWR(
+    token ? '/notifications/unread-count' : null,
+    async url => {
+      const response = await api.get(url);
+      return response.data;
+    },
+    { refreshInterval: token ? 30000 : 0 }
+  );
+
+  const notifications = notificationsData?.data || [];
+  const count = unreadData?.data?.count || 0;
 
   useEffect(() => {
     if (!token) return;
