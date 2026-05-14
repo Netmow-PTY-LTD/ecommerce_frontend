@@ -58,8 +58,17 @@ function OrderStatusContent() {
   const fetchOrder = async (id: string) => {
     try {
       setLoading(true);
-      const response = await api.get(`/sales/customer/orders/${id}`);
-      const data = response.data.data;
+      let data: any = null;
+
+      try {
+        // Try public endpoint first (works for guest customers)
+        const response = await api.get(`/sales/public/orders/${id}`);
+        data = response.data.data || response.data;
+      } catch (publicErr: any) {
+        // Fallback to customer endpoint for logged-in users
+        const response = await api.get(`/sales/customer/orders/${id}`);
+        data = response.data.data || response.data;
+      }
 
       // Calculate subtotal from items
       const itemsSubtotal = data.items?.reduce((sum: number, item: any) => {
