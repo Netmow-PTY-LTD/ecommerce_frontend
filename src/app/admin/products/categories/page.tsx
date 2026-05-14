@@ -159,7 +159,7 @@ export default function AdminCategoriesPage() {
   const fetchCategories = useCallback(async (page: number = currentPage) => {
     try {
       setDataLoading(true);
-      const response = await api.get(`/ecommerce/categories?page=${page}&limit=100`);
+      const response = await api.get(`/products/categories?page=${page}&limit=100`);
       setCategories(response.data.data || []);
       setPaginationMeta(response.data.pagination || {
         total: 0,
@@ -189,7 +189,7 @@ export default function AdminCategoriesPage() {
 
     try {
       const orders = reordered.map((c, i) => ({ id: c.id, sort_order: i }));
-      await api.put('/ecommerce/categories/reorder', { orders });
+      await api.put('/products/categories/reorder', { orders });
     } catch {
       setCategories(categories);
       setError('Failed to save order');
@@ -211,7 +211,7 @@ export default function AdminCategoriesPage() {
 
     try {
       setIsDeleting(true);
-      await api.delete(`/ecommerce/categories/${categoryToDelete}`);
+      await api.delete(`/products/categories/${categoryToDelete}`);
       setSuccess('Category deleted successfully');
       fetchCategories();
       setTimeout(() => setSuccess(''), 3000);
@@ -239,104 +239,104 @@ export default function AdminCategoriesPage() {
 
   return (
     <>
-    <AdminLayout>
-      <div className="w-full">
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Categories Management</h1>
-            <p className="text-slate-500 text-sm">Manage your product categories</p>
-          </div>
-          <Button
-            onClick={() => router.push('/admin/products/categories/add')}
-            className="gap-2 bg-brand text-white border-none rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:bg-brand/90 transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            Add Category
-          </Button>
-        </div>
-        <div className="space-y-6">
-          <ProductsNavbar />
-
-          {success && (
-            <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
-              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              {success}
+      <AdminLayout>
+        <div className="w-full">
+          <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Categories Management</h1>
+              <p className="text-slate-500 text-sm">Manage your product categories</p>
             </div>
-          )}
-          {error && (
-            <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
-              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              {error}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Categories ({paginationMeta.total})</h2>
-          </div>
-
-          {dataLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-4">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-              <p className="text-sm text-muted-foreground font-medium">Loading categories...</p>
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No categories found. Add your first category to get started.
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
+            <Button
+              onClick={() => router.push('/admin/products/categories/add')}
+              className="gap-2 bg-brand text-white border-none rounded-xl px-6 py-2.5 font-semibold shadow-lg hover:bg-brand/90 transition-all"
             >
-              <SortableContext
-                items={categories.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <SortableCategoryItem
-                      key={category.id}
-                      category={category}
-                      onEdit={handleEdit}
-                      onDelete={handleDeleteClick}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          )}
+              <Plus className="h-4 w-4" />
+              Add Category
+            </Button>
+          </div>
+          <div className="space-y-6">
+            <ProductsNavbar />
 
-          {paginationMeta.totalPage > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handlePageChange(page)}
-                >
-                  {page}
-                </Button>
-              ))}
+            {success && (
+              <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 101.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-sm flex items-center">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Categories ({paginationMeta.total})</h2>
             </div>
-          )}
+
+            {dataLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                <p className="text-sm text-muted-foreground font-medium">Loading categories...</p>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                No categories found. Add your first category to get started.
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={categories.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <SortableCategoryItem
+                        key={category.id}
+                        category={category}
+                        onEdit={handleEdit}
+                        onDelete={handleDeleteClick}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {paginationMeta.totalPage > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {Array.from({ length: paginationMeta.totalPage }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </AdminLayout>
-    <ConfirmationModal
-      isOpen={isDeleteModalOpen}
-      onClose={() => setIsDeleteModalOpen(false)}
-      onConfirm={confirmDelete}
-      isLoading={isDeleting}
-      title="Delete Category"
-      description="Are you sure you want to delete this category? This will also affect products associated with it."
-      confirmText="Delete Category"
-    />
+      </AdminLayout>
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? This will also affect products associated with it."
+        confirmText="Delete Category"
+      />
     </>
   );
 }

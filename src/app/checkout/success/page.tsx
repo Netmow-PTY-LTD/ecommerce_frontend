@@ -348,7 +348,7 @@ function CheckoutSuccessPageContent() {
                         {/* Action Buttons — always visible regardless of whether order details loaded */}
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             {order ? (
-                                <Link href={`/order-status?id=${order.id}`}>
+                                <Link href={`/order-status?id=${order.order_number}`}>
                                     <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
                                         <Package className="h-4 w-4 mr-2" />
                                         View Order Status
@@ -368,6 +368,24 @@ function CheckoutSuccessPageContent() {
                                     Continue Shopping
                                 </Button>
                             </Link>
+                        </div>
+
+                        {/* Order Tracking Info for Guest Customers */}
+                        <div className="mt-6 pt-6 border-t border-slate-100">
+                            <div className="bg-blue-50 rounded-lg p-4">
+                                <h3 className="font-semibold text-blue-900 mb-2">Track Your Order Later</h3>
+                                <p className="text-sm text-blue-700 mb-3">
+                                    Save your order number <span className="font-bold">#{orderNumber}</span> to track your order status anytime.
+                                </p>
+                                <div className="space-y-2 text-sm text-blue-700">
+                                    <p className="font-medium">Ways to track your order:</p>
+                                    <ul className="list-disc list-inside space-y-1 ml-2">
+                                        <li>Bookmark this page or save the order link</li>
+                                        <li>Visit <Link href="/track-order" className="underline font-medium hover:text-blue-900">Track Order</Link> page and enter your email</li>
+                                        <li>Use your order number: <span className="font-mono bg-white px-2 py-0.5 rounded">{orderNumber}</span></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

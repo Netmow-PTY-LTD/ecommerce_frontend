@@ -96,13 +96,20 @@ api.interceptors.response.use(
       if (typeof window !== 'undefined') {
         const pathname = window.location.pathname;
 
-        // NEVER redirect from the success page - we want users to see their confirmation
-        if (pathname === '/checkout/success') {
+        // NEVER redirect from checkout pages or success page - users should be able to complete guest checkout
+        if (pathname.startsWith('/checkout') || pathname === '/checkout/success') {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[API] 401 error on checkout page - not redirecting to login (guest checkout allowed)');
+          }
           return Promise.reject(error);
         }
 
         // Admin route detection
         const isAdminRoute = pathname.startsWith('/admin');
+
+        // Customer/Account protected routes that require authentication
+        const protectedCustomerRoutes = ['/customer/', '/account/', '/wishlist'];
+        const isProtectedCustomerRoute = protectedCustomerRoutes.some(route => pathname.startsWith(route));
 
         if (isAdminRoute) {
           // Admin route - clear admin token and redirect to admin login
@@ -111,21 +118,26 @@ api.interceptors.response.use(
           }
           localStorage.removeItem('admin_token');
           localStorage.removeItem('admin_user');
-          
+
           // Only redirect if we're not already on the login page to avoid loops
           if (pathname !== '/admin/login') {
             window.location.href = '/admin/login';
           }
-        } else {
-          // Customer route - clear customer token and redirect to customer login
+        } else if (isProtectedCustomerRoute) {
+          // Protected customer route - clear customer token and redirect to login
           if (process.env.NODE_ENV === 'development') {
             console.warn('[API] Clearing customer_token due to 401 error');
           }
           localStorage.removeItem('customer_token');
           localStorage.removeItem('customer_data');
-          
+
           if (pathname !== '/login') {
             window.location.href = '/login';
+          }
+        } else {
+          // Public route (/, /shop, /categories, etc.) - do NOT redirect, just let the error pass through
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[API] 401 error on public route - not redirecting to login');
           }
         }
       }
