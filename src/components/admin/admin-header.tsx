@@ -12,8 +12,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LayoutDashboard, ShoppingCart, Users, Package, Settings, LogOut, Menu, Bell, FileText } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Settings, LogOut, Menu, FileText, ExternalLink, Store } from 'lucide-react';
 import { useState } from 'react';
+import { NotificationBell } from '@/components/notifications';
+import Link from 'next/link';
 
 interface AdminHeaderProps {
   title: string;
@@ -73,6 +75,15 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1 mx-8">
+          {/* Visit Store Link */}
+          <Link href="/">
+            <Button variant="ghost" className="text-brand hover:text-brand/80 gap-2">
+              <Store className="h-4 w-4" />
+              Visit Store
+              <ExternalLink className="h-3 w-3" />
+            </Button>
+          </Link>
+
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
@@ -95,10 +106,7 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         {/* Right side actions */}
         <div className="flex items-center space-x-2">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-          </Button>
+          <NotificationBell userType="admin" />
 
           {/* User menu */}
           <DropdownMenu>
@@ -149,6 +157,15 @@ export default function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background">
           <nav className="px-4 py-4 space-y-2">
+            {/* Visit Store Link */}
+            <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-brand hover:text-brand/80 gap-2">
+                <Store className="h-4 w-4" />
+                Visit Store
+                <ExternalLink className="h-3 w-3 ml-auto" />
+              </Button>
+            </Link>
+
             {navigation.map((item) => {
               const Icon = item.icon;
               return (

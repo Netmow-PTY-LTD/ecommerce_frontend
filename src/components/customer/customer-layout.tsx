@@ -13,7 +13,6 @@ import {
   ChevronRight,
   ChevronDown,
   LogOut,
-  Bell,
   Search,
   Menu,
   User,
@@ -31,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-
+import { NotificationBell } from '@/components/notifications';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 
 interface CustomerLayoutProps {
@@ -214,6 +213,9 @@ export default function CustomerLayout({
                 className="pl-10 pr-4 py-2 w-64 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               />
             </div>
+
+            {/* Notifications */}
+            <NotificationBell userType="customer" />
 
             <Link href="/" className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
               <ShoppingBag className="h-5 w-5" />
