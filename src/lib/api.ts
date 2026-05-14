@@ -22,12 +22,12 @@ const getAuthToken = () => {
   if (typeof window === 'undefined') return null;
 
   const pathname = window.location.pathname;
-  
+
   // Admin routes specifically start with /admin
   const isAdminRoute = pathname.startsWith('/admin');
 
-  // For admin routes, prefer admin_token
-  // For other routes, prefer customer_token
+  // For admin routes, use admin_token
+  // For other routes, prefer customer_token, but fall back to admin_token for admins viewing public pages
   let token = null;
   let usedKey = '';
 
@@ -35,8 +35,18 @@ const getAuthToken = () => {
     token = localStorage.getItem('admin_token');
     usedKey = 'admin_token';
   } else {
+    // On public routes, try customer_token first, then fall back to admin_token
     token = localStorage.getItem('customer_token');
     usedKey = 'customer_token';
+
+    // If no customer token, check if admin is logged in (for admins viewing public pages)
+    if (!token || token === 'undefined' || token === 'null' || token === '') {
+      const adminToken = localStorage.getItem('admin_token');
+      if (adminToken && adminToken !== 'undefined' && adminToken !== 'null' && adminToken !== '') {
+        token = adminToken;
+        usedKey = 'admin_token (fallback)';
+      }
+    }
   }
 
   // Robust check for various falsy or invalid values
