@@ -6,6 +6,9 @@ import { X, Mail, Lock, Eye, EyeOff, ArrowRight, ShoppingBag } from 'lucide-reac
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useSettings } from '@/hooks/use-settings';
+import Image from 'next/image';
+
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -19,6 +22,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const { login } = useCustomerAuth();
+    const { settings, isLoading: settingsLoading } = useSettings();
+
 
     // Reset state and handle scroll lock when modal opens/closes
     useEffect(() => {
@@ -90,12 +95,29 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         <div className="relative z-10 p-8 sm:p-10">
                             {/* Header */}
                             <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 mb-4">
-                                    <ShoppingBag className="h-6 w-6 text-indigo-600" />
+                                <div className="inline-flex items-center justify-center mb-4">
+                                    {settingsLoading ? (
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-100 animate-pulse" />
+                                    ) : settings.logo_url ? (
+                                        <Image
+                                            src={settings.logo_url}
+                                            alt={settings.company_name || 'Store Logo'}
+                                            width={120}
+                                            height={40}
+                                            className="h-10 w-auto object-contain"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center">
+                                            <ShoppingBag className="h-6 w-6 text-brand" />
+                                        </div>
+                                    )}
                                 </div>
                                 <h2 className="text-2xl font-bold text-slate-900">Sign In</h2>
-                                <p className="text-slate-500 text-sm mt-1">Access your customer account</p>
+                                <p className="text-slate-500 text-sm mt-1">
+                                    {settings.company_name ? `Access your ${settings.company_name} account` : 'Access your customer account'}
+                                </p>
                             </div>
+
 
                             {/* Error Banner */}
                             {error && (
@@ -121,7 +143,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="you@example.com"
                                             required
-                                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                                         />
                                     </div>
                                 </div>
@@ -130,7 +152,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between items-center ml-1">
                                         <label className="text-xs font-semibold text-slate-700">Password</label>
-                                        <Link href="/forgot-password" type="button" onClick={onClose} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer">Forgot?</Link>
+                                        <Link href="/forgot-password" onClick={onClose} className="text-xs text-brand hover:opacity-80 font-medium transition-colors cursor-pointer">Forgot?</Link>
+
                                     </div>
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
@@ -140,7 +163,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="••••••••"
                                             required
-                                            className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                            className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                                         />
                                         <button
                                             type="button"
@@ -156,7 +179,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-200"
+                                    className="w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm bg-brand hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-brand/20"
                                 >
                                     {submitting ? (
                                         <div className="flex items-center gap-2">
@@ -171,21 +194,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                     )}
                                 </button>
 
-                                {/* Footer */}
-                                <div className="pt-4 text-center">
-                                    <p className="text-slate-500 text-sm">
-                                        New here?{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                onClose();
-                                            }}
-                                            className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors cursor-pointer"
-                                        >
-                                            Create account
-                                        </button>
-                                    </p>
-                                </div>
                             </form>
                         </div>
                     </motion.div>
