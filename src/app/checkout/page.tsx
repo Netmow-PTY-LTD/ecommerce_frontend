@@ -58,7 +58,9 @@ function CheckoutForm({
     discountAmount,
     freeShipping,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    effectiveTax
+
 }: {
     formData: CheckoutFormData;
     setFormData: React.Dispatch<React.SetStateAction<CheckoutFormData>>;
@@ -83,6 +85,8 @@ function CheckoutForm({
     freeShipping: boolean;
     applyCoupon: (coupon: any, discountAmount: number, freeShipping: boolean) => void;
     removeCoupon: () => void;
+    effectiveTax: number;
+
 }) {
     const router = useRouter();
     const [couponCode, setCouponCode] = useState('');
@@ -835,20 +839,6 @@ function CheckoutForm({
                             </div>
                         )}
                     </section>
-
-                    {/* Newsletter */}
-                    <div className="bg-card border border-border rounded-xl p-6">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                name="newsletter"
-                                checked={formData.newsletter}
-                                onChange={handleInputChange}
-                                className="w-4 h-4"
-                            />
-                            <span className="text-sm">Email me with news and offers</span>
-                        </label>
-                    </div>
                 </div>
 
                 {/* Right Column - Order Summary */}
@@ -1200,33 +1190,60 @@ function CheckoutPageContent() {
 
     if (items.length === 0) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center space-y-4">
-                    <h2 className="text-2xl font-bold">Your cart is empty</h2>
-                    <p className="text-muted-foreground">Add items to your cart before checkout</p>
-                    <Link href="/shop">
-                        <Button size="lg">Browse Products</Button>
-                    </Link>
+            <div className="min-h-screen bg-gray-50/50">
+                {/* Red Banner */}
+                <section className='py-3 bg-brand'>
+                    <div className="container px-4 mx-auto">
+                        <div className="w-full flex items-center justify-between">
+                            <h1 className="text-white font-bold text-sm md:text-base tracking-wide">Checkout</h1>
+                            <div className="flex items-center gap-2 text-xs md:text-sm font-medium">
+                                <Link href="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
+                                <span className="text-white/50">-</span>
+                                <span className="text-white">Checkout</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                        <h2 className="text-2xl font-bold">Your cart is empty</h2>
+                        <p className="text-muted-foreground text-sm">Add items to your cart before checkout</p>
+                        <Link href="/shop">
+                            <Button size="lg" className="rounded-xl px-8">Browse Products</Button>
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Header */}
-            <div className="bg-secondary/30 border-b border-border py-1">
-                <div className="container px-4 py-4">
-                    <Link href="/cart" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Cart
-                    </Link>
+        <div className="min-h-screen bg-gray-50/50">
+            {/* Red Banner */}
+            <section className='py-3 bg-brand'>
+                <div className="container px-4 mx-auto">
+                    <div className="w-full flex items-center justify-between">
+                        <h1 className="text-white font-bold text-sm md:text-base tracking-wide">Checkout</h1>
+                        <div className="flex items-center gap-2 text-xs md:text-sm font-medium">
+                            <Link href="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
+                            <span className="text-white/50">-</span>
+                            <Link href="/cart" className="text-white/80 hover:text-white transition-colors">Cart</Link>
+                            <span className="text-white/50">-</span>
+                            <span className="text-white">Checkout</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <section className='py-10'>
                 <div className="container mx-auto">
-                    <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+                    <div className="mb-6">
+                        <Link href="/cart" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-brand transition-colors">
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Back to Cart
+                        </Link>
+                    </div>
 
                     <CheckoutForm
                         formData={formData}
@@ -1252,6 +1269,7 @@ function CheckoutPageContent() {
                         freeShipping={freeShipping}
                         applyCoupon={applyCoupon}
                         removeCoupon={removeCoupon}
+                        effectiveTax={effectiveTax}
                     />
                 </div>
             </section>

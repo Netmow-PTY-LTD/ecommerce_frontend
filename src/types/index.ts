@@ -78,7 +78,10 @@ export interface Category {
     show_on_home?: boolean;
     section_id?: number | null;
     banner_url?: string;
+    total_products?: number;
+    products_count?: number;
     created_at?: string;
+
     updated_at?: string;
 }
 
@@ -91,9 +94,10 @@ export interface Unit {
 
 export interface Pagination {
     total: number;
-    page: string | number;
-    limit: string | number;
+    page: number;
+    limit: number;
     totalPage: number;
+
 }
 
 export interface ApiResponse<T> {

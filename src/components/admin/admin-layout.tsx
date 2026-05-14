@@ -295,7 +295,7 @@ export default function AdminLayout({
             </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors shrink-0 text-muted-foreground"
+              className="p-1.5 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors shrink-0 text-muted-foreground cursor-pointer"
             >
               {sidebarCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
