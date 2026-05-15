@@ -321,7 +321,7 @@ function CheckoutForm({
                         phone: formData.phone
                     };
 
-                    const registerResponse = await api.post('/auth/register', registerData);
+                    const registerResponse = await api.post('/customers/register', registerData);
 
                     if (registerResponse.data?.status === true || registerResponse.data?.data) {
                         toast.success('Account created successfully!');
