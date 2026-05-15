@@ -4,11 +4,12 @@ import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Package, Home, ShoppingBag } from 'lucide-react';
+import { CheckCircle, Package, Home, ShoppingBag, ArrowRight, ArrowLeft, MapPin, CreditCard, Mail, ClipboardCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { cn } from '@/lib/utils';
 
 interface OrderItem {
   id: number;
@@ -37,408 +38,368 @@ interface Order {
 }
 
 function CheckoutSuccessPageContent() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const { formatCurrency } = useCurrency();
-    const [order, setOrder] = useState<Order | null>(null);
-    const [orderNumber, setOrderNumber] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [hasError, setHasError] = useState(false);
-    const [showLoader, setShowLoader] = useState(true);
-    const processingStarted = useRef(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { formatCurrency } = useCurrency();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
+  const processingStarted = useRef(false);
 
-    useEffect(() => {
-        const loadOrderDetails = async () => {
-            try {
-                console.log('🔍 Success page loaded');
-                console.log('URL params:', Object.fromEntries(searchParams));
+  const parseShippingAddress = (addressStr: string) => {
+    if (!addressStr) return 'Details provided during checkout';
+    try {
+      // Check if it's a JSON string
+      if (addressStr.startsWith('{')) {
+        const addr = JSON.parse(addressStr);
+        return (
+          <div className="space-y-0.5">
+            <p className="font-semibold text-slate-900">{addr.first_name} {addr.last_name}</p>
+            <p>{addr.address_line_1}</p>
+            {addr.address_line_2 && <p>{addr.address_line_2}</p>}
+            <p>{addr.city}, {addr.state} {addr.zip_code}</p>
+            <p>{addr.country}</p>
+            {addr.phone && <p className="text-xs mt-1 text-slate-400 font-medium">Tel: {addr.phone}</p>}
+          </div>
+        );
+      }
+      return addressStr;
+    } catch (e) {
+      return addressStr;
+    }
+  };
 
-                // Check localStorage
-                const lastOrderId = localStorage.getItem('lastOrderId');
-                const lastOrderNumber = localStorage.getItem('lastOrderNumber');
-                console.log('📦 localStorage:', { lastOrderId, lastOrderNumber });
+  useEffect(() => {
+    const loadOrderDetails = async () => {
+      try {
+        const lastOrderId = localStorage.getItem('lastOrderId');
+        const lastOrderNumber = localStorage.getItem('lastOrderNumber');
+        const sessionId = searchParams.get('session_id');
 
-                // Check if this is a COD order (no session_id)
-                const sessionId = searchParams.get('session_id');
-                console.log('💳 Session ID:', sessionId);
-
-                if (!sessionId && !lastOrderId) {
-                    // Only show error if we haven't already loaded an order
-                    if (!order && !orderNumber) {
-                        console.log('❌ No session_id and no lastOrderId');
-                        setTimeout(() => {
-                            // Final check: if we started processing in ANY run, don't show error
-                            if (!processingStarted.current) {
-                                setHasError(true);
-                                setIsLoading(false);
-                                setShowLoader(false);
-                            }
-                        }, 1500);
-                    }
-                    return;
-                }
-
-                // Mark as processing to prevent re-runs
-                if (processingStarted.current) return;
-                processingStarted.current = true;
-
-                let orderId: string | null = null;
-
-                // For COD orders, we already have the order created
-                if (!sessionId && lastOrderId && lastOrderNumber) {
-                    console.log('✅ COD Order:', { lastOrderId, lastOrderNumber });
-                    setOrderNumber(lastOrderNumber);
-                    orderId = lastOrderId;
-                    localStorage.removeItem('lastOrderId');
-                    localStorage.removeItem('lastOrderNumber');
-                    setShowLoader(false);
-                }
-
-                // For online payments, verify the session
-                if (sessionId) {
-                    console.log('💳 Verifying online payment order');
-                    
-                    try {
-                        const response = await api.post('/sales/public/verify-payment', {
-                            session_id: sessionId
-                        }, { skipAuthRedirect: true } as any);
-
-                        if (response.data?.data?.order_number) {
-                            setOrderNumber(response.data.data.order_number);
-                            orderId = String(response.data.data.id);
-                            setShowLoader(false);
-                        } else {
-                            throw new Error('Order verification returned unexpected format');
-                        }
-                    } catch (err: any) {
-                        console.error('Payment verification error:', err);
-                        toast.error(err.response?.data?.message || 'Payment verification failed');
-                        setTimeout(() => {
-                            setHasError(true);
-                            setIsLoading(false);
-                            setShowLoader(false);
-                        }, 1500);
-                        return;
-                    }
-                }
-
-                // Fetch full order details — try public endpoint first, fall back to customer endpoint
-                if (orderId) {
-                    try {
-                        let data: any = null;
-
-                        try {
-                            // Public endpoint — works for guests
-                            const orderResponse = await api.get(`/sales/public/orders/${orderId}`, { skipAuthRedirect: true } as any);
-                            data = orderResponse.data?.data || orderResponse.data;
-                        } catch (publicErr: any) {
-                            console.warn('Public order endpoint failed, trying customer endpoint...', publicErr?.response?.status);
-                            // Fallback: customer auth endpoint (works for logged-in users)
-                            const orderResponse = await api.get(`/sales/customer/orders/${orderId}`, { skipAuthRedirect: true } as any);
-                            data = orderResponse.data?.data || orderResponse.data;
-                        }
-
-                        if (data && data.id) {
-                            const itemsSubtotal = data.items?.reduce((sum: number, item: any) => {
-                                return sum + parseFloat(item.line_total || item.total_price || 0);
-                            }, 0) || 0;
-
-                            const taxAmount = parseFloat(data.tax_amount || 0);
-                            const shippingCost = parseFloat(data.shipping_cost || 0);
-                            const discountAmount = parseFloat(data.discount_amount || 0);
-                            const calculatedTotal = itemsSubtotal + taxAmount + shippingCost - discountAmount;
-
-                            const transformedOrder: Order = {
-                                id: data.id,
-                                order_number: data.order_number,
-                                customer_name: data.customer?.name && data.customer?.name !== 'undefined undefined'
-                                    ? data.customer.name
-                                    : [data.customer?.first_name, data.customer?.last_name].filter(Boolean).join(' ') || 'Customer',
-                                customer_email: data.customer_email || data.customer?.email || '',
-                                status: data.status,
-                                subtotal: itemsSubtotal,
-                                tax: taxAmount,
-                                shipping_cost: shippingCost,
-                                total: calculatedTotal,
-                                payment_method: data.payment_method || 'N/A',
-                                payment_status: data.payment_status || 'pending',
-                                items: data.items?.map((item: any) => ({
-                                    id: item.id,
-                                    product_name: item.product?.name || item.name || 'Product',
-                                    quantity: item.quantity,
-                                    price: parseFloat(item.unit_price || item.price || 0),
-                                    total: parseFloat(item.line_total || item.total_price || item.total || 0),
-                                })) || [],
-                                notes: data.notes || '',
-                                created_at: data.created_at || data.order_date || new Date().toISOString(),
-                                shipping_address: data.shipping_address || '',
-                            };
-
-                            setOrder(transformedOrder);
-                            toast.success(`Order #${data.order_number} confirmed!`);
-                        }
-                    } catch (orderError: any) {
-                        console.warn('Could not fetch order details (non-fatal):', orderError?.response?.status, orderError?.message);
-                        // Non-fatal — we still have the order number, show success anyway
-                    }
-                }
-
-                setIsLoading(false);
-                setShowLoader(false);
-            } catch (error: any) {
-                console.error('❌ Error on success page:', error);
-                setShowLoader(false);
+        if (!sessionId && !lastOrderId) {
+          if (!order && !orderNumber) {
+            setTimeout(() => {
+              if (!processingStarted.current) {
                 setHasError(true);
-                localStorage.removeItem('pendingOrder');
-                localStorage.removeItem('lastOrderId');
-                localStorage.removeItem('lastOrderNumber');
-                toast.error('Order confirmed but failed to load details');
                 setIsLoading(false);
+                setShowLoader(false);
+              }
+            }, 1500);
+          }
+          return;
+        }
+
+        if (processingStarted.current) return;
+        processingStarted.current = true;
+
+        let orderId: string | null = null;
+
+        if (!sessionId && lastOrderId && lastOrderNumber) {
+          setOrderNumber(lastOrderNumber);
+          orderId = lastOrderId;
+          localStorage.removeItem('lastOrderId');
+          localStorage.removeItem('lastOrderNumber');
+          setShowLoader(false);
+        }
+
+        if (sessionId) {
+          try {
+            const response = await api.post('/sales/public/verify-payment', {
+              session_id: sessionId
+            }, { skipAuthRedirect: true } as any);
+
+            if (response.data?.data?.order_number) {
+              setOrderNumber(response.data.data.order_number);
+              orderId = String(response.data.data.id);
+              setShowLoader(false);
+            } else {
+              throw new Error('Order verification failed');
             }
-        };
-
-        loadOrderDetails();
-    }, [searchParams]);
-
-
-    // Show loading state while fetching order details
-    if (showLoader) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center px-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="max-w-2xl w-full text-center"
-                >
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 px-12 py-16">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-6"></div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Processing Your Order...</h2>
-                        <p className="text-slate-600">Please wait while we confirm your order details.</p>
-                    </div>
-                </motion.div>
-            </div>
-        );
-    }
-
-    // Show error state if no order found
-    if (hasError) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="max-w-2xl w-full"
-                >
-                    <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-8">
-                        {/* Info Icon */}
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="w-24 h-24 mx-auto bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center"
-                        >
-                            <Package className="h-12 w-12 text-amber-600 dark:text-amber-400" />
-                        </motion.div>
-
-                        {/* Message */}
-                        <div className="space-y-3">
-                            <h1 className="text-3xl font-bold">No Order Found</h1>
-                            <p className="text-lg text-muted-foreground">
-                                We couldn't find any order information. You may have reached this page directly without completing a purchase.
-                            </p>
-                        </div>
-
-                        {/* Explanation */}
-                        <div className="bg-secondary/30 rounded-xl p-6 text-left">
-                            <p className="text-sm text-muted-foreground">
-                                This page is shown after successfully completing an order. To place an order, please visit our shop and go through the checkout process.
-                            </p>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                            <Link href="/shop">
-                                <Button size="lg" className="w-full sm:w-auto">
-                                    <ShoppingBag className="h-4 w-4 mr-2" />
-                                    Browse Products
-                                </Button>
-                            </Link>
-                            <Link href="/cart">
-                                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                                    View Cart
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        );
-    }
-
-    const getStatusColor = (status: Order['status']) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-            case 'processing':
-                return 'bg-blue-100 text-blue-800 border-blue-300';
-            case 'shipped':
-                return 'bg-purple-100 text-purple-800 border-purple-300';
-            case 'delivered':
-                return 'bg-green-100 text-green-800 border-green-300';
-            case 'cancelled':
-                return 'bg-red-100 text-red-800 border-red-300';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-300';
+          } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Payment verification failed');
+            setHasError(true);
+            setIsLoading(false);
+            setShowLoader(false);
+            return;
+          }
         }
-    };
 
-    const getPaymentMethodBadge = (method: string) => {
-        const methodLower = method.toLowerCase();
-        if (methodLower === 'cash' || methodLower === 'cod') {
-            return { label: 'COD', color: 'bg-green-100 text-green-800 border-green-300' };
-        } else if (methodLower.includes('stripe') || methodLower.includes('online') || methodLower.includes('card')) {
-            return { label: 'Stripe', color: 'bg-purple-100 text-purple-800 border-purple-300' };
-        } else if (methodLower.includes('bank')) {
-            return { label: 'Bank Transfer', color: 'bg-blue-100 text-blue-800 border-blue-300' };
-        } else {
-            return { label: method, color: 'bg-gray-100 text-gray-800 border-gray-300' };
+        if (orderId) {
+          try {
+            let data: any = null;
+            try {
+              const orderResponse = await api.get(`/sales/public/orders/${orderId}`, { skipAuthRedirect: true } as any);
+              data = orderResponse.data?.data || orderResponse.data;
+            } catch (publicErr: any) {
+              const orderResponse = await api.get(`/sales/customer/orders/${orderId}`, { skipAuthRedirect: true } as any);
+              data = orderResponse.data?.data || orderResponse.data;
+            }
+
+            if (data && data.id) {
+              const itemsSubtotal = data.items?.reduce((sum: number, item: any) => {
+                return sum + parseFloat(item.line_total || item.total_price || 0);
+              }, 0) || 0;
+
+              const transformedOrder: Order = {
+                id: data.id,
+                order_number: data.order_number,
+                customer_name: [data.customer?.first_name, data.customer?.last_name].filter(Boolean).join(' ') || data.customer_name || 'Customer',
+                customer_email: data.customer_email || data.customer?.email || '',
+                status: data.status,
+                subtotal: itemsSubtotal,
+                tax: parseFloat(data.tax_amount || 0),
+                shipping_cost: parseFloat(data.shipping_cost || 0),
+                total: parseFloat(data.total_payable_amount || data.total_amount || 0),
+                payment_method: data.payment_method || 'N/A',
+                payment_status: data.payment_status || 'pending',
+                items: data.items?.map((item: any) => ({
+                  id: item.id,
+                  product_name: item.product?.name || item.product_name || 'Product',
+                  quantity: item.quantity,
+                  price: parseFloat(item.unit_price || item.price || 0),
+                  total: parseFloat(item.line_total || item.total_price || 0),
+                })) || [],
+                notes: data.notes || '',
+                created_at: data.created_at || new Date().toISOString(),
+                shipping_address: data.shipping_address || '',
+              };
+
+              setOrder(transformedOrder);
+            }
+          } catch (orderError: any) {
+            console.warn('Could not fetch order details', orderError);
+          }
         }
+
+        setIsLoading(false);
+        setShowLoader(false);
+      } catch (error: any) {
+        console.error('Error on success page:', error);
+        setShowLoader(false);
+        setHasError(true);
+        setIsLoading(false);
+      }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+    loadOrderDetails();
+  }, [searchParams]);
 
+  if (showLoader) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center px-4">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="max-w-2xl w-full"
-            >
-                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-12 text-center">
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-6"
-                        >
-                            <CheckCircle className="h-12 w-12 text-green-600" />
-                        </motion.div>
-                        <h1 className="text-3xl font-bold text-slate-900 mb-3">Order Confirmed!</h1>
-                        {orderNumber && (
-                            <p className="text-lg text-slate-700 mb-4">
-                                Order #{orderNumber}
-                            </p>
-                        )}
-                        <p className="text-slate-600 mb-8">
-                            Thank you for your purchase. Your order has been placed successfully.
-                        </p>
-
-                        {/* Action Buttons — always visible regardless of whether order details loaded */}
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            {order ? (
-                                <Link href={`/order-status?id=${order.order_number}`}>
-                                    <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
-                                        <Package className="h-4 w-4 mr-2" />
-                                        View Order Status
-                                    </Button>
-                                </Link>
-                            ) : (
-                                <Link href="/customer/dashboard">
-                                    <Button size="lg" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
-                                        <Package className="h-4 w-4 mr-2" />
-                                        View My Orders
-                                    </Button>
-                                </Link>
-                            )}
-                            <Link href="/shop">
-                                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                                    <Home className="h-4 w-4 mr-2" />
-                                    Continue Shopping
-                                </Button>
-                            </Link>
-                        </div>
-
-                        {/* Order Tracking Info for Guest Customers */}
-                        <div className="mt-6 pt-6 border-t border-slate-100">
-                            <div className="bg-blue-50 rounded-lg p-4">
-                                <h3 className="font-semibold text-blue-900 mb-2">Track Your Order Later</h3>
-                                <p className="text-sm text-blue-700 mb-3">
-                                    Save your order number <span className="font-bold">#{orderNumber}</span> to track your order status anytime.
-                                </p>
-                                <div className="space-y-2 text-sm text-blue-700">
-                                    <p className="font-medium">Ways to track your order:</p>
-                                    <ul className="list-disc list-inside space-y-1 ml-2">
-                                        <li>Bookmark this page or save the order link</li>
-                                        <li>Visit <Link href="/track-order" className="underline font-medium hover:text-blue-900">Track Order</Link> page and enter your email</li>
-                                        <li>Use your order number: <span className="font-mono bg-white px-2 py-0.5 rounded">{orderNumber}</span></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Order Details — only shown when details were successfully fetched */}
-                    {order && (
-                        <div className="px-8 py-6 border-t border-slate-200">
-                            <h2 className="text-lg font-semibold text-slate-800 mb-4">Order Summary</h2>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Order Number</span>
-                                    <span className="font-medium text-slate-900">#{order.order_number}</span>
-                                </div>
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Status</span>
-                                    <span className="capitalize font-medium text-slate-900">{order.status}</span>
-                                </div>
-                                <div className="flex justify-between text-slate-600">
-                                    <span>Payment Method</span>
-                                    <span className="uppercase font-medium text-slate-900">{order.payment_method}</span>
-                                </div>
-                                {order.items?.length > 0 && (
-                                    <>
-                                        <div className="border-t border-slate-100 pt-3 mt-3">
-                                            <p className="font-medium text-slate-700 mb-2">Items</p>
-                                            {order.items.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between text-slate-600 py-1">
-                                                    <span>{item.product_name} × {item.quantity}</span>
-                                                    <span className="font-medium">{formatCurrency(item.total)}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="border-t border-slate-100 pt-2 flex justify-between font-semibold text-slate-900">
-                                            <span>Total</span>
-                                            <span>{formatCurrency(order.total)}</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </motion.div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold text-slate-900">Confirming your order...</h2>
+          <p className="text-slate-500 mt-2">Please stay on this page while we process your request.</p>
         </div>
+      </div>
     );
+  }
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <section className='py-3 bg-brand'>
+          <div className="container px-4 mx-auto">
+            <div className="flex items-center gap-4">
+              <Link href="/shop" className="flex items-center text-white/90 hover:text-white transition-colors text-xs md:text-sm font-medium">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Store
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-xl mx-auto text-center bg-white p-12 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-amber-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-4">Order Session Expired</h1>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              We couldn't retrieve your order details. This usually happens if the page is refreshed or accessed directly. Please check your email or dashboard for order confirmation.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/shop" className="w-full sm:w-auto">
+                <Button className="w-full bg-brand hover:bg-brand/90 font-bold px-8">Continue Shopping</Button>
+              </Link>
+              <Link href="/customer/orders" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full font-bold px-8">View My Orders</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-16">
+      {/* Red Banner */}
+      <section className='py-3 bg-brand'>
+        <div className="container px-4 mx-auto">
+          <div className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/shop" className="flex items-center text-white/90 hover:text-white transition-colors text-xs md:text-sm font-medium">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Store
+              </Link>
+              <div className="h-5 w-px bg-white/20 hidden sm:block"></div>
+              <h1 className="text-white font-bold text-sm md:text-base tracking-wide hidden sm:block">Order Confirmed</h1>
+            </div>
+            <div className="flex items-center gap-2 text-xs md:text-sm font-medium">
+              <Link href="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
+              <span className="text-white/50">-</span>
+              <span className="text-white">Success</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+        {/* Success Message Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-100"
+          >
+            <CheckCircle className="w-10 h-10 text-green-500" />
+          </motion.div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-3">Thank you for your order!</h1>
+          <p className="text-slate-600 max-w-lg mx-auto">
+            Your order has been placed successfully and is being processed. We've sent a confirmation email to <span className="font-semibold text-slate-900">{order?.customer_email || 'your email'}</span>.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Order Details Card */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <h2 className="text-sm font-bold text-slate-900">Order Summary</h2>
+                <span className="text-xs font-bold text-brand uppercase tracking-wider">#{orderNumber}</span>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {order?.items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <div className="flex-1 pr-4">
+                        <p className="font-medium text-slate-800 line-clamp-1">{item.product_name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Quantity: {item.quantity}</p>
+                      </div>
+                      <span className="font-bold text-slate-900">{formatCurrency(item.total)}</span>
+                    </div>
+                  ))}
+
+                  <div className="pt-4 border-t border-slate-100 space-y-2">
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>Subtotal</span>
+                      <span>{formatCurrency(order?.subtotal || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>Shipping</span>
+                      <span>{formatCurrency(order?.shipping_cost || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-bold text-slate-900 pt-2">
+                      <span>Total Paid</span>
+                      <span className="text-brand text-base">{formatCurrency(order?.total || 0)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tracking Info Card for Guest */}
+            <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 bg-blue-100 rounded-xl">
+                  <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-blue-900">Track Your Order</h3>
+                  <p className="text-xs text-blue-700/80 mt-1 leading-relaxed">
+                    Save your order number <span className="font-bold">#{orderNumber}</span> to track your order status on our tracking page.
+                  </p>
+                  <Link href="/track-order" className="inline-flex items-center text-xs font-bold text-blue-600 mt-3 hover:text-blue-700 transition-colors">
+                    Go to Track Order <ArrowRight className="w-3 h-3 ml-1" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Customer & Shipping Card */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <h2 className="text-sm font-bold text-slate-900">Delivery Information</h2>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Shipping Address</p>
+                    <div className="text-sm text-slate-600 mt-1 leading-relaxed">
+                      {parseShippingAddress(order?.shipping_address || '')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <CreditCard className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Payment Method</p>
+                    <p className="text-sm font-bold text-slate-900 mt-1 uppercase">
+                      {order?.payment_method || 'N/A'}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                      <span className="text-[10px] text-green-600 font-bold uppercase tracking-wide">
+                        {order?.payment_status === 'paid' ? 'Verified' : 'Processing'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex flex-col gap-3">
+              <Link href={order ? `/order-status?id=${order.order_number}` : `/track-order`} className="w-full">
+                <Button className="w-full bg-brand hover:bg-brand/90 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2">
+                  <Package className="w-4 h-4" /> View Live Status
+                </Button>
+              </Link>
+              <Link href="/shop" className="w-full">
+                <Button variant="outline" className="w-full border-slate-200 text-slate-600 font-bold h-12 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50">
+                  <ShoppingBag className="w-4 h-4" /> Continue Shopping
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-
-// Wrapper component with Suspense boundary
 export default function CheckoutSuccessPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-            <CheckoutSuccessPageContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mb-4"></div>
+        <p className="text-slate-500 font-medium">Loading confirmation details...</p>
+      </div>
+    }>
+      <CheckoutSuccessPageContent />
+    </Suspense>
+  );
 }
 

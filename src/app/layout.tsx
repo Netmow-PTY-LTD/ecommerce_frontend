@@ -57,7 +57,7 @@ export default function RootLayout({
                     <ChatWidget />
                   </AdminNavbarProvider>
                   <ToastContainer />
-                  <Toaster position="bottom-right" richColors />
+                  <Toaster position="top-right" richColors />
                 </NotificationProviderWrapper>
               </CustomerAuthProvider>
             </AuthProvider>

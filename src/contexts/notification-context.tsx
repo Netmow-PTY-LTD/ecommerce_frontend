@@ -4,7 +4,7 @@ import { initSocket, getSocket } from '@/lib/socket';
 import useSWR from 'swr';
 import api from '@/lib/api';
 
-interface Notification {
+export interface AppNotification {
   id: number;
   type: string;
   event_type: string;
@@ -13,11 +13,12 @@ interface Notification {
   data?: any;
   priority: 'low' | 'medium' | 'high' | 'critical';
   is_read: boolean;
+  read_at?: string | null;
   created_at: string;
 }
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -98,7 +99,7 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
     socket.on('connect', () => setIsConnected(true));
     socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('notification:new', (notification: Notification) => {
+    socket.on('notification:new', (notification: AppNotification) => {
       console.log('New notification received:', notification);
       mutate();
       mutateCount();
