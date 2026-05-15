@@ -47,7 +47,7 @@ export function FeaturedArrivals() {
                                     key={arrival.id}
                                     product={arrival.product}
                                     showNewBadge={true}
-                                    badgeText={arrival.badge_text}
+                                    badgeText={arrival.badge_text ?? undefined}
                                 />
                             )
                         ))}
