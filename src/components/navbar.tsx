@@ -162,11 +162,7 @@ export function Navbar() {
                             <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-brand font-bold">{settings.phone || '+123 456 789'}</span></span>
                         </div>
                         <div className="flex items-center gap-4 pl-1">
-                            {isCustomerAuthenticated || isAdminAuthenticated ? (
-                                <Link href={`/${currentUser?.role?.name === 'Superadmin' ? 'admin' : 'customer'}/orders`} className="hover:text-brand transition-colors">Track Order</Link>
-                            ) : (
-                                <Link href="/login" className="hover:text-brand transition-colors">Track Order</Link>
-                            )}
+                                <Link href="/track-order" className="hover:text-brand transition-colors">Track Order</Link>
                         </div>
                     </div>
                 </div>
