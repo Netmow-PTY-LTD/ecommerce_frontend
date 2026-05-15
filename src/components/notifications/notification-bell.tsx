@@ -2,23 +2,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, Package, DollarSign, ShoppingCart, AlertTriangle, MessageSquare, Tag } from 'lucide-react';
-import { useNotificationContext } from '@/contexts/notification-context';
+import { useNotificationContext, AppNotification } from '@/contexts/notification-context';
 
 interface NotificationBellProps {
   userType?: 'admin' | 'customer';
-}
-
-interface AppNotification {
-  id: number;
-  type: string;
-  event_type: string;
-  title: string;
-  message: string;
-  data?: any;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  is_read: boolean;
-  read_at?: string | null;
-  created_at: string;
 }
 
 const getNotificationIcon = (type: string) => {
@@ -109,7 +96,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                   const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
-                className="flex flex-col items-start justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex flex-col items-center justify-center py-12 px-4 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <Bell size={32} className="mb-2 opacity-50" />
                 <p className="text-sm">No unread notifications</p>

@@ -81,7 +81,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   {
     name: 'Visit Store',
-    href: '/',
+    href: '/shop',
     icon: Globe,
     isExternal: true
   },
@@ -331,6 +331,7 @@ export default function AdminLayout({
                     {item.href ? (
                       <Link
                         href={item.href}
+                        target={item.isExternal ? "_blank" : undefined}
                         className={cn(
                           'group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
                           'hover:bg-accent hover:text-accent-foreground',
@@ -487,14 +488,14 @@ export default function AdminLayout({
             {/* Header Actions */}
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Search */}
-              <div className="hidden sm:block relative">
+              {/* <div className="hidden sm:block relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search..."
                   className="pl-10 pr-4 py-2 w-64 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 />
-              </div>
+              </div> */}
 
               {/* Notifications */}
               <NotificationBell userType="admin" />
@@ -528,7 +529,7 @@ export default function AdminLayout({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/" className="cursor-pointer">
+                    <Link href="/shop" className="cursor-pointer" target="_blank">
                       <Globe className="h-4 w-4 mr-2" />
                       Visit Store
                       <ExternalLink className="h-3 w-3 ml-auto opacity-50" />

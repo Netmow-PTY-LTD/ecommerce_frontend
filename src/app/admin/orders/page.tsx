@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, ReactNode, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -422,14 +422,16 @@ function OrdersContent() {
                 key: 'order_number',
                 title: 'Order ID',
                 render: (_, order): ReactNode => (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">#{order.order_number}</span>
-                      <Badge className={`${getStatusColor(order.status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
+                  <span className="font-bold text-slate-900">#{order.order_number}</span>
+                )
+              },
+              {
+                key: 'status',
+                title: 'Status',
+                render: (_, order): ReactNode => (
+                  <Badge className={`${getStatusColor(order.status)} shadow-none border px-1.5 py-0 rounded text-[9px] font-bold uppercase`} variant="outline">
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </Badge>
                 )
               },
               {
@@ -604,6 +606,7 @@ function OrdersContent() {
             }}
             onPageChange={(page) => setCurrentPage(page)}
             loading={loadingOrders}
+            columnVisibility={columnVisibility}
           />
           </div>
         </div>
