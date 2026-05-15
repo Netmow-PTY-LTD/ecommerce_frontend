@@ -3,8 +3,24 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useSettingsContext } from '@/contexts/SettingsContext';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import {
+  Package,
+  Calendar,
+  ArrowLeft,
+  FileText,
+  MapPin,
+  User,
+  Mail,
+  CreditCard,
+  Download,
+  AlertCircle,
+  Home,
+  ArrowRight
+} from 'lucide-react';
 
 interface OrderItem {
   id: number;
@@ -45,6 +61,7 @@ function OrderStatusContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
   const { formatCurrency } = useCurrency();
+  const { settings } = useSettingsContext();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,43 +138,43 @@ function OrderStatusContent() {
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       case 'processing':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'shipped':
-        return 'bg-purple-100 text-purple-800 border-purple-300';
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'delivered':
-        return 'bg-green-100 text-green-800 border-green-300';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-300';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getPaymentStatusColor = (status: Order['payment_status']) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800 border-green-300';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       case 'failed':
-        return 'bg-red-100 text-red-800 border-red-300';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getPaymentMethodBadge = (method: string) => {
-    const methodLower = method.toLowerCase();
+    const methodLower = (method || '').toLowerCase();
     if (methodLower === 'cash' || methodLower === 'cod') {
-      return { label: 'COD', color: 'bg-green-100 text-green-800 border-green-300' };
+      return { label: 'COD', color: 'bg-green-50 text-green-700 border-green-200' };
     } else if (methodLower.includes('stripe') || methodLower.includes('online') || methodLower.includes('card')) {
-      return { label: 'Stripe', color: 'bg-purple-100 text-purple-800 border-purple-300' };
+      return { label: 'Stripe', color: 'bg-purple-50 text-purple-700 border-purple-200' };
     } else if (methodLower.includes('bank')) {
-      return { label: 'Bank Transfer', color: 'bg-blue-100 text-blue-800 border-blue-300' };
+      return { label: 'Bank Transfer', color: 'bg-blue-50 text-blue-700 border-blue-200' };
     } else {
-      return { label: method, color: 'bg-gray-100 text-gray-800 border-gray-300' };
+      return { label: method || 'N/A', color: 'bg-gray-50 text-gray-700 border-gray-200' };
     }
   };
 
@@ -171,91 +188,47 @@ function OrderStatusContent() {
     });
   };
 
-  const handleDownloadInvoice = async () => {
-    if (!order) return;
-
-    setDownloadingInvoice(true);
+  const parseAddress = (address: any) => {
+    if (!address) return null;
+    if (typeof address === 'object') return address;
     try {
-      const response = await api.get(`/sales/public/orders/${order.id}/invoice`, {
-        skipAuthRedirect: true,
-        responseType: 'blob'
-      } as any);
-
-      // Create a blob from the response
-      const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Invoice-${order.order_number}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success('Invoice downloaded successfully');
-    } catch (error: any) {
-      console.error('Error downloading invoice:', error);
-
-      // Fallback: create a simple invoice from the order data
-      const invoiceContent = {
-        invoice_number: `INV-${order.order_number}`,
-        order_number: order.order_number,
-        date: order.created_at,
-        customer: {
-          name: order.customer_name,
-          email: order.customer_email
-        },
-        items: order.items,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        shipping: order.shipping_cost,
-        discount: order.discount_amount,
-        total: order.total,
-        payment_method: order.payment_method,
-        payment_status: order.payment_status
-      };
-
-      const blob = new Blob([JSON.stringify(invoiceContent, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Invoice-${order.order_number}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.info('Invoice generated from order details');
-    } finally {
-      setDownloadingInvoice(false);
+      return JSON.parse(address);
+    } catch (e) {
+      return address;
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadInvoice = () => {
+    handlePrint();
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
       </div>
     );
   }
 
   if (!orderId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-          <svg className="mx-auto h-16 w-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.532-3L5.008 7.362 4.724 4.638 7.523 4.9a2.25 2.25 0 012.186 3.355l-.733 2.2a9.009 9.009 0 01-1.605 3.714m0 0V12a2 2 0 002 2h2.586a1 1 0 001 1v-5a1 1 0 00-1-1V7a1 1 0 00-1-1v-.063c0-.536.21-1.054.468-1.447l-2.2-.733a9.009 9.009 0 01-3.714-1.605M7 5a9.009 9.009 0 012.186 3.355l-.733 2.2A2.25 2.25 0 017.532 7h2.586a1 1 0 001 1v-5a1 1 0 00-1-1V7a1 1 0 00-1-1v-.063c0-.536.21-1.054.468-1.447l-2.2-.733a9.009 9.009 0 01-3.714-1.605" />
-          </svg>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Order ID Required</h2>
-          <p className="text-slate-600 mb-6">Please provide an order ID to check the status.</p>
-          <a
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 p-8 text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Order ID Required</h2>
+          <p className="text-sm text-slate-500 mb-6">Please provide an order ID to check the status.</p>
+          <Link
             href="/"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="inline-block px-6 py-3 bg-brand text-white rounded-lg font-semibold hover:bg-brand/90 transition-all cursor-pointer"
           >
             Go to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -263,19 +236,19 @@ function OrderStatusContent() {
 
   if (error && !order) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-          <svg className="mx-auto h-16 w-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.532-3L5.008 7.362 4.724 4.638 7.523 4.9a2.25 2.25 0 012.186 3.355l-.733 2.2a9.009 9.009 0 01-1.605 3.714m0 0V12a2 2 0 002 2h2.586a1 1 0 001 1v-5a1 1 0 00-1-1V7a1 1 0 00-1-1v-.063c0-.536.21-1.054.468-1.447l-2.2-.733a9.009 9.009 0 01-3.714-1.605M7 5a9.009 9.009 0 012.186 3.355l-.733 2.2A2.25 2.25 0 017.532 7h2.586a1 1 0 001 1v-5a1 1 0 00-1-1V7a1 1 0 00-1-1v-.063c0-.536.21-1.054.468-1.447l-2.2-.733a9.009 9.009 0 01-3.714-1.605" />
-          </svg>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Order Not Found</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
-          <a
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 p-8 text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Order Not Found</h2>
+          <p className="text-sm text-slate-500 mb-6">{error}</p>
+          <Link
             href="/"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="inline-block px-6 py-3 bg-brand text-white rounded-lg font-semibold hover:bg-brand/90 transition-all cursor-pointer"
           >
             Go to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -286,167 +259,352 @@ function OrderStatusContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      {/* Header */}
-      <nav className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <a href="/" className="flex items-center text-slate-600 hover:text-indigo-600 transition-colors font-medium">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7 7M5 10v10a2 2 0 002 2h2a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2h2" />
-                </svg>
+    <div className="min-h-screen bg-slate-50">
+      {/* Red Banner - Hidden on Print */}
+      <section className='py-3 bg-brand print:hidden'>
+        <div className="container px-4 mx-auto">
+          <div className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/shop" className="flex items-center text-white/90 hover:text-white transition-colors text-xs md:text-sm font-medium">
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Store
-              </a>
+              </Link>
+              <div className="h-5 w-px bg-white/20 hidden sm:block"></div>
+              <h1 className="text-white font-bold text-sm md:text-base tracking-wide hidden sm:block">Order Status</h1>
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Order Status</h1>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Order Header */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-6 border-b border-slate-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-900">{order.order_number}</h2>
-                <p className="text-sm text-slate-600 mt-1">Placed on {formatDate(order.created_at)}</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={handleDownloadInvoice}
-                  disabled={downloadingInvoice}
-                  className="px-4 py-2 text-sm font-bold rounded-full border-2 bg-green-50 text-green-700 border-green-300 hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {downloadingInvoice ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Download Invoice
-                    </>
-                  )}
-                </button>
-                <span className={`px-4 py-2 text-sm font-bold rounded-full border-2 ${getStatusColor(order.status)}`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
-                <span className={`px-4 py-2 text-sm font-bold rounded-full border-2 ${getPaymentMethodBadge(order.payment_method).color}`}>
-                  {getPaymentMethodBadge(order.payment_method).label}
-                </span>
-                <span className={`px-4 py-2 text-sm font-bold rounded-full border-2 ${getPaymentStatusColor(order.payment_status)}`}>
-                  {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-xs md:text-sm font-medium">
+              <Link href="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
+              <span className="text-white/50">-</span>
+              <span className="text-white">Order Status</span>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Order Summary */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900">Order Summary</h3>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:hidden">
+        {/* Order Info Bar */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
+              <Package className="w-6 h-6 text-slate-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">{order.order_number}</h2>
+              <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                <Calendar className="w-3.5 h-3.5" />
+                Placed on {formatDate(order.created_at)}
+              </p>
+            </div>
           </div>
-          <div className="p-6 space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-600">Subtotal</span>
-              <span className="text-base font-semibold text-slate-900">{formatCurrency(order.subtotal)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-600">Tax</span>
-              <span className="text-base font-semibold text-slate-900">{formatCurrency(order.tax)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-600">Shipping</span>
-              <span className="text-base font-semibold text-slate-900">{formatCurrency(order.shipping_cost)}</span>
-            </div>
-            {order.discount_amount > 0 && (
-              <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                <span className="text-sm text-green-600 font-medium">Discount (Coupon)</span>
-                <span className="text-base font-semibold text-green-600">-{formatCurrency(order.discount_amount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-center py-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg px-4 -mx-4">
-              <span className="text-lg font-bold text-slate-900">Total</span>
-              <span className="text-2xl font-bold text-indigo-600">{formatCurrency(order.total)}</span>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`px-3 py-1 text-[11px] font-bold rounded-full border ${getStatusColor(order.status)}`}>
+              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+            </span>
+            <span className={`px-3 py-1 text-[11px] font-bold rounded-full border ${getPaymentStatusColor(order.payment_status)}`}>
+              {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+            </span>
+            <button
+              onClick={handleDownloadInvoice}
+              className="px-3 py-1 text-[11px] font-bold rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <Download className="w-3 h-3" />
+              Invoice
+            </button>
           </div>
         </div>
 
-        {/* Order Items */}
-        {order.items.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Order Items ({order.items.length})</h3>
-            </div>
-            <div className="divide-y divide-slate-200">
-              {order.items.map((item) => (
-                <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors">
-                  <div className="flex justify-between items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Order Items & Summary */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Order Items */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/30">
+                <h3 className="text-sm font-bold text-slate-900">Order Items</h3>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {order.items.map((item) => (
+                  <div key={item.id} className="px-5 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                     <div className="flex-1">
-                      <h4 className="text-base font-semibold text-slate-900">{item.product_name}</h4>
-                      <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
+                      <h4 className="text-sm font-medium text-slate-900">{item.product_name}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-slate-900">{formatCurrency(item.total)}</p>
-                      <p className="text-xs text-slate-500">{formatCurrency(item.price)} each</p>
+                      <p className="text-sm font-bold text-slate-900">{formatCurrency(item.total)}</p>
+                      <p className="text-[10px] text-slate-400">{formatCurrency(item.price)} each</p>
                     </div>
                   </div>
+                ))}
+              </div>
+              <div className="px-5 py-4 bg-slate-50/30 border-t border-slate-100">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Subtotal</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(order.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Shipping</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(order.shipping_cost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Tax</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(order.tax)}</span>
+                  </div>
+                  {order.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount</span>
+                      <span className="font-medium">-{formatCurrency(order.discount_amount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t border-slate-200">
+                    <span className="text-base font-bold text-slate-900">Total</span>
+                    <span className="text-lg font-bold text-brand">{formatCurrency(order.total)}</span>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Order Notes */}
-        {order.notes && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Order Notes</h3>
-            </div>
-            <div className="p-6">
-              <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-4">
-                <p className="text-sm text-amber-900">{order.notes}</p>
+            {/* Notes */}
+            {order.notes && (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/30">
+                  <h3 className="text-sm font-bold text-slate-900">Order Notes</h3>
+                </div>
+                <div className="p-5">
+                  <div className="bg-slate-50 rounded-lg p-4 text-xs text-slate-600 leading-relaxed border border-slate-100">
+                    {order.notes}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
 
-        {/* Customer Information */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900">Customer Information</h3>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Customer Name</p>
-                <p className="text-base font-medium text-slate-900">{order.customer_name}</p>
+          {/* Right Column: Customer & Shipping Info */}
+          <div className="space-y-6">
+            {/* Customer Details */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/30">
+                <h3 className="text-sm font-bold text-slate-900">Customer Details</h3>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Email</p>
-                <p className="text-base font-medium text-slate-900">{order.customer_email || 'N/A'}</p>
+              <div className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <User className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">Name</p>
+                    <p className="text-sm font-medium text-slate-900">{order.customer_name}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">Email</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">{order.customer_email || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <CreditCard className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">Payment Method</p>
+                    <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full border ${getPaymentMethodBadge(order.payment_method).color}`}>
+                      {getPaymentMethodBadge(order.payment_method).label}
+                    </span>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Shipping Address */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/30">
+                <h3 className="text-sm font-bold text-slate-900">Shipping Address</h3>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 shrink-0">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="text-sm text-slate-600 leading-relaxed">
+                    {(() => {
+                      const addr = parseAddress(order.shipping_address);
+                      if (!addr) return 'No shipping address provided';
+                      if (typeof addr === 'string') return addr;
+                      
+                      return (
+                        <div className="space-y-0.5">
+                          <p className="font-bold text-slate-900">{addr.firstName} {addr.lastName}</p>
+                          <p>{addr.address}</p>
+                          <p>{addr.apartment && `${addr.apartment}, `}{addr.city}, {addr.state} {addr.postalCode}</p>
+                          <p>{addr.country}</p>
+                          {addr.phone && <p className="text-xs text-slate-400 mt-1">Phone: {addr.phone}</p>}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Help & Support */}
+            <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-5">
+              <h3 className="text-sm font-bold text-slate-900 mb-2">Need Help?</h3>
+              <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                If you have any questions regarding your order status or delivery, our team is here to help.
+              </p>
+              <Link
+                href="/contact"
+                className="w-full bg-white border border-indigo-200 text-indigo-700 py-2 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Contact Support
+                <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center py-6">
-          <p className="text-sm text-slate-500 mb-2">Need help with your order?</p>
-          <a
-            href="/"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+        {/* Footer actions */}
+        <div className="mt-8 pt-8 border-t border-slate-200 text-center">
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand text-white rounded-lg text-sm font-bold hover:bg-brand/90 transition-colors cursor-pointer shadow-sm"
           >
-            Contact Us
-          </a>
+            Continue Shopping
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
+
+      {/* Invoice Layout for Print */}
+      <div className="hidden print:block p-8 bg-white min-h-screen text-slate-900">
+        <div className="flex justify-between items-start mb-8 border-b border-slate-200 pb-6">
+          <div>
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt={settings.company_name} className="h-12 object-contain mb-4" />
+            ) : (
+              <h1 className="text-2xl font-bold uppercase mb-4">{settings?.company_name || 'INVOICE'}</h1>
+            )}
+            <div className="text-xs text-slate-500 space-y-1">
+              <p className="font-bold text-slate-900">{settings?.company_name}</p>
+              <p>{settings?.address}</p>
+              <p>{settings?.city}, {settings?.state} {settings?.postal_code}</p>
+              <p>{settings?.country}</p>
+              <p>{settings?.email}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <h2 className="text-3xl font-bold uppercase text-slate-900 mb-2">Invoice</h2>
+            <div className="text-sm space-y-1">
+              <p className="font-bold"># {order.order_number}</p>
+              <p className="text-slate-500">Date: {formatDate(order.created_at)}</p>
+              <div className="mt-2">
+                <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase border ${getPaymentStatusColor(order.payment_status)}`}>
+                  Payment: {order.payment_status}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-12 mb-8">
+          <div>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Bill To / Ship To</h3>
+            <div className="text-sm space-y-1">
+              {(() => {
+                const addr = parseAddress(order.shipping_address);
+                if (!addr) return <p className="text-slate-500 italic">No address provided</p>;
+                if (typeof addr === 'string') return <p>{addr}</p>;
+                return (
+                  <>
+                    <p className="font-bold text-slate-900">{addr.firstName} {addr.lastName}</p>
+                    <p>{addr.address}</p>
+                    {addr.apartment && <p>{addr.apartment}</p>}
+                    <p>{addr.city}, {addr.state} {addr.postalCode}</p>
+                    <p>{addr.country}</p>
+                    {addr.phone && <p className="pt-1 text-slate-400">Phone: {addr.phone}</p>}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Order Summary</h3>
+            <div className="text-sm space-y-1">
+              <p><span className="text-slate-400">Payment Method:</span> {getPaymentMethodBadge(order.payment_method).label}</p>
+              <p><span className="text-slate-400">Order Status:</span> {order.status.toUpperCase()}</p>
+              <p><span className="text-slate-400">Customer Email:</span> {order.customer_email}</p>
+            </div>
+          </div>
+        </div>
+
+        <table className="w-full mb-8">
+          <thead>
+            <tr className="border-b border-slate-200">
+              <th className="py-2 text-left text-xs font-bold uppercase text-slate-900">Description</th>
+              <th className="py-2 text-center text-xs font-bold uppercase text-slate-900 w-20">Qty</th>
+              <th className="py-2 text-right text-xs font-bold uppercase text-slate-900 w-32">Unit Price</th>
+              <th className="py-2 text-right text-xs font-bold uppercase text-slate-900 w-32">Total</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {order.items.map((item) => (
+              <tr key={item.id}>
+                <td className="py-4">
+                  <p className="text-sm font-bold text-slate-900">{item.product_name}</p>
+                </td>
+                <td className="py-4 text-center text-sm">{item.quantity}</td>
+                <td className="py-4 text-right text-sm">{formatCurrency(item.price)}</td>
+                <td className="py-4 text-right text-sm font-bold">{formatCurrency(item.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="flex justify-end">
+          <div className="w-64 space-y-2 border-t pt-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Subtotal</span>
+              <span>{formatCurrency(order.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Shipping</span>
+              <span>{formatCurrency(order.shipping_cost)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Tax</span>
+              <span>{formatCurrency(order.tax)}</span>
+            </div>
+            {order.discount_amount > 0 && (
+              <div className="flex justify-between text-sm text-red-600">
+                <span>Discount</span>
+                <span>-{formatCurrency(order.discount_amount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-bold border-t border-slate-900 pt-2 mt-2">
+              <span>Total</span>
+              <span className="text-brand">{formatCurrency(order.total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-20 text-center border-t border-slate-100 pt-8">
+          <p className="text-xs text-slate-400">Thank you for your business!</p>
+          <p className="text-[10px] text-slate-300 mt-1">{settings?.website}</p>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @media print {
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          .print\:hidden { display: none !important; }
+          .print\:block { display: block !important; }
+          @page { margin: 1cm; size: auto; }
+          main { padding: 0 !important; margin: 0 !important; }
+        }
+      `}</style>
     </div>
   );
 }

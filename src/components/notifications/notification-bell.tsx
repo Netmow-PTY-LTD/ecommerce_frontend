@@ -59,7 +59,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
         title={isConnected ? 'Connected' : 'Disconnected'}
       >
         <Bell size={20} className={isConnected ? 'text-green-500' : 'text-gray-400'} />
@@ -94,7 +94,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                   const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
-                className="flex flex-col items-center justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex flex-col items-start justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <Bell size={32} className="mb-2 opacity-50" />
                 <p className="text-sm">No notifications yet</p>
@@ -107,11 +107,10 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`px-4 py-3 border-b last:border-0 cursor-pointer transition-colors ${
-                      !notification.is_read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-3 border-b last:border-0 cursor-pointer transition-colors ${!notification.is_read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
+                      }`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-full ${getPriorityColor(notification.priority)} text-white flex-shrink-0`}>
                         <Icon size={14} />
                       </div>
@@ -139,7 +138,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                   const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
-                className="text-xs text-gray-600 hover:text-gray-900 w-full text-center font-medium hover:underline"
+                className="text-xs text-gray-600 hover:text-gray-900 w-full text-center font-medium hover:underline cursor-pointer"
               >
                 View all notifications
               </button>

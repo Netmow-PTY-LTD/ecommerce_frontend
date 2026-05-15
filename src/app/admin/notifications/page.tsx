@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useNotificationContext } from '@/contexts/notification-context';
+import { useNotificationContext, AppNotification } from '@/contexts/notification-context';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
 import { formatDistanceToNow } from 'date-fns';
@@ -29,18 +29,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-interface Notification {
-  id: number;
-  type: string;
-  event_type: string;
-  title: string;
-  message: string;
-  data?: any;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  is_read: boolean;
-  read_at: string | null;
-  created_at: string;
-}
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -115,7 +103,7 @@ export default function AdminNotificationsPage() {
     setRefreshing(false);
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: AppNotification) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
     }
@@ -132,7 +120,7 @@ export default function AdminNotificationsPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter((n: Notification) => {
+  const filteredNotifications = notifications.filter((n: AppNotification) => {
     if (filterType !== 'all' && n.type !== filterType) return false;
     if (filterRead === 'read' && !n.is_read) return false;
     if (filterRead === 'unread' && n.is_read) return false;
@@ -142,8 +130,8 @@ export default function AdminNotificationsPage() {
   const stats = {
     total: notifications.length,
     unread: unreadCount,
-    critical: notifications.filter((n: Notification) => n.priority === 'critical').length,
-    high: notifications.filter((n: Notification) => n.priority === 'high').length
+    critical: notifications.filter((n: AppNotification) => n.priority === 'critical').length,
+    high: notifications.filter((n: AppNotification) => n.priority === 'high').length
   };
 
   if (loading) {
@@ -273,7 +261,7 @@ export default function AdminNotificationsPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification: Notification) => {
+              {filteredNotifications.map((notification: AppNotification) => {
                 const Icon = getNotificationIcon(notification.type);
                 return (
                   <div
