@@ -8,6 +8,19 @@ interface NotificationBellProps {
   userType?: 'admin' | 'customer';
 }
 
+interface AppNotification {
+  id: number;
+  type: string;
+  event_type: string;
+  title: string;
+  message: string;
+  data?: any;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  is_read: boolean;
+  read_at?: string | null;
+  created_at: string;
+}
+
 const getNotificationIcon = (type: string) => {
   switch (type) {
     case 'order': return Package;
@@ -44,7 +57,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: AppNotification) => {
     // Mark as read
     await markAsRead(notification.id);
     // Navigate based on notification type
@@ -54,8 +67,8 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
     setIsOpen(false);
   };
 
-  // API now returns only unread notifications, so no frontend filtering needed
-  const unreadNotifications = notifications;
+  // Show only unread notifications in dropdown
+  const unreadNotifications = notifications.filter((n: AppNotification) => !n.is_read);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -103,7 +116,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                 <p className="text-xs text-blue-600 hover:underline mt-1">View notification history</p>
               </div>
             ) : (
-              unreadNotifications.map((notification: any) => {
+              unreadNotifications.map((notification: AppNotification) => {
                 const Icon = getNotificationIcon(notification.type);
                 return (
                   <div
