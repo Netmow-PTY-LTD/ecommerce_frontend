@@ -136,7 +136,7 @@ export function Navbar() {
     return (
         <header
             className={cn(
-                'sticky top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-white shadow-sm'
+                'sticky top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-white shadow-sm print:hidden'
             )}
         >
             {/* Top Bar */}
@@ -162,11 +162,7 @@ export function Navbar() {
                             <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-brand font-bold">{settings.phone || '+123 456 789'}</span></span>
                         </div>
                         <div className="flex items-center gap-4 pl-1">
-                            {isCustomerAuthenticated || isAdminAuthenticated ? (
-                                <Link href={`/${currentUser?.role?.name === 'Superadmin' ? 'admin' : 'customer'}/orders`} className="hover:text-brand transition-colors">Track Order</Link>
-                            ) : (
-                                <Link href="/login" className="hover:text-brand transition-colors">Track Order</Link>
-                            )}
+                            <Link href="/track-order" className="hover:text-brand transition-colors">Track Order</Link>
                         </div>
                     </div>
                 </div>
@@ -322,7 +318,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        {isAuthenticated && <NotificationBell userType="customer" />}
+                        {isCustomerAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
@@ -384,7 +380,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        {isAuthenticated && <NotificationBell userType="customer" />}
+                        {isCustomerAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">

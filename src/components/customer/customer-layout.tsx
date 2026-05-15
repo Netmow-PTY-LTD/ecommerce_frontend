@@ -16,7 +16,8 @@ import {
   Search,
   Menu,
   User,
-  ShoppingBag
+  ShoppingBag,
+  Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ const navigation = [
   { name: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
   { name: 'My Orders', href: '/customer/orders', icon: Package },
   { name: 'Wishlist', href: '/wishlist', icon: Heart },
+  { name: 'Notifications', href: '/customer/notifications', icon: Bell },
   { name: 'Profile Settings', href: '/customer/profile', icon: User },
 ];
 
@@ -97,9 +99,9 @@ export default function CustomerLayout({
           )}>
             {settings?.logo_url ? (
               <div className="h-9 w-auto max-w-[140px] flex items-center overflow-hidden">
-                <img 
-                  src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                  alt="Logo" 
+                <img
+                  src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                  alt="Logo"
                   className="h-full w-auto object-contain"
                 />
               </div>
@@ -174,7 +176,7 @@ export default function CustomerLayout({
               </div>
             )}
           </div>
-          {!sidebarCollapsed && (
+          {/* {!sidebarCollapsed && (
             <button
               onClick={handleLogout}
               className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200"
@@ -182,7 +184,7 @@ export default function CustomerLayout({
               <LogOut className="h-4 w-4" />
               Sign Out
             </button>
-          )}
+          )} */}
         </div>
       </aside>
 
@@ -280,9 +282,9 @@ export default function CustomerLayout({
               <div className="flex items-center overflow-hidden">
                 {settings?.logo_url ? (
                   <div className="h-8 w-auto max-w-[120px] flex items-center overflow-hidden">
-                    <img 
-                      src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`} 
-                      alt="Logo" 
+                    <img
+                      src={settings.logo_url.startsWith('http') ? settings.logo_url : `${process.env.NEXT_PUBLIC_API_URL}${settings.logo_url}`}
+                      alt="Logo"
                       className="h-full w-auto object-contain"
                     />
                   </div>

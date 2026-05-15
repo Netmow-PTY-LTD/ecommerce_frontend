@@ -1,10 +1,10 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { initSocket, getSocket } from '@/lib/socket';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
+import { initSocket } from '@/lib/socket';
 import useSWR from 'swr';
 import api from '@/lib/api';
 
-interface Notification {
+export interface AppNotification {
   id: number;
   type: string;
   event_type: string;
@@ -13,11 +13,12 @@ interface Notification {
   data?: any;
   priority: 'low' | 'medium' | 'high' | 'critical';
   is_read: boolean;
+  read_at?: string | null;
   created_at: string;
 }
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -30,22 +31,23 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children, token }: { children: ReactNode; token?: string }) {
   const [isConnected, setIsConnected] = useState(false);
 
-  // Detect user type from token (simple JWT decode)
-  const [userType, setUserType] = useState<'admin' | 'customer'>('admin');
-
-  useEffect(() => {
-    if (token) {
-      try {
-        // Simple JWT decode to check user type
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          setUserType(payload.type === 'customer' ? 'customer' : 'admin');
-        }
-      } catch (err) {
-        console.error('Error decoding token:', err);
-      }
+  // Detect user type from token synchronously (no state/useEffect needed)
+  const userType = useMemo<'admin' | 'customer'>(() => {
+    if (!token) {
+      return 'admin';
     }
+    try {
+      // Simple JWT decode to check user type
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        const detectedType = payload.type === 'customer' ? 'customer' : 'admin';
+        return detectedType;
+      }
+    } catch (err) {
+      console.error('Error decoding token:', err);
+    }
+    return 'admin';
   }, [token]);
 
   // Use different endpoints based on user type
@@ -53,12 +55,11 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
   const unreadCountEndpoint = userType === 'customer' ? '/notifications/customer/unread-count' : '/notifications/unread-count';
 
   // Use SWR conditionally - only fetch when token exists
+  // Fetch all notifications - filtering is handled client-side by the notification page
   const { data: notificationsData, mutate } = useSWR(
     token ? `${notificationsEndpoint}?page=1&limit=50` : null,
     async (url: string) => {
-      console.log('🔔 Fetching notifications from:', url);
       const response = await api.get(url);
-      console.log('🔔 Notifications response:', response.data);
       return response.data;
     },
     {
@@ -74,9 +75,7 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
   const { data: unreadData, mutate: mutateCount } = useSWR(
     token ? unreadCountEndpoint : null,
     async (url: string) => {
-      console.log('🔔 Fetching unread count from:', url);
       const response = await api.get(url);
-      console.log('🔔 Unread count response:', response.data);
       return response.data;
     },
     {
@@ -87,7 +86,9 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
     }
   );
 
-  const notifications = notificationsData?.data || [];
+  // Handle different possible response structures
+  // API returns only unread notifications, so we can use them directly
+  const notifications = notificationsData?.data || notificationsData || [];
   const count = unreadData?.data?.count || 0;
 
   useEffect(() => {
@@ -99,7 +100,6 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
     socket.on('disconnect', () => setIsConnected(false));
 
     socket.on('notification:new', (notification: Notification) => {
-      console.log('New notification received:', notification);
       mutate();
       mutateCount();
 
@@ -113,7 +113,7 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
       }
     });
 
-    socket.on('notification:unread_count', (data: { count: number }) => {
+    socket.on('notification:unread_count', () => {
       mutateCount();
     });
 
