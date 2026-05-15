@@ -11,7 +11,7 @@ const slides = [
     {
         id: 1,
         subtitle: "Super Delicious",
-        title: "THE BEST WAY TO STUFF YOUR WALLET.",
+        title: "The best way to stuff your wallet.",
         deal: "Today's Best Deal",
         discount: "50% OFF",
         image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop", // High quality headphone
@@ -20,7 +20,7 @@ const slides = [
     {
         id: 2,
         subtitle: "Premium Sound",
-        title: "EXPERIENCE PURE AUDIO BLISS.",
+        title: "Experience pure audio bliss.",
         deal: "Limited Time Offer",
         discount: "30% OFF",
         image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=1000&auto=format&fit=crop", // Another headphone/speaker
@@ -41,7 +41,7 @@ export function Hero() {
     const slide = slides[currentSlide];
 
     return (
-        <section className="relative min-h-[670px] w-full overflow-hidden bg-[#f3f4f6] py-20 flex items-center z-10">
+        <section className="relative min-h-[500px] w-full overflow-hidden bg-[#f3f4f6] py-8 md:py-12 flex items-center z-10">
             {/* Background Image (Common for all slides) */}
             <div className="absolute inset-0 z-0">
                 <Image
@@ -54,7 +54,7 @@ export function Hero() {
                 <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent" />
             </div>
 
-            <div className="container h-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container h-full">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide}
@@ -62,10 +62,10 @@ export function Hero() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="flex flex-col lg:flex-row items-center justify-between h-full py-12 lg:py-0"
+                        className="flex flex-col lg:flex-row items-center justify-between h-full"
                     >
                         {/* Text Content */}
-                        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left pr-40">
+                        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left md:pr-40">
                             <motion.p
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -79,7 +79,7 @@ export function Hero() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
-                                className="text-3xl lg:text-5xl font-black text-slate-900 leading-[1.1] tracking-tighter"
+                                className="text-3xl lg:text-4xl font-bold text-slate-900 leading-[1.2] tracking-tight"
                             >
                                 {slide.title.split(' ').map((word, i) => (
                                     <span key={i} className="inline-block mr-3">

@@ -40,19 +40,11 @@ export function PopularCategories() {
     const categories: Category[] = categoriesData?.data || [];
 
     return (
-        <section className="py-14 lg:py-20 bg-white">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-8 md:py-16 bg-white">
+            <div className="container">
 
                 {/* Header */}
                 <div className="relative flex flex-col items-center text-center mb-10">
-                    {/* "All Categories" link — top right */}
-                    <Link
-                        href="/shop"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-[#ff4d4d] transition-colors group"
-                    >
-                        All Categories
-                        <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
 
                     {/* Subtitle */}
                     <p className="text-[#ff4d4d] text-[11px] font-black uppercase tracking-[0.25em] mb-3">
@@ -60,7 +52,7 @@ export function PopularCategories() {
                     </p>
 
                     {/* Main Heading */}
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
                         Popular Categories
                     </h2>
                 </div>
@@ -76,57 +68,58 @@ export function PopularCategories() {
                         <p className="text-slate-400 font-medium text-sm">No categories found.</p>
                     </div>
                 ) : (
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true, margin: '-40px' }}
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5"
-                    >
-                        {categories.slice(0, 10).map((category) => (
-                            <motion.div key={category.id} variants={cardVariants}>
-                                <Link
-                                    href={`/shop?category_id=${category.id}`}
-                                    className="group flex flex-col items-center bg-white border border-slate-100 rounded-2xl p-10 shadow-xl hover:shadow-md hover:border-slate-200 transition-all duration-300"
-                                >
-                                    {/* Circular Image Container */}
-                                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-[#f5f0e8] flex items-center justify-center overflow-hidden mb-4 group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-                                        {category.image_url ? (
-                                            <Image
-                                                src={category.image_url}
-                                                alt={category.name}
-                                                width={112}
-                                                height={112}
-                                                className="object-contain w-[80%] h-[80%]"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <span className="text-4xl select-none">
-                                                {getCategoryEmoji(category.name)}
-                                            </span>
-                                        )}
-                                    </div>
+                    <>
+                        {/* "All Categories" link — top right */}
+                        <div className='flex md:justify-end mb-4'>
+                            <Link
+                                href="/categories"
+                                className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-[#ff4d4d] transition-colors group"
+                            >
+                                All Categories
+                                <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+                        </div>
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            whileInView="show"
+                            viewport={{ once: true, margin: '-40px' }}
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5"
+                        >
+                            {categories.slice(0, 10).map((category) => (
+                                <motion.div key={category.id} variants={cardVariants}>
+                                    <Link
+                                        href={`/shop?category_id=${category.id}`}
+                                        className="group flex flex-col items-center bg-white border border-slate-100 rounded-2xl p-10 shadow-xl hover:shadow-md hover:border-slate-200 transition-all duration-300"
+                                    >
+                                        {/* Circular Image Container */}
+                                        <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-[#f5f0e8] flex items-center justify-center overflow-hidden mb-4 group-hover:scale-105 transition-transform duration-300 flex-shrink-0 p-2">
+                                            {category.image_url ? (
+                                                <Image
+                                                    src={category.image_url}
+                                                    alt={category.name}
+                                                    width={112}
+                                                    height={112}
+                                                    className="object-contain w-[80%] h-[80%]"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <span className="text-4xl select-none">
+                                                    {getCategoryEmoji(category.name)}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    {/* Category Name */}
-                                    <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-[#ff4d4d] transition-colors duration-200 text-center leading-snug">
-                                        {category.name}
-                                    </h3>
-                                </Link>
-                            </motion.div>
-                        ))}
-                    </motion.div>
+                                        {/* Category Name */}
+                                        <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-[#ff4d4d] transition-colors duration-200 text-center leading-snug">
+                                            {category.name}
+                                        </h3>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </>
                 )}
-
-                {/* Mobile "All Categories" link */}
-                <div className="mt-8 flex justify-center md:hidden">
-                    <Link
-                        href="/shop"
-                        className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-[#ff4d4d] transition-colors"
-                    >
-                        All Categories
-                        <ChevronRight className="h-3.5 w-3.5" />
-                    </Link>
-                </div>
 
             </div>
         </section>

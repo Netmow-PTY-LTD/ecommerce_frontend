@@ -297,141 +297,141 @@ export default function CustomerDashboard() {
         <div className="lg:col-span-2 space-y-8">
           {/* Quick Links / Actions */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 relative overflow-hidden">
-             <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                        <Activity className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Quick Actions</h2>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-indigo-600" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link href="/customer/orders" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Package className="h-6 w-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Track Orders</h3>
-                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Check your order status</p>
-                      </div>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Quick Actions</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Link href="/customer/orders" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      <Package className="h-6 w-6 text-indigo-600" />
                     </div>
-                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
-
-                  <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <User className="h-6 w-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Edit Profile</h3>
-                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Update your information</p>
-                      </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Track Orders</h3>
+                      <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Check your order status</p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </Link>
 
-                  <Link href="/wishlist" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Heart className="h-6 w-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Your Wishlist</h3>
-                        <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">See what you've saved</p>
-                      </div>
+                <Link href="/customer/profile" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      <User className="h-6 w-6 text-indigo-600" />
                     </div>
-                    <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
+                    <div>
+                      <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Edit Profile</h3>
+                      <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">Update your information</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </Link>
 
-                </div>
-             </div>
+                <Link href="/wishlist" className="group flex items-center justify-between p-5 bg-slate-50 hover:bg-indigo-600 rounded-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      <Heart className="h-6 w-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 group-hover:text-white transition-colors">Your Wishlist</h3>
+                      <p className="text-xs text-slate-500 group-hover:text-white/70 transition-colors">See what you've saved</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </Link>
+
+              </div>
+            </div>
           </div>
 
           {/* Account Details Summary */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Account Summary</h2>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-indigo-600" />
                 </div>
-                <Link href="/customer/orders" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-                    View All Orders
-                </Link>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Account Summary</h2>
+              </div>
+              <Link href="/customer/orders" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                View All Orders
+              </Link>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</p>
-                    <div className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-sm font-bold text-slate-700">Active</span>
-                    </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-sm font-bold text-slate-700">Active</span>
                 </div>
-                <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Orders</p>
-                    <p className="text-sm font-bold text-slate-700">{orderStats.totalOrders}</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending</p>
-                    <p className="text-sm font-bold text-slate-700">{orderStats.pendingOrders}</p>
-                </div>
-                <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Customer since</p>
-                    <p className="text-sm font-bold text-slate-700">2024</p>
-                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Orders</p>
+                <p className="text-sm font-bold text-slate-700">{orderStats.totalOrders}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending</p>
+                <p className="text-sm font-bold text-slate-700">{orderStats.pendingOrders}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Customer since</p>
+                <p className="text-sm font-bold text-slate-700">2024</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Profile Card Sidebar Style */}
         <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
-                <div className="text-center">
-                    <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-slate-50 shadow-lg shadow-slate-100">
-                        {customer?.image_url && (
-                          <AvatarImage 
-                            src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`} 
-                            className="object-cover" 
-                          />
-                        )}
-                        <AvatarFallback className="bg-indigo-600 text-white text-2xl font-black">
-                            {customer.name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{customer.name}</h3>
-                    <p className="text-sm text-slate-500 font-medium">{customer.email}</p>
-                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                        {customer.customer_type} account
-                    </div>
-                </div>
-
-                <div className="mt-8 space-y-4">
-                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                        <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Email</p>
-                            <p className="text-xs font-bold text-slate-700 truncate">{customer.email || 'N/A'}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
-                        <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Phone</p>
-                            <p className="text-xs font-bold text-slate-700 truncate">{customer.phone || 'N/A'}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <button className="w-full mt-6 py-3 rounded-2xl text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-all uppercase tracking-widest cursor-pointer">
-                    Manage Account
-                </button>
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <div className="text-center">
+              <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-slate-50 shadow-lg shadow-slate-100">
+                {customer?.image_url && (
+                  <AvatarImage
+                    src={customer.image_url.startsWith('http') ? customer.image_url : `${process.env.NEXT_PUBLIC_API_URL}${customer.image_url}`}
+                    className="object-cover"
+                  />
+                )}
+                <AvatarFallback className="bg-indigo-600 text-white text-2xl font-black">
+                  {customer.name?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">{customer.name}</h3>
+              <p className="text-sm text-slate-500 font-medium">{customer.email}</p>
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                {customer.customer_type} account
+              </div>
             </div>
 
-            {/* Support / Help Card */}
-            <div className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white relative overflow-hidden group">
+            <div className="mt-8 space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Email</p>
+                  <p className="text-xs font-bold text-slate-700 truncate">{customer.email || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Phone</p>
+                  <p className="text-xs font-bold text-slate-700 truncate">{customer.phone || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+
+            <button className="w-full mt-6 py-3 rounded-2xl text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-all uppercase tracking-widest cursor-pointer">
+              Manage Account
+            </button>
+          </div>
+
+          {/* Support / Help Card */}
+          {/* <div className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white relative overflow-hidden group">
                 <div className="relative z-10">
                     <h3 className="text-lg font-bold mb-2">Need help?</h3>
                     <p className="text-indigo-100 text-xs mb-6 font-medium leading-relaxed">Our support team is available 24/7 to assist you with your orders.</p>
@@ -440,7 +440,7 @@ export default function CustomerDashboard() {
                     </button>
                 </div>
                 <Sparkles className="absolute -top-6 -right-6 h-24 w-24 text-white/10 rotate-12 group-hover:scale-125 transition-transform duration-500" />
-            </div>
+            </div> */}
         </div>
       </div>
     </>
