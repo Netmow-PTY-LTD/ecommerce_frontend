@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -518,6 +518,14 @@ export default function SettingsPage() {
                                             <option value="IDR">IDR - Indonesian Rupiah (Rp)</option>
                                             <option value="THB">THB - Thai Baht (฿)</option>
                                             <option value="VND">VND - Vietnamese Dong (₫)</option>
+                                            <option value="BDT">BDT - Bangladeshi Taka (৳)</option>
+                                            <option value="MYR">MYR - Malaysian Ringgit (RM)</option>
+                                            <option value="PKR">PKR - Pakistani Rupee (Rs)</option>
+                                            <option value="LKR">LKR - Sri Lankan Rupee (Rs)</option>
+                                            <option value="AED">AED - UAE Dirham (د.إ)</option>
+                                            <option value="SAR">SAR - Saudi Riyal (﷼)</option>
+                                            <option value="QAR">QAR - Qatari Rial (﷼)</option>
+                                            <option value="KWD">KWD - Kuwaiti Dinar (د.ك)</option>
                                         </select>
                                     </div>
 

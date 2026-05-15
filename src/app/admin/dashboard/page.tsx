@@ -26,7 +26,7 @@ interface Order {
 export default function AdminDashboardPage() {
   const { user, logout, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currencySymbol } = useCurrency();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
     totalOrders: 0,
