@@ -13,7 +13,6 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useShippingRules } from '@/hooks/use-settings';
 import { useAddresses } from '@/hooks/use-addresses';
-import { AddressSelector } from '@/components/address/address-selector';
 
 // Checkout data interface
 interface CheckoutFormData {

@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import { initSocket, getSocket } from '@/lib/socket';
 import useSWR from 'swr';
 import api from '@/lib/api';
@@ -30,22 +30,20 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children, token }: { children: ReactNode; token?: string }) {
   const [isConnected, setIsConnected] = useState(false);
 
-  // Detect user type from token (simple JWT decode)
-  const [userType, setUserType] = useState<'admin' | 'customer'>('admin');
-
-  useEffect(() => {
-    if (token) {
-      try {
-        // Simple JWT decode to check user type
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          setUserType(payload.type === 'customer' ? 'customer' : 'admin');
-        }
-      } catch (err) {
-        console.error('Error decoding token:', err);
+  // Detect user type from token synchronously (no state/useEffect needed)
+  const userType = useMemo<'admin' | 'customer'>(() => {
+    if (!token) return 'admin';
+    try {
+      // Simple JWT decode to check user type
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        return payload.type === 'customer' ? 'customer' : 'admin';
       }
+    } catch (err) {
+      console.error('Error decoding token:', err);
     }
+    return 'admin';
   }, [token]);
 
   // Use different endpoints based on user type
