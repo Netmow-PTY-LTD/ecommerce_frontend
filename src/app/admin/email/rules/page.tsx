@@ -7,6 +7,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/admin/admin-layout';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
+import { Info, HelpCircle, AlertCircle } from 'lucide-react';
+import {
+  TRIGGER_EVENT_VARIABLES,
+  TRIGGER_EVENT_LABELS,
+  DEFAULT_TEMPLATE_SLUGS,
+  getRequiredVariables,
+  validateTemplateVariables,
+  getSampleDataForTrigger
+} from '@/lib/email-system-guide';
 import {
   Plus,
   Pencil,
@@ -298,6 +307,45 @@ export default function EmailRulesPage() {
           </div>
         </div>
 
+        {/* Email System Guide */}
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 mb-6 border border-indigo-200">
+          <div className="flex items-start gap-4">
+            <div className="bg-indigo-600 p-3 rounded-xl shrink-0">
+              <HelpCircle size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-indigo-900 mb-2">How Email Automation Works</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-sm text-indigo-800">
+                <div>
+                  <p className="font-semibold mb-1">1. Choose Trigger Event</p>
+                  <p className="text-indigo-700">Select when emails should be sent (e.g., when order is placed, shipped, etc.)</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1">2. Select Email Template</p>
+                  <p className="text-indigo-700">Choose which template to use. Make sure it has the required variables!</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1">3. Set Delay (Optional)</p>
+                  <p className="text-indigo-700">Wait X minutes before sending the email</p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-1">4. Test Your Rule</p>
+                  <p className="text-indigo-700">Use the test button to verify emails are working correctly</p>
+                </div>
+              </div>
+              <div className="mt-3 p-3 bg-white/70 rounded-lg border border-indigo-200">
+                <p className="text-xs font-semibold text-indigo-900 mb-1">⚠️ Important Notes:</p>
+                <ul className="text-xs text-indigo-700 space-y-1">
+                  <li>• Template <strong>variables must match exactly</strong> what the backend sends (see template editor for full list)</li>
+                  <li>• Using wrong variable names will result in empty/missing data in emails</li>
+                  <li>• Each trigger event has recommended template slugs for best results</li>
+                  <li>• Templates must be <strong>Active</strong> to be used in automation rules</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Rules Table */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           {/* Header */}
@@ -471,7 +519,9 @@ export default function EmailRulesPage() {
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Trigger Event</label>
                   <select
                     value={form.trigger_event}
-                    onChange={(e) => setForm({ ...form, trigger_event: e.target.value as EmailAutomationRule['trigger_event'] })}
+                    onChange={(e) => {
+                      setForm({ ...form, trigger_event: e.target.value as EmailAutomationRule['trigger_event'] });
+                    }}
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
                     {TRIGGER_EVENTS.map((event) => (
@@ -480,6 +530,22 @@ export default function EmailRulesPage() {
                       </option>
                     ))}
                   </select>
+                  {form.trigger_event && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <Info size={14} className="text-blue-600 mt-0.5" />
+                        <div className="text-xs">
+                          <p className="font-semibold text-blue-900">Recommended Template Slug:</p>
+                          <code className="bg-white px-2 py-0.5 rounded font-mono text-blue-800">
+                            {DEFAULT_TEMPLATE_SLUGS[form.trigger_event] || 'custom'}
+                          </code>
+                          <p className="text-blue-700 mt-1">
+                            Required variables: {getRequiredVariables(form.trigger_event).join(', ') || 'none'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -490,18 +556,64 @@ export default function EmailRulesPage() {
                       Loading templates...
                     </div>
                   ) : (
-                    <select
-                      value={form.template_id}
-                      onChange={(e) => setForm({ ...form, template_id: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="">Select a template...</option>
-                      {templates.map((tpl) => (
-                        <option key={tpl.id} value={tpl.id}>
-                          {tpl.name} ({tpl.slug}) {tpl.status === 'inactive' ? '- Inactive' : ''}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        value={form.template_id}
+                        onChange={(e) => setForm({ ...form, template_id: e.target.value })}
+                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      >
+                        <option value="">Select a template...</option>
+                        {templates.map((tpl) => {
+                          const templateVars = Array.isArray(tpl.variables) ? tpl.variables : [];
+                          const requiredVars = getRequiredVariables(form.trigger_event);
+                          const hasRequiredVars = requiredVars.every(v => templateVars.includes(v));
+                          const isRecommended = tpl.slug === DEFAULT_TEMPLATE_SLUGS[form.trigger_event];
+
+                          return (
+                            <option key={tpl.id} value={tpl.id}>
+                              {tpl.name} ({tpl.slug})
+                              {tpl.status === 'inactive' ? ' - Inactive' : ''}
+                              {isRecommended ? ' ⭐ Recommended' : ''}
+                              {!hasRequiredVars && requiredVars.length > 0 ? ' ⚠️ Missing Variables' : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {form.template_id && (
+                        <div className="mt-2">
+                          {(() => {
+                            const template = templates.find(t => t.id === parseInt(form.template_id as string));
+                            if (!template) return null;
+                            const templateVars = Array.isArray(template.variables) ? template.variables : [];
+                            const requiredVars = getRequiredVariables(form.trigger_event);
+                            const missing = requiredVars.filter(v => !templateVars.includes(v));
+
+                            if (missing.length > 0) {
+                              return (
+                                <div className="flex items-start gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                                  <AlertCircle size={14} className="text-amber-600 mt-0.5" />
+                                  <div className="text-xs">
+                                    <p className="font-semibold text-amber-900">Missing Variables:</p>
+                                    <p className="text-amber-700">Template is missing: {missing.join(', ')}</p>
+                                    <p className="text-amber-600">Add these variables to the template or the email may not work correctly.</p>
+                                  </div>
+                                </div>
+                              );
+                            } else if (templateVars.length > 0) {
+                              return (
+                                <div className="flex items-start gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                                  <CheckCircle2 size={14} className="text-green-600 mt-0.5" />
+                                  <div className="text-xs text-green-700">
+                                    ✓ Template has all required variables
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
