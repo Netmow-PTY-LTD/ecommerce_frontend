@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useNotificationContext } from '@/contexts/notification-context';
+import { useNotificationContext, AppNotification } from '@/contexts/notification-context';
 import api from '@/lib/api';
 import AdminLayout from '@/components/admin/admin-layout';
 import { formatDistanceToNow } from 'date-fns';
@@ -218,8 +218,8 @@ export default function AdminNotificationsPage() {
   const stats = {
     total: pagination.total,
     unread: unreadCount,
-    critical: notifications.filter((n: Notification) => n.priority === 'critical').length,
-    high: notifications.filter((n: Notification) => n.priority === 'high').length
+    critical: notifications.filter((n: AppNotification) => n.priority === 'critical').length,
+    high: notifications.filter((n: AppNotification) => n.priority === 'high').length
   };
 
   if (loading) {

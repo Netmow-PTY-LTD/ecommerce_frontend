@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useRouter } from 'next/navigation';
-import { useNotificationContext } from '@/contexts/notification-context';
+import { useNotificationContext, AppNotification } from '@/contexts/notification-context';
 import { formatDistanceToNow } from 'date-fns';
 import {
   Package,
@@ -121,7 +121,7 @@ export default function CustomerNotificationsPage() {
     setRefreshing(false);
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: AppNotification) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
     }
@@ -135,7 +135,7 @@ export default function CustomerNotificationsPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter((n: Notification) => {
+  const filteredNotifications = notifications.filter((n: AppNotification) => {
     if (filterType !== 'all' && n.type !== filterType) return false;
     if (filterRead === 'read' && !n.is_read) return false;
     if (filterRead === 'unread' && n.is_read) return false;
@@ -187,61 +187,27 @@ export default function CustomerNotificationsPage() {
   }
 
   return (
-   
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium',
-            isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          )}>
-            <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-red-500')} />
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                <p className="text-xs text-slate-500">Total</p>
-              </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className={cn(
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium',
+          isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        )}>
+          <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-red-500')} />
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <MessageSquare className="h-5 w-5 text-blue-600" />
             </div>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.orders}</p>
-                <p className="text-xs text-slate-500">Orders</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Tag className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{stats.promos}</p>
-                <p className="text-xs text-slate-500">Promos</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-lg">
-                <RefreshCw className={cn('h-5 w-5 text-slate-600', refreshing && 'animate-spin')} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">Refresh</p>
-                <p className="text-xs text-slate-500">Updates</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-xs text-slate-500">Total</p>
             </div>
           </div>
         </div>
@@ -298,18 +264,63 @@ export default function CustomerNotificationsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <Button onClick={handleMarkAllAsRead} variant="outline" size="sm" className="gap-2">
-                <CheckCheck className="h-4 w-4" />
-                Mark All Read
-              </Button>
-            )}
-            <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2">
-              <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
-            </Button>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Tag className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">{stats.promos}</p>
+              <p className="text-xs text-slate-500">Promos</p>
+            </div>
           </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <RefreshCw className={cn('h-5 w-5 text-slate-600', refreshing && 'animate-spin')} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-900">Refresh</p>
+              <p className="text-xs text-slate-500">Updates</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Type: {filterType === 'all' ? 'All' : typeLabels[filterType]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setFilterType('all')}>All Types</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterType('order')}>Orders</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterType('payment')}>Payments</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterType('stock')}>Stock</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterType('chat')}>Support</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterType('promo')}>Promotions</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                {filterRead === 'all' ? 'All' : filterRead === 'read' ? 'Read' : 'Unread'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setFilterRead('all')}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterRead('unread')}>Unread</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterRead('read')}>Read</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -378,6 +389,20 @@ export default function CustomerNotificationsPage() {
                               )}
                             </div>
                           </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {!notification.is_read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsRead(notification.id);
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-white transition-colors"
+                              title="Mark as read"
+                            >
+                              <Check className="h-4 w-4 text-slate-400 hover:text-green-600" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -476,6 +501,40 @@ export default function CustomerNotificationsPage() {
           </button>
         </div>
       </div>
-    
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <button
+          onClick={() => router.push('/customer/orders')}
+          className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer"
+        >
+          <Package className="h-5 w-5 text-indigo-600" />
+          <div className="text-left">
+            <p className="text-sm font-semibold text-slate-900">My Orders</p>
+            <p className="text-xs text-slate-500">Track your orders</p>
+          </div>
+        </button>
+        <button
+          onClick={() => router.push('/cart')}
+          className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer"
+        >
+          <ShoppingCart className="h-5 w-5 text-indigo-600" />
+          <div className="text-left">
+            <p className="text-sm font-semibold text-slate-900">Cart</p>
+            <p className="text-xs text-slate-500">Continue shopping</p>
+          </div>
+        </button>
+        <button
+          onClick={() => router.push('/customer/profile')}
+          className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer"
+        >
+          <MessageSquare className="h-5 w-5 text-indigo-600" />
+          <div className="text-left">
+            <p className="text-sm font-semibold text-slate-900">Profile</p>
+            <p className="text-xs text-slate-500">Update settings</p>
+          </div>
+        </button>
+      </div>
+    </div>
+
   );
 }

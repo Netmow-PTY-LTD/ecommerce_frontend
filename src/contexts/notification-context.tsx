@@ -4,7 +4,7 @@ import { initSocket } from '@/lib/socket';
 import useSWR from 'swr';
 import api from '@/lib/api';
 
-interface Notification {
+export interface AppNotification {
   id: number;
   type: string;
   event_type: string;
@@ -18,7 +18,7 @@ interface Notification {
 }
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
