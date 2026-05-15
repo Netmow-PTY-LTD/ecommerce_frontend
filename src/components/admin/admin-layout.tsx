@@ -33,6 +33,7 @@ import {
   BookOpen,
   Sparkles,
   Mail,
+  Send,
   BarChart3,
   TrendingUp,
   Globe,
@@ -104,6 +105,7 @@ const navigation: NavItem[] = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
+  { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
   { name: 'Stock Management', href: '/admin/stock', icon: Box },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
@@ -122,15 +124,17 @@ const navigation: NavItem[] = [
       { name: 'Answer Guide', href: '/admin/chat/answer-guide', icon: BookOpen },
     ],
   },
-  // {
-  //   name: 'Email',
-  //   icon: Mail,
-  //   subitems: [
-  //     { name: 'Templates', href: '/admin/email/templates', icon: FileText },
-  //     // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
-  //     // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
-  //   ],
-  // },
+  {
+    name: 'Email',
+    icon: Mail,
+    subitems: [
+      { name: 'Templates', href: '/admin/email/templates', icon: FileText },
+      { name: 'Automation Rules', href: '/admin/email/rules', icon: Clock },
+      { name: 'Email Logs', href: '/admin/email/logs', icon: Mail },
+      { name: 'Queue Monitor', href: '/admin/email/queue', icon: Layers },
+    ],
+  },
+  { name: 'Newsletter', href: '/admin/newsletter', icon: Send },
   {
     name: 'Analytics',
     icon: BarChart3,
