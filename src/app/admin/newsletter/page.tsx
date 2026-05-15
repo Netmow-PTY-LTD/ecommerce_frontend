@@ -18,7 +18,9 @@ import {
   Search,
   RefreshCw,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Send,
+  XCircle as CloseIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +78,14 @@ export default function AdminNewsletterPage() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [subscriberToDelete, setSubscriberToDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [showComposeModal, setShowComposeModal] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
+  const [textContent, setTextContent] = useState('');
+  const [testEmail, setTestEmail] = useState('');
 
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
@@ -197,6 +207,77 @@ export default function AdminNewsletterPage() {
     }
   };
 
+  const handleSendNewsletter = async () => {
+    if (!subject.trim() || !htmlContent.trim()) {
+      toast.error('Subject and HTML content are required');
+      return;
+    }
+
+    try {
+      setSending(true);
+      const response = await api.post('/newsletter/admin/send', {
+        subject: subject.trim(),
+        htmlContent: htmlContent.trim(),
+        textContent: textContent.trim()
+      });
+
+      const result = response.data.data;
+      toast.success(`Newsletter sent to ${result.sent} subscribers!`);
+
+      // Reset form
+      setSubject('');
+      setHtmlContent('');
+      setTextContent('');
+      setShowComposeModal(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send newsletter');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const resetComposeForm = () => {
+    setSubject('');
+    setHtmlContent('');
+    setTextContent('');
+    setTestEmail('');
+    setShowComposeModal(false);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!subject.trim() || !htmlContent.trim()) {
+      toast.error('Subject and HTML content are required');
+      return;
+    }
+
+    if (!testEmail.trim()) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setSendingTest(true);
+      await api.post('/newsletter/admin/send-test', {
+        subject: subject.trim(),
+        htmlContent: htmlContent.trim(),
+        textContent: textContent.trim(),
+        testEmail: testEmail.trim()
+      });
+
+      toast.success(`Test email sent to ${testEmail}! Check your inbox.`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send test email');
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -223,6 +304,13 @@ export default function AdminNewsletterPage() {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Newsletter Subscribers</h1>
             <p className="text-slate-500 mt-1 text-sm">Manage your newsletter subscribers and send marketing campaigns.</p>
           </div>
+          <Button
+            onClick={() => setShowComposeModal(true)}
+            className="bg-brand hover:bg-brand/90 text-white gap-2"
+          >
+            <Send className="h-4 w-4" />
+            Send Newsletter
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -437,6 +525,149 @@ export default function AdminNewsletterPage() {
         isLoading={deleting}
         variant="danger"
       />
+
+      {/* Compose Newsletter Modal */}
+      {showComposeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+              <h3 className="text-lg font-semibold text-slate-900">Send Newsletter</h3>
+              <button
+                onClick={resetComposeForm}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500"
+              >
+                <CloseIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Recipients Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-blue-900">
+                  <Users className="h-5 w-5" />
+                  <span className="font-medium">This will send to <strong>{stats.active}</strong> active subscribers</span>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Subject <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="e.g., Special Offer - 20% Off Everything!"
+                  className="w-full"
+                />
+              </div>
+
+              {/* HTML Content */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  HTML Content <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={htmlContent}
+                  onChange={(e) => setHtmlContent(e.target.value)}
+                  placeholder="<h1>Hello Subscriber!</h1><p>Check out our latest deals...</p>"
+                  rows={12}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-y"
+                />
+                <p className="text-xs text-slate-400 mt-1">HTML version of your newsletter email</p>
+              </div>
+
+              {/* Text Content */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Plain Text Content <span className="text-slate-400">(optional)</span>
+                </label>
+                <textarea
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  placeholder="Plain text version for email clients that don't support HTML..."
+                  rows={4}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-y"
+                />
+              </div>
+
+              {/* Preview Warning */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm text-amber-900">
+                  <strong>Tip:</strong> Send a test email to yourself first to check how your newsletter looks before sending to all subscribers.
+                </p>
+              </div>
+
+              {/* Test Email Section */}
+              <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Send className="h-4 w-4 text-brand" />
+                    Send Test Email
+                  </span>
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleSendTestEmail}
+                    disabled={sendingTest || sending || !subject.trim() || !htmlContent.trim() || !testEmail.trim()}
+                    variant="outline"
+                    className="shrink-0"
+                  >
+                    {sendingTest ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Test
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Send a test email to verify your newsletter content before sending to all {stats.active} subscribers.
+                </p>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+              <button
+                onClick={resetComposeForm}
+                disabled={sending}
+                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendNewsletter}
+                disabled={sending || !subject.trim() || !htmlContent.trim()}
+                className="px-5 py-2 bg-brand text-white rounded-xl hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                {sending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send to {stats.active} Subscribers
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
