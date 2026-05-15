@@ -20,8 +20,8 @@ export function Footer() {
     const { settings } = useSettingsContext();
 
     return (
-        <footer className="bg-background border-t border-border mt-auto py-12 md:py-16">
-            <div className="container mx-auto">
+        <footer className="bg-background border-t border-border mt-auto pt-12 md:pt-16">
+            <div className="container">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
                         {/* Logo / Company Name */}
@@ -85,7 +85,7 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+                <div className="mt-12 py-4 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
                     <p>&copy; 2026 {settings.company_name || 'LuxeStore'}. All rights reserved.</p>
                     <div className="flex gap-4">
                         <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
