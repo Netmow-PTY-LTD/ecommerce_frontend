@@ -18,9 +18,15 @@ import {
   CheckCheck,
   Filter,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +44,15 @@ interface Notification {
   data?: any;
   priority: 'low' | 'medium' | 'high' | 'critical';
   is_read: boolean;
-  read_at: string | null;
+  read_at?: string | null;
   created_at: string;
+}
+
+interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPage: number;
 }
 
 const getNotificationIcon = (type: string) => {
@@ -88,11 +101,23 @@ const typeLabels: Record<string, string> = {
 export default function AdminNotificationsPage() {
   const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } = useNotificationContext();
+  const { unreadCount, markAsRead, markAllAsRead } = useNotificationContext();
 
   const [filterType, setFilterType] = useState<string>('all');
   const [filterRead, setFilterRead] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPage: 0,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -100,19 +125,77 @@ export default function AdminNotificationsPage() {
     }
   }, [isAuthenticated, loading, router]);
 
+  const fetchNotifications = async (page = 1) => {
+    try {
+      setLoadingNotifications(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+      });
+      if (filterType !== 'all') params.append('type', filterType);
+      if (filterRead === 'read') params.append('is_read', 'true');
+      if (filterRead === 'unread') params.append('is_read', 'false');
+      if (appliedSearch) params.append('search', appliedSearch);
+
+      const response = await api.get(`/notifications?${params}`);
+      const data = response.data;
+
+      setNotifications(data.data || []);
+      setPagination({
+        total: data.total || 0,
+        page: data.page || 1,
+        limit: data.limit || 10,
+        totalPage: data.totalPage || 0,
+      });
+      setCurrentPage(data.page || 1);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setNotifications([]);
+      setPagination({
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPage: 0,
+      });
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchNotifications(currentPage);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchNotifications(1);
+  }, [filterType, filterRead, appliedSearch]);
+
   const handleMarkAsRead = async (id: number) => {
     await markAsRead(id);
+    fetchNotifications(currentPage);
   };
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
+    fetchNotifications(currentPage);
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Force refresh by calling the mutate function
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await fetchNotifications(currentPage);
     setRefreshing(false);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAppliedSearch(searchTerm);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setAppliedSearch('');
   };
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -132,15 +215,8 @@ export default function AdminNotificationsPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter((n: Notification) => {
-    if (filterType !== 'all' && n.type !== filterType) return false;
-    if (filterRead === 'read' && !n.is_read) return false;
-    if (filterRead === 'unread' && n.is_read) return false;
-    return true;
-  });
-
   const stats = {
-    total: notifications.length,
+    total: pagination.total,
     unread: unreadCount,
     critical: notifications.filter((n: Notification) => n.priority === 'critical').length,
     high: notifications.filter((n: Notification) => n.priority === 'high').length
@@ -164,7 +240,7 @@ export default function AdminNotificationsPage() {
     <AdminLayout title="Notifications" subtitle={`You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`}>
       <div className="w-full space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -198,24 +274,20 @@ export default function AdminNotificationsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <RefreshCw className={cn('h-5 w-5 text-orange-600', refreshing && 'animate-spin')} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Connection</p>
-                <p className={cn('text-xs', isConnected ? 'text-green-600' : 'text-red-600')}>
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <form onSubmit={handleSearch} className="relative flex-1 sm:flex-none min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search notifications..."
+                className="pl-10 h-9 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </form>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -247,6 +319,11 @@ export default function AdminNotificationsPage() {
                 <DropdownMenuItem onClick={() => setFilterRead('read')}>Read Only</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {(appliedSearch || filterType !== 'all' || filterRead !== 'all') && (
+              <Button onClick={handleClearSearch} variant="ghost" size="sm">
+                Clear
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -265,88 +342,172 @@ export default function AdminNotificationsPage() {
 
         {/* Notifications List */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {filteredNotifications.length === 0 ? (
+          {loadingNotifications ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
               <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No notifications found</p>
               <p className="text-sm mt-1">Try changing your filters</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification: Notification) => {
-                const Icon = getNotificationIcon(notification.type);
-                return (
-                  <div
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={cn(
-                      'p-4 cursor-pointer transition-all hover:bg-gray-50',
-                      getPriorityColor(notification.priority, notification.is_read)
-                    )}
-                  >
-                    <div className="flex gap-4">
-                      <div className={cn(
-                        'p-2.5 rounded-full flex-shrink-0',
-                        notification.is_read ? 'bg-gray-200 text-gray-500' : getPriorityBadge(notification.priority)
-                      )}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className={cn(
-                              'text-sm font-semibold truncate',
-                              notification.is_read ? 'text-gray-600' : 'text-gray-900'
-                            )}>
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
-                              {notification.message}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-[10px] uppercase font-semibold text-gray-500">
-                                {typeLabels[notification.type] || notification.type}
-                              </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-[10px] text-gray-400">
-                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                              </span>
-                              {notification.priority !== 'low' && (
-                                <>
-                                  <span className="text-gray-300">•</span>
-                                  <span className={cn(
-                                    'text-[10px] font-semibold uppercase',
-                                    notification.priority === 'critical' && 'text-red-600',
-                                    notification.priority === 'high' && 'text-orange-600',
-                                    notification.priority === 'medium' && 'text-blue-600'
-                                  )}>
-                                    {notification.priority}
-                                  </span>
-                                </>
+            <>
+              <div className="divide-y divide-gray-100">
+                {notifications.map((notification: Notification) => {
+                  const Icon = getNotificationIcon(notification.type);
+                  return (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={cn(
+                        'p-4 cursor-pointer transition-all hover:bg-gray-50',
+                        getPriorityColor(notification.priority, notification.is_read)
+                      )}
+                    >
+                      <div className="flex gap-4">
+                        <div className={cn(
+                          'p-2.5 rounded-full flex-shrink-0',
+                          notification.is_read ? 'bg-gray-200 text-gray-500' : getPriorityBadge(notification.priority)
+                        )}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={cn(
+                                'text-sm font-semibold truncate',
+                                notification.is_read ? 'text-gray-600' : 'text-gray-900'
+                              )}>
+                                {notification.title}
+                              </p>
+                              <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] uppercase font-semibold text-gray-500">
+                                  {typeLabels[notification.type] || notification.type}
+                                </span>
+                                <span className="text-gray-300">•</span>
+                                <span className="text-[10px] text-gray-400">
+                                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                </span>
+                                {notification.priority !== 'low' && (
+                                  <>
+                                    <span className="text-gray-300">•</span>
+                                    <span className={cn(
+                                      'text-[10px] font-semibold uppercase',
+                                      notification.priority === 'critical' && 'text-red-600',
+                                      notification.priority === 'high' && 'text-orange-600',
+                                      notification.priority === 'medium' && 'text-blue-600'
+                                    )}>
+                                      {notification.priority}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0">
+                              {!notification.is_read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAsRead(notification.id);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-white transition-colors"
+                                  title="Mark as read"
+                                >
+                                  <Check className="h-4 w-4 text-gray-400 hover:text-green-600" />
+                                </button>
                               )}
                             </div>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {!notification.is_read && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMarkAsRead(notification.id);
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-white transition-colors"
-                                title="Mark as read"
-                              >
-                                <Check className="h-4 w-4 text-gray-400 hover:text-green-600" />
-                              </button>
-                            )}
                           </div>
                         </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPage > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} notifications
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchNotifications(1)}
+                      disabled={currentPage === 1 || loadingNotifications}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchNotifications(currentPage - 1)}
+                      disabled={currentPage === 1 || loadingNotifications}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {pagination.totalPage > 0 && (
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(pagination.totalPage, 5) }, (_, i) => {
+                          let pageNum;
+                          if (pagination.totalPage <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= pagination.totalPage - 2) {
+                            pageNum = pagination.totalPage - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? 'default' : 'outline'}
+                              size="sm"
+                              disabled={loadingNotifications}
+                              className="h-8 w-8 p-0"
+                              onClick={() => fetchNotifications(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchNotifications(currentPage + 1)}
+                      disabled={currentPage === pagination.totalPage || loadingNotifications}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchNotifications(pagination.totalPage)}
+                      disabled={currentPage === pagination.totalPage || loadingNotifications}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

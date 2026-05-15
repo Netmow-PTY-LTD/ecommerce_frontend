@@ -13,6 +13,7 @@ interface Notification {
   data?: any;
   priority: 'low' | 'medium' | 'high' | 'critical';
   is_read: boolean;
+  read_at?: string | null;
   created_at: string;
 }
 
