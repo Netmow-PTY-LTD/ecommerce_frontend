@@ -99,7 +99,7 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
     socket.on('connect', () => setIsConnected(true));
     socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('notification:new', (notification: Notification) => {
+    socket.on('notification:new', (notification: AppNotification) => {
       mutate();
       mutateCount();
 

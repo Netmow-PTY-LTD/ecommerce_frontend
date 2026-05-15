@@ -198,7 +198,7 @@ export default function AdminNotificationsPage() {
     setAppliedSearch('');
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: AppNotification) => {
     if (!notification.is_read) {
       await handleMarkAsRead(notification.id);
     }
@@ -355,7 +355,7 @@ export default function AdminNotificationsPage() {
           ) : (
             <>
               <div className="divide-y divide-gray-100">
-                {notifications.map((notification: Notification) => {
+                {notifications.map((notification: AppNotification) => {
                   const Icon = getNotificationIcon(notification.type);
                   return (
                     <div
