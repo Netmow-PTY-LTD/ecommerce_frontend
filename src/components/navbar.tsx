@@ -41,6 +41,18 @@ export function Navbar() {
     const [isSearching, setIsSearching] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
+    const [contactPhone, setContactPhone] = useState<string | null>(null);
+
+    useEffect(() => {
+        api.get('/settings/contact-details')
+            .then((res) => {
+                const data = res.data?.data;
+                if (data) {
+                    setContactPhone(data.support_phone || data.phone || null);
+                }
+            })
+            .catch(() => { /* use fallback */ });
+    }, []);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -159,7 +171,9 @@ export function Navbar() {
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 pr-4 border-r border-slate-200">
                             <Phone className="h-3 w-3 text-brand" />
-                            <span className="normal-case font-semibold text-slate-600">Need help? Call Us: <span className="text-brand font-bold">{settings.phone || '+123 456 789'}</span></span>
+                            <a href={`tel:${contactPhone || settings.phone || ''}`} className="normal-case font-semibold text-slate-600 hover:text-brand transition-colors">
+                                Need help? Call Us: <span className="text-brand font-bold">{contactPhone || settings.phone || '+123 456 789'}</span>
+                            </a>
                         </div>
                         <div className="flex items-center gap-4 pl-1">
                             <Link href="/track-order" className="hover:text-brand transition-colors">Track Order</Link>

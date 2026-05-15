@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, Search, HelpCircle, MessageCircle, Mail, Phone, ShoppingBag, Truck, CreditCard, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import api from '@/lib/api';
+
+interface ContactDetails {
+  email?: string;
+  phone?: string;
+  support_email?: string;
+  support_phone?: string;
+}
 
 const FAQ_CATEGORIES = [
   { id: 'all', name: 'All Questions', icon: HelpCircle },
@@ -67,6 +75,20 @@ export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [contactDetails, setContactDetails] = useState<ContactDetails | null>(null);
+
+  useEffect(() => {
+    api.get('/settings/contact-details')
+      .then((res) => {
+        if (res.data?.data) setContactDetails(res.data.data);
+      })
+      .catch(() => {/* silently fail, fallback values used */});
+  }, []);
+
+  // Resolve the best email and phone to display
+  const displayEmail = contactDetails?.support_email || contactDetails?.email;
+  const displayPhone = contactDetails?.support_phone || contactDetails?.phone;
+
 
   const filteredFaqs = FAQS.filter(faq => {
     const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
@@ -210,12 +232,21 @@ export default function FAQPage() {
                       </Button>
                     </Link>
                     <div className="flex items-center gap-6 text-slate-400 text-sm font-bold">
-                      <a href="mailto:support@netmow.com" className="hover:text-white transition-colors flex items-center gap-2">
-                        <Mail className="h-4 w-4" /> Email Us
-                      </a>
-                      <a href="tel:+60123456789" className="hover:text-white transition-colors flex items-center gap-2">
-                        <Phone className="h-4 w-4" /> +60 123 456 789
-                      </a>
+                      {displayEmail && (
+                        <a href={`mailto:${displayEmail}`} className="hover:text-white transition-colors flex items-center gap-2">
+                          <Mail className="h-4 w-4" /> {displayEmail}
+                        </a>
+                      )}
+                      {displayPhone && (
+                        <a href={`tel:${displayPhone}`} className="hover:text-white transition-colors flex items-center gap-2">
+                          <Phone className="h-4 w-4" /> {displayPhone}
+                        </a>
+                      )}
+                      {!displayEmail && !displayPhone && (
+                        <a href="mailto:support@netmow.com" className="hover:text-white transition-colors flex items-center gap-2">
+                          <Mail className="h-4 w-4" /> support@netmow.com
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
