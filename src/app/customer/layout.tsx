@@ -2,6 +2,18 @@
 
 import CustomerLayout from '@/components/customer/customer-layout';
 import { usePathname } from 'next/navigation';
+import { NotificationProvider } from '@/contexts/notification-context';
+import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
+
+function CustomerNotificationWrapper({ children }: { children: React.ReactNode }) {
+  const { token } = useCustomerAuth();
+
+  return (
+    <NotificationProvider token={token || undefined}>
+      {children}
+    </NotificationProvider>
+  );
+}
 
 export default function CustomerDashboardLayout({
   children,
@@ -30,11 +42,13 @@ export default function CustomerDashboardLayout({
   };
 
   return (
-    <CustomerLayout
-    // title={getTitle(pathname)} 
-    // subtitle={getSubtitle(pathname)}
-    >
-      {children}
-    </CustomerLayout>
+    <CustomerNotificationWrapper>
+      <CustomerLayout
+      // title={getTitle(pathname)}
+      // subtitle={getSubtitle(pathname)}
+      >
+        {children}
+      </CustomerLayout>
+    </CustomerNotificationWrapper>
   );
 }

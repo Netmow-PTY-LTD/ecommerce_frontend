@@ -24,6 +24,7 @@ export function useNotifications(page = 1, limit = 20) {
     endpoint,
     fetcher
   );
+
   return {
     notifications: data?.data || [],
     pagination: data?.pagination,
@@ -46,6 +47,7 @@ export function useUnreadCount() {
     fetcher,
     { refreshInterval: 30000 }
   );
+
   return {
     count: data?.data?.count || 0,
     isLoading,
