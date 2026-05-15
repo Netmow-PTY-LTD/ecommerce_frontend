@@ -2,23 +2,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, Package, DollarSign, ShoppingCart, AlertTriangle, MessageSquare, Tag } from 'lucide-react';
-import { useNotificationContext } from '@/contexts/notification-context';
+import { useNotificationContext, AppNotification } from '@/contexts/notification-context';
 
 interface NotificationBellProps {
   userType?: 'admin' | 'customer';
-}
-
-interface AppNotification {
-  id: number;
-  type: string;
-  event_type: string;
-  title: string;
-  message: string;
-  data?: any;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  is_read: boolean;
-  read_at?: string | null;
-  created_at: string;
 }
 
 const getNotificationIcon = (type: string) => {

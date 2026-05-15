@@ -333,7 +333,7 @@ export default function CustomerNotificationsPage() {
           ) : (
             <>
               <div className="divide-y divide-slate-100">
-                {paginatedNotifications.map((notification: Notification) => {
+                {paginatedNotifications.map((notification: AppNotification) => {
                   const Icon = getNotificationIcon(notification.type);
                   return (
                     <div
