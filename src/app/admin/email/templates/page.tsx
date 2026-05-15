@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/admin/admin-layout';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
+import { Info, HelpCircle } from 'lucide-react';
+import {
+  TRIGGER_EVENT_VARIABLES,
+  TRIGGER_EVENT_LABELS,
+  getSampleDataForTrigger,
+  DEFAULT_TEMPLATE_SLUGS
+} from '@/lib/email-system-guide';
 import {
   Plus,
   Pencil,
@@ -18,11 +26,10 @@ import {
   FileText,
   CheckCircle2,
   XCircle as XCircleIcon,
-  Clock,
   Search,
   RefreshCw,
-  Zap,
   Copy,
+  Copy as Duplicate,
 } from 'lucide-react';
 
 interface EmailTemplate {
@@ -55,6 +62,9 @@ export default function EmailTemplatesPage() {
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -78,9 +88,10 @@ export default function EmailTemplatesPage() {
     try {
       setLoadingTemplates(true);
       const res = await api.get('/email/templates');
-      setTemplates(res.data.data || []);
+      setTemplates(res.data.data || res.data || []);
     } catch (err) {
       console.error('Failed to fetch templates:', err);
+      toast.error('Failed to load templates');
     } finally {
       setLoadingTemplates(false);
     }
@@ -123,14 +134,33 @@ export default function EmailTemplatesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this email template?')) return;
+  const handleDelete = (id: number) => {
+    setTemplateToDelete(id);
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!templateToDelete) return;
     try {
-      await api.delete(`/email/templates/${id}`);
+      setDeleting(true);
+      await api.delete(`/email/templates/${templateToDelete}`);
       toast.success('Template deleted');
       fetchTemplates();
+      setDeleteModal(false);
+      setTemplateToDelete(null);
     } catch (err: any) {
       toast.error('Failed to delete template');
+      setDeleting(false);
+    }
+  };
+
+  const handleDuplicate = async (id: number) => {
+    try {
+      await api.post(`/email/templates/${id}/duplicate`);
+      toast.success('Template duplicated');
+      fetchTemplates();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to duplicate template');
     }
   };
 
@@ -187,6 +217,41 @@ export default function EmailTemplatesPage() {
   const copySlug = (slug: string) => {
     navigator.clipboard.writeText(slug);
     toast.success('Slug copied!');
+  };
+
+  // Function to substitute variables with sample data for preview
+  const substituteVariables = (text: string, templateVars: string[]) => {
+    if (!text) return '';
+    let result = text;
+    templateVars.forEach(v => {
+      const sampleValues: Record<string, string> = {
+        customer_name: 'John Doe',
+        order_number: 'ORD-1234567890-123',
+        total: '99.99',
+        currency: 'USD',
+        order_date: new Date().toLocaleDateString(),
+        order_status: 'Confirmed',
+        tracking_number: '1Z999AA10123456784',
+        estimated_delivery: '2026-05-20',
+        carrier: 'FedEx',
+        delivery_date: new Date().toLocaleDateString(),
+        payment_amount: '99.99',
+        payment_method: 'Credit Card',
+        payment_date: new Date().toLocaleDateString(),
+        reason: 'Out of stock',
+        name: 'John Doe',
+        email: 'john@example.com',
+        shop_url: 'https://example.com/shop',
+        cart_url: 'https://example.com/cart/abc123',
+        item_count: '3',
+        product_name: 'Awesome Product',
+        current_stock: '5',
+        sku: 'PROD-123',
+        store_name: 'Your Store',
+      };
+      result = result.replace(new RegExp(`\\{\\{\\s*${v}\\s*\\}\\}`, 'g'), sampleValues[v] || `{{${v}}}`);
+    });
+    return result;
   };
 
   // Auto-generate slug from name
@@ -412,6 +477,13 @@ export default function EmailTemplatesPage() {
                             <Pencil size={15} />
                           </button>
                           <button
+                            onClick={() => handleDuplicate(tpl.id)}
+                            className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                            title="Duplicate"
+                          >
+                            <Duplicate size={15} />
+                          </button>
+                          <button
                             onClick={() => handleDelete(tpl.id)}
                             className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
                             title="Delete"
@@ -526,18 +598,73 @@ export default function EmailTemplatesPage() {
                   </div>
                 </div>
 
-                {/* Quick variable reference */}
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-slate-600 mb-2">Common Variables Reference:</p>
-                  <div className="grid grid-cols-2 gap-1 text-xs text-slate-500">
-                    <span><code className="bg-white px-1 rounded">{'{{customer_name}}'}</code> Customer name</span>
-                    <span><code className="bg-white px-1 rounded">{'{{order_number}}'}</code> Order number</span>
-                    <span><code className="bg-white px-1 rounded">{'{{order_total}}'}</code> Order total</span>
-                    <span><code className="bg-white px-1 rounded">{'{{order_date}}'}</code> Order date</span>
-                    <span><code className="bg-white px-1 rounded">{'{{order_status}}'}</code> Order status</span>
-                    <span><code className="bg-white px-1 rounded">{'{{product_name}}'}</code> Product name</span>
-                    <span><code className="bg-white px-1 rounded">{'{{tracking_number}}'}</code> Tracking #</span>
-                    <span><code className="bg-white px-1 rounded">{'{{store_name}}'}</code> Store name</span>
+                {/* Email System Guide */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-600 p-2 rounded-lg">
+                      <HelpCircle size={18} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-blue-900 mb-2">Email System Guide</p>
+                      <p className="text-xs text-blue-700 mb-3">
+                        Templates use {'{{variable}}'} syntax. Available variables depend on which trigger event you're targeting.
+                      </p>
+
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold text-blue-800 mb-1.5">📧 Recommended Template Slugs:</p>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">order-confirmation</span> → Order Placed/Confirmed
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">order-shipped</span> → Order Shipped
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">order-delivered</span> → Order Delivered
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">order-cancelled</span> → Order Cancelled
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">payment-received</span> → Payment Received
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <span className="font-mono">welcome-email</span> → Customer Registered
+                          </div>
+                        </div>
+                      </div>
+
+                      <details className="group">
+                        <summary className="cursor-pointer text-xs font-semibold text-blue-800 hover:text-blue-900 flex items-center gap-1">
+                          <Info size={12} />
+                          Click to see all available variables by trigger event
+                        </summary>
+                        <div className="mt-3 space-y-3 text-xs">
+                          {Object.entries(TRIGGER_EVENT_VARIABLES).map(([event, vars]) => (
+                            <div key={event} className="bg-white rounded-lg p-3">
+                              <p className="font-semibold text-slate-900 mb-2">{TRIGGER_EVENT_LABELS[event] || event}</p>
+                              <div className="grid grid-cols-1 gap-1">
+                                {vars.map((v) => (
+                                  <div key={v.name} className="flex items-start gap-2">
+                                    <code className="bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-mono text-xs">
+                                      {'{{'}{v.name}{'}}'}
+                                    </code>
+                                    <div className="flex-1">
+                                      <span className="text-slate-700">{v.description}</span>
+                                      {v.required && <span className="text-red-600 ml-1">*</span>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+
+                      <p className="text-xs text-blue-600 mt-2">
+                        💡 <strong>Tip:</strong> Use these exact variable names in your template. Variables marked with * are required.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -579,27 +706,36 @@ export default function EmailTemplatesPage() {
               <div className="p-6 space-y-4">
                 {/* Subject */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">Subject</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">Subject (with sample data)</label>
                   <div className="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-800 border border-slate-200">
-                    {previewTemplate.subject}
+                    {substituteVariables(previewTemplate.subject, Array.isArray(previewTemplate.variables) ? previewTemplate.variables : [])}
                   </div>
                 </div>
 
                 {/* HTML Preview */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">HTML Body Preview</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">
+                    <span className="flex items-center gap-2">
+                      HTML Body Preview (with sample data substitution)
+                    </span>
+                  </label>
                   <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
+                    <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
                       <div className="flex gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-red-400" />
                         <span className="w-3 h-3 rounded-full bg-yellow-400" />
                         <span className="w-3 h-3 rounded-full bg-green-400" />
                       </div>
-                      <span className="text-xs text-slate-400 ml-2">Email Preview</span>
+                      <span className="text-xs text-slate-400">Email Preview with Sample Data</span>
+                      <div className="text-xs text-blue-600 ml-2">
+                        Variables shown with sample values for preview
+                      </div>
                     </div>
                     <div className="p-4 min-h-[200px]">
                       {previewTemplate.body_html ? (
-                        <div dangerouslySetInnerHTML={{ __html: previewTemplate.body_html }} />
+                        <div dangerouslySetInnerHTML={{
+                          __html: substituteVariables(previewTemplate.body_html, Array.isArray(previewTemplate.variables) ? previewTemplate.variables : [])
+                        }} />
                       ) : (
                         <p className="text-sm text-slate-400 italic">No HTML content</p>
                       )}
@@ -610,9 +746,9 @@ export default function EmailTemplatesPage() {
                 {/* Plain Text */}
                 {previewTemplate.body_text && (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">Plain Text</label>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">Plain Text (with sample data)</label>
                     <pre className="bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-700 border border-slate-200 whitespace-pre-wrap font-mono">
-                      {previewTemplate.body_text}
+                      {substituteVariables(previewTemplate.body_text, Array.isArray(previewTemplate.variables) ? previewTemplate.variables : [])}
                     </pre>
                   </div>
                 )}
@@ -628,6 +764,9 @@ export default function EmailTemplatesPage() {
                         </span>
                       ))}
                     </div>
+                    <p className="text-xs text-slate-400 mt-2">
+                      💡 These variables will be replaced with actual data when emails are sent. Preview above shows sample values.
+                    </p>
                   </div>
                 )}
               </div>
@@ -649,6 +788,22 @@ export default function EmailTemplatesPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteModal}
+          onClose={() => {
+            setDeleteModal(false);
+            setTemplateToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Delete Email Template?"
+          description="Are you sure you want to delete this email template? This action cannot be undone and will affect any automation rules using this template."
+          confirmText="Delete"
+          cancelText="Cancel"
+          isLoading={deleting}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   );

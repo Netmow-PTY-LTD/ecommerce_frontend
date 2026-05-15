@@ -107,6 +107,20 @@ export interface ApiResponse<T> {
     pagination?: Pagination;
 }
 
+export interface ArrivalProduct {
+    id: number;
+    product_id: number;
+    arrival_date: string;
+    featured: boolean;
+    display_order: number;
+    expiry_date?: string | null;
+    badge_text?: string | null;
+    status: 'active' | 'inactive' | 'scheduled';
+    created_at?: string;
+    updated_at?: string;
+    product?: Product;
+}
+
 export interface GalleryImage {
     id: number;
     filename: string;
