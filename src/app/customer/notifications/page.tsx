@@ -16,9 +16,14 @@ import {
   CheckCheck,
   Filter,
   RefreshCw,
-  ShoppingBag
+  ShoppingBag,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,7 +96,10 @@ export default function CustomerNotificationsPage() {
 
   const [filterType, setFilterType] = useState<string>('all');
   const [filterRead, setFilterRead] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [refreshing, setRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -131,12 +139,35 @@ export default function CustomerNotificationsPage() {
     if (filterType !== 'all' && n.type !== filterType) return false;
     if (filterRead === 'read' && !n.is_read) return false;
     if (filterRead === 'unread' && n.is_read) return false;
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        n.title.toLowerCase().includes(searchLower) ||
+        n.message.toLowerCase().includes(searchLower) ||
+        (n.data?.orderNumber && n.data.orderNumber.toLowerCase().includes(searchLower))
+      );
+    }
     return true;
   });
 
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const paginatedNotifications = filteredNotifications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterRead, searchTerm]);
+
   const stats = {
-    total: notifications.length,
-    unread: unreadCount,
+    total: filteredNotifications.length,
+    unread: notifications.filter((n: Notification) => !n.is_read).length,
     orders: notifications.filter((n: Notification) => n.type === 'order').length,
     promos: notifications.filter((n: Notification) => n.type === 'promo').length
   };
@@ -216,7 +247,26 @@ export default function CustomerNotificationsPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search notifications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-8"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -270,69 +320,126 @@ export default function CustomerNotificationsPage() {
               <p className="text-sm mt-1">We'll notify you about important updates</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
-              {filteredNotifications.map((notification: Notification) => {
-                const Icon = getNotificationIcon(notification.type);
-                return (
-                  <div
-                    key={notification.id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={cn(
-                      'p-4 cursor-pointer transition-all hover:bg-slate-50',
-                      getPriorityColor(notification.priority, notification.is_read),
-                      !notification.is_read && 'border-l-4 border-l-indigo-500'
-                    )}
-                  >
-                    <div className="flex gap-4">
-                      <div className={cn(
-                        'p-2.5 rounded-full flex-shrink-0',
-                        notification.is_read ? 'bg-slate-200 text-slate-500' : getPriorityBadge(notification.priority)
-                      )}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className={cn(
-                              'text-sm font-semibold truncate',
-                              notification.is_read ? 'text-slate-600' : 'text-slate-900'
-                            )}>
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-slate-600 mt-0.5 line-clamp-2">
-                              {notification.message}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-[10px] uppercase font-semibold text-slate-500">
-                                {typeLabels[notification.type] || notification.type}
-                              </span>
-                              <span className="text-slate-300">•</span>
-                              <span className="text-[10px] text-slate-400">
-                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                              </span>
+            <>
+              <div className="divide-y divide-slate-100">
+                {paginatedNotifications.map((notification: Notification) => {
+                  const Icon = getNotificationIcon(notification.type);
+                  return (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={cn(
+                        'p-4 cursor-pointer transition-all hover:bg-slate-50',
+                        getPriorityColor(notification.priority, notification.is_read),
+                        !notification.is_read && 'border-l-4 border-l-indigo-500'
+                      )}
+                    >
+                      <div className="flex gap-4">
+                        <div className={cn(
+                          'p-2.5 rounded-full flex-shrink-0',
+                          notification.is_read ? 'bg-slate-200 text-slate-500' : getPriorityBadge(notification.priority)
+                        )}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={cn(
+                                'text-sm font-semibold truncate',
+                                notification.is_read ? 'text-slate-600' : 'text-slate-900'
+                              )}>
+                                {notification.title}
+                              </p>
+                              <p className="text-sm text-slate-600 mt-0.5 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] uppercase font-semibold text-slate-500">
+                                  {typeLabels[notification.type] || notification.type}
+                                </span>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-[10px] text-slate-400">
+                                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {!notification.is_read && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMarkAsRead(notification.id);
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-white transition-colors"
-                                title="Mark as read"
-                              >
-                                <Check className="h-4 w-4 text-slate-400 hover:text-green-600" />
-                              </button>
-                            )}
+                            <div className="flex-shrink-0">
+                              {!notification.is_read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAsRead(notification.id);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-white transition-colors"
+                                  title="Mark as read"
+                                >
+                                  <Check className="h-4 w-4 text-slate-400 hover:text-green-600" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-t">
+                  <p className="text-sm text-slate-600">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredNotifications.length)} of {filteredNotifications.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="gap-1"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
