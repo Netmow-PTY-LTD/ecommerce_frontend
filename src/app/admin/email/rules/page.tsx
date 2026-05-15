@@ -18,6 +18,7 @@ import {
   Zap,
   CheckCircle2,
   XCircle as XCircleIcon,
+  Mail,
 } from 'lucide-react';
 
 interface EmailTemplate {
@@ -69,6 +70,10 @@ export default function EmailRulesPage() {
   const [editingRule, setEditingRule] = useState<EmailAutomationRule | null>(null);
   const [saving, setSaving] = useState(false);
   const [testingRule, setTestingRule] = useState<number | null>(null);
+  const [showTestEmailModal, setShowTestEmailModal] = useState(false);
+  const [testRuleId, setTestRuleId] = useState<number | null>(null);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [testEmailError, setTestEmailError] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -159,20 +164,30 @@ export default function EmailRulesPage() {
     }
   };
 
-  const handleTest = async (ruleId: number) => {
-    const email = prompt('Enter email address to send test email:');
-    if (!email || !email.trim()) {
-      toast.error('Email address is required');
+  const handleTest = (ruleId: number) => {
+    setTestRuleId(ruleId);
+    setTestEmailAddress('');
+    setTestEmailError('');
+    setShowTestEmailModal(true);
+  };
+
+  const confirmTestEmail = async () => {
+    if (!testEmailAddress.trim()) {
+      setTestEmailError('Email address is required');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      toast.error('Please enter a valid email address');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmailAddress.trim())) {
+      setTestEmailError('Please enter a valid email address');
       return;
     }
+    if (!testRuleId) return;
+
     try {
-      setTestingRule(ruleId);
-      await api.post(`/email/rules/${ruleId}/test`, { to: email.trim() });
-      toast.success(`Test email sent to ${email}`);
+      setTestingRule(testRuleId);
+      await api.post(`/email/rules/${testRuleId}/test`, { to: testEmailAddress.trim() });
+      toast.success(`Test email sent to ${testEmailAddress}`);
+      setShowTestEmailModal(false);
+      setTestEmailAddress('');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to send test email');
     } finally {
@@ -528,6 +543,86 @@ export default function EmailRulesPage() {
                 >
                   {saving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : null}
                   {editingRule ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Test Email Modal */}
+        {showTestEmailModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-600 p-2 rounded-lg">
+                    <Mail size={18} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900">Send Test Email</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowTestEmailModal(false);
+                    setTestEmailAddress('');
+                    setTestEmailError('');
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-500"
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Recipient Email Address</label>
+                  <input
+                    type="email"
+                    value={testEmailAddress}
+                    onChange={(e) => {
+                      setTestEmailAddress(e.target.value);
+                      setTestEmailError('');
+                    }}
+                    placeholder="you@example.com"
+                    className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                      testEmailError
+                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                        : 'border-slate-200 focus:ring-indigo-500 focus:border-transparent'
+                    }`}
+                  />
+                  {testEmailError && (
+                    <p className="text-xs text-red-600 mt-1">{testEmailError}</p>
+                  )}
+                  <p className="text-xs text-slate-400 mt-1">Enter the email address where you want to receive the test email.</p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-white">
+                <button
+                  onClick={() => {
+                    setShowTestEmailModal(false);
+                    setTestEmailAddress('');
+                    setTestEmailError('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmTestEmail}
+                  disabled={!testEmailAddress.trim() || testingRule !== null}
+                  className="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  {testingRule ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={16} />
+                      Send Test Email
+                    </>
+                  )}
                 </button>
               </div>
             </div>
