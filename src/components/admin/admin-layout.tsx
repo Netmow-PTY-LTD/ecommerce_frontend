@@ -33,6 +33,7 @@ import {
   BookOpen,
   Sparkles,
   Mail,
+  Send,
   BarChart3,
   TrendingUp,
   Globe,
@@ -133,6 +134,7 @@ const navigation: NavItem[] = [
       { name: 'Queue Monitor', href: '/admin/email/queue', icon: Layers },
     ],
   },
+  { name: 'Newsletter', href: '/admin/newsletter', icon: Send },
   {
     name: 'Analytics',
     icon: BarChart3,
