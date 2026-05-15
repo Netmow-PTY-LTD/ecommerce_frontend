@@ -252,10 +252,8 @@ function CheckoutForm({
         if (!isAuthenticated && !formData.guestCheckout) {
             if (!formData.password) {
                 newErrors.password = 'Password is required';
-            } else if (formData.password.length < 8) {
-                newErrors.password = 'Password must be at least 8 characters';
-            } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
-                newErrors.password = 'Password must contain both letters and numbers';
+            } else if (formData.password.length < 6) {
+                newErrors.password = 'Password must be at least 6 characters';
             }
 
             if (!formData.confirmPassword) {
@@ -288,7 +286,7 @@ function CheckoutForm({
 
         try {
             // Handle account creation if password is provided AND not guest checkout
-            if (formData.password && formData.password.length >= 8 && !isAuthenticated && !formData.guestCheckout) {
+            if (formData.password && formData.password.length >= 6 && !isAuthenticated && !formData.guestCheckout) {
                 try {
                     // First check if email already exists
                     const checkResponse = await api.post('/auth/check-email', { email: formData.email });
@@ -690,7 +688,7 @@ function CheckoutForm({
                                                     <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                                                 )}
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    Minimum 8 characters, must contain letters and numbers. Leave empty to skip account creation.
+                                                    Minimum 6 characters. Leave empty to skip account creation.
                                                 </p>
                                             </div>
                                             <div>
