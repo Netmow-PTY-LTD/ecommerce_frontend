@@ -18,11 +18,10 @@ import {
   FileText,
   CheckCircle2,
   XCircle as XCircleIcon,
-  Clock,
   Search,
   RefreshCw,
-  Zap,
   Copy,
+  Copy as Duplicate,
 } from 'lucide-react';
 
 interface EmailTemplate {
@@ -78,9 +77,10 @@ export default function EmailTemplatesPage() {
     try {
       setLoadingTemplates(true);
       const res = await api.get('/email/templates');
-      setTemplates(res.data.data || []);
+      setTemplates(res.data.data || res.data || []);
     } catch (err) {
       console.error('Failed to fetch templates:', err);
+      toast.error('Failed to load templates');
     } finally {
       setLoadingTemplates(false);
     }
@@ -131,6 +131,16 @@ export default function EmailTemplatesPage() {
       fetchTemplates();
     } catch (err: any) {
       toast.error('Failed to delete template');
+    }
+  };
+
+  const handleDuplicate = async (id: number) => {
+    try {
+      await api.post(`/email/templates/${id}/duplicate`);
+      toast.success('Template duplicated');
+      fetchTemplates();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to duplicate template');
     }
   };
 
@@ -410,6 +420,13 @@ export default function EmailTemplatesPage() {
                             title="Edit"
                           >
                             <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDuplicate(tpl.id)}
+                            className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                            title="Duplicate"
+                          >
+                            <Duplicate size={15} />
                           </button>
                           <button
                             onClick={() => handleDelete(tpl.id)}

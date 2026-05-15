@@ -122,15 +122,16 @@ const navigation: NavItem[] = [
       { name: 'Answer Guide', href: '/admin/chat/answer-guide', icon: BookOpen },
     ],
   },
-  // {
-  //   name: 'Email',
-  //   icon: Mail,
-  //   subitems: [
-  //     { name: 'Templates', href: '/admin/email/templates', icon: FileText },
-  //     // { name: 'Automation', href: '/admin/email/automation', icon: Clock },
-  //     // { name: 'Logs', href: '/admin/email/logs', icon: Mail },
-  //   ],
-  // },
+  {
+    name: 'Email',
+    icon: Mail,
+    subitems: [
+      { name: 'Templates', href: '/admin/email/templates', icon: FileText },
+      { name: 'Automation Rules', href: '/admin/email/rules', icon: Clock },
+      { name: 'Email Logs', href: '/admin/email/logs', icon: Mail },
+      { name: 'Queue Monitor', href: '/admin/email/queue', icon: Layers },
+    ],
+  },
   {
     name: 'Analytics',
     icon: BarChart3,
