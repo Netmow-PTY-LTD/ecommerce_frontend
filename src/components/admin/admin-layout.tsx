@@ -104,6 +104,7 @@ const navigation: NavItem[] = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
+  { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
   { name: 'Stock Management', href: '/admin/stock', icon: Box },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {

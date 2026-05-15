@@ -3,6 +3,9 @@ import { PopularCategories } from "@/components/popular-categories";
 import { HomeCategories } from "@/components/home-categories";
 import { FlashSalesSection } from "@/components/flash-sales-section";
 import { CouponsSection } from "@/components/coupons-section";
+import { NewArrivals } from "@/components/new-arrivals";
+import { FeaturedArrivals } from "@/components/featured-arrivals";
+import { FeaturedProducts } from "@/components/featured-products";
 import Link from "next/link";
 
 export default function Home() {
@@ -80,7 +83,20 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* New Arrivals Section */}
+      <NewArrivals />
+
+      {/* Featured Arrivals Section */}
+      <FeaturedArrivals />
+
+      {/* Featured Products Section */}
+      <FeaturedProducts />
+
+      {/* Flash Sales Section */}
       <FlashSalesSection />
+
+      {/* Coupons Section */}
       <CouponsSection />
     </>
   );

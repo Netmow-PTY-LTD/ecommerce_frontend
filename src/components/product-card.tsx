@@ -20,6 +20,7 @@ interface ProductCardProps {
     discountPercentage?: number;
     freeShipping?: boolean;
     bogoDeal?: boolean;
+    badgeText?: string;
 }
 
 export function ProductCard({
@@ -30,7 +31,8 @@ export function ProductCard({
     showSaleBadge = false,
     discountPercentage = 0,
     freeShipping = false,
-    bogoDeal = false
+    bogoDeal = false,
+    badgeText
 }: ProductCardProps) {
     const addItem = useCartStore((state) => state.addItem);
     const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -175,9 +177,9 @@ export function ProductCard({
 
                 {/* Badges - Floating on Image */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-                    {shouldShowNewBadge && (
+                    {(badgeText || shouldShowNewBadge) && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-gray-100 shadow-sm text-gray-900 uppercase">
-                            NEW
+                            {badgeText || 'NEW'}
                         </span>
                     )}
                     {hasDiscount && (
