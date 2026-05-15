@@ -45,15 +45,17 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
   }, []);
 
   const handleNotificationClick = async (notification: any) => {
-    if (!notification.is_read) {
-      await markAsRead(notification.id);
-    }
+    // Mark as read
+    await markAsRead(notification.id);
     // Navigate based on notification type
     if (notification.data?.orderId) {
       window.location.href = userType === 'admin' ? `/admin/orders/${notification.data.orderId}` : `/customer/orders/${notification.data.orderId}`;
     }
     setIsOpen(false);
   };
+
+  // API now returns only unread notifications, so no frontend filtering needed
+  const unreadNotifications = notifications;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -88,7 +90,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {unreadNotifications.length === 0 ? (
               <div
                 onClick={() => {
                   const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
@@ -97,19 +99,17 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                 className="flex flex-col items-center justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <Bell size={32} className="mb-2 opacity-50" />
-                <p className="text-sm">No notifications yet</p>
+                <p className="text-sm">No unread notifications</p>
                 <p className="text-xs text-blue-600 hover:underline mt-1">View notification history</p>
               </div>
             ) : (
-              notifications.map((notification: any) => {
+              unreadNotifications.map((notification: any) => {
                 const Icon = getNotificationIcon(notification.type);
                 return (
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`px-4 py-3 border-b last:border-0 cursor-pointer transition-colors ${
-                      !notification.is_read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
-                    }`}
+                    className="px-4 py-3 border-b last:border-0 cursor-pointer transition-colors bg-blue-50 hover:bg-blue-100"
                   >
                     <div className="flex gap-3">
                       <div className={`p-2 rounded-full ${getPriorityColor(notification.priority)} text-white flex-shrink-0`}>
@@ -122,9 +122,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
                       </div>
-                      {!notification.is_read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
-                      )}
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
                     </div>
                   </div>
                 );
@@ -132,7 +130,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
             )}
           </div>
 
-          {notifications.length > 0 && (
+          {unreadNotifications.length > 0 && (
             <div className="px-4 py-2 border-t bg-gray-50">
               <button
                 onClick={() => {
