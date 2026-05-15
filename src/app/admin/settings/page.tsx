@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -264,7 +264,7 @@ export default function SettingsPage() {
     if (loading || loadingProfile) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
             </div>
         );
     }
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                                 <Truck className="w-4 h-4 mr-2" />
                                 Shipping
                             </button>
-                            <button
+                            {/* <button
                                 type="button"
                                 onClick={() => setActiveTab('payment')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'payment'
@@ -352,7 +352,7 @@ export default function SettingsPage() {
                             >
                                 <CreditCard className="w-4 h-4 mr-2" />
                                 Payment
-                            </button>
+                            </button> */}
                         </nav>
                     </div>
                 </div>

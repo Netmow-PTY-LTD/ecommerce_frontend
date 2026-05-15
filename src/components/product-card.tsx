@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, Eye, GitCompare, Star, Check, Sparkles, Truck, Package, Gift } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, GitCompare, Star, Check, Sparkles, Truck, Package, Gift, Loader2 } from 'lucide-react';
 import { Product } from '@/types';
 import { useCartStore, useWishlistStore, useCompareStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
     product: Product;
@@ -21,6 +22,7 @@ interface ProductCardProps {
     freeShipping?: boolean;
     bogoDeal?: boolean;
     badgeText?: string;
+    viewMode?: 'grid' | 'list';
 }
 
 export function ProductCard({
@@ -32,35 +34,26 @@ export function ProductCard({
     discountPercentage = 0,
     freeShipping = false,
     bogoDeal = false,
-    badgeText
+    badgeText,
+    viewMode = 'grid'
 }: ProductCardProps) {
     const addItem = useCartStore((state) => state.addItem);
     const toggleWishlist = useWishlistStore((state) => state.toggleItem);
     const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.id));
     const addToCompare = useCompareStore((state) => state.addItem);
-    const isInCompare = useCompareStore((state) => state.isInCompare(product.id));
     const { formatCurrency } = useCurrency();
 
     const [isAdding, setIsAdding] = useState(false);
     const [showAddedCheck, setShowAddedCheck] = useState(false);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imageError, setImageError] = useState(false);
     const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
     const [lastProductId, setLastProductId] = useState<number | null>(null);
     const [lastAttributesLength, setLastAttributesLength] = useState<number>(0);
 
-    // Compute initial selections from product attributes
     const initialSelections = useMemo(() => {
-        if (!product?.attributes) {
-            return {};
-        }
-
-        // Ensure attributes is an array
+        if (!product?.attributes) return {};
         const attributesArray = Array.isArray(product.attributes) ? product.attributes : [];
-
-        if (attributesArray.length === 0) {
-            return {};
-        }
+        if (attributesArray.length === 0) return {};
 
         const selections: Record<string, string> = {};
         attributesArray.forEach((attr: any) => {
@@ -68,32 +61,26 @@ export function ProductCard({
                 selections[attr.name] = attr.values[0];
             }
         });
-
         return selections;
     }, [product?.id, product?.attributes]);
 
-    // Auto-select first value for each attribute when product changes
     useEffect(() => {
         const currentAttributesLength = Array.isArray(product?.attributes) ? product.attributes.length : 0;
-
         if (!product?.id) return;
-
-        // Update if product ID changed OR if attributes were just loaded (length changed from 0 to > 0)
         const productChanged = product.id !== lastProductId;
         const attributesJustLoaded = lastAttributesLength === 0 && currentAttributesLength > 0;
-
         if (productChanged || attributesJustLoaded) {
             setSelectedAttributes(initialSelections);
             setLastProductId(product.id);
             setLastAttributesLength(currentAttributesLength);
         }
-    }, [product?.id, product?.attributes, initialSelections]); // Watch product ID and attributes
+    }, [product?.id, product?.attributes, initialSelections, lastProductId, lastAttributesLength]);
 
     const isNewProduct = useCallback(() => {
         if (!product.created_at) return false;
         const createdAt = new Date(product.created_at);
         const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-        return daysSinceCreation <= 30; // New if within 30 days
+        return daysSinceCreation <= 30;
     }, [product.created_at]);
 
     const hasDiscount = discountPercentage > 0 || showSaleBadge;
@@ -101,25 +88,17 @@ export function ProductCard({
     const handleAddToCart = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (!product.stock_quantity || product.stock_quantity === 0) {
             toast.error('This product is out of stock');
             return;
         }
-
         setIsAdding(true);
         addItem(product, 1, selectedAttributes);
-
         setTimeout(() => {
             setIsAdding(false);
             setShowAddedCheck(true);
-            toast.success('Added to cart!', {
-                icon: <Check className="h-4 w-4" />
-            });
-
-            setTimeout(() => {
-                setShowAddedCheck(false);
-            }, 2000);
+            toast.success('Added to cart!', { icon: <Check className="h-4 w-4" /> });
+            setTimeout(() => setShowAddedCheck(false), 2000);
         }, 500);
     }, [addItem, product, selectedAttributes]);
 
@@ -127,12 +106,7 @@ export function ProductCard({
         e.preventDefault();
         e.stopPropagation();
         toggleWishlist(product);
-
-        if (!isInWishlist) {
-            toast.success('Added to wishlist');
-        } else {
-            toast.info('Removed from wishlist');
-        }
+        !isInWishlist ? toast.success('Added to wishlist') : toast.info('Removed from wishlist');
     }, [toggleWishlist, product, isInWishlist]);
 
     const handleCompare = useCallback((e: React.MouseEvent) => {
@@ -146,6 +120,173 @@ export function ProductCard({
     const soldCount = (product.initial_stock || 0) - (product.stock_quantity || 0);
     const totalStock = product.initial_stock || (product.stock_quantity ? product.stock_quantity + 10 : 100);
     const soldPercentage = Math.min(Math.max((soldCount / totalStock) * 100, 10), 90);
+
+    if (viewMode === 'list') {
+        return (
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+                className="group relative bg-white rounded-2xl border hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row overflow-hidden min-h-[180px]"
+            >
+                {/* Image Section */}
+                <div className="relative w-full sm:w-48 md:w-64 aspect-square sm:aspect-auto bg-gray-50/50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <Link href={`/product/${product.slug || product.id}`} className="w-full h-full relative">
+                        {imageError || (!product.image_url && !product.thumb_url) ? (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <Package className="h-8 w-8 text-gray-300" />
+                            </div>
+                        ) : (
+                            <Image
+                                src={product.image_url || product.thumb_url || '/placeholder.png'}
+                                alt={product.name}
+                                fill
+                                className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                                sizes="(max-width: 768px) 100vw, 256px"
+                                onError={() => setImageError(true)}
+                                unoptimized
+                            />
+                        )}
+                    </Link>
+
+                    {/* Badges */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                        {shouldShowNewBadge && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white border border-gray-100 shadow-sm text-gray-900 uppercase">
+                                NEW
+                            </span>
+                        )}
+                        {hasDiscount && (
+                            <span className="bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm w-fit">
+                                -{discountPercentage || 50}%
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-4 md:p-6 flex-grow flex flex-col justify-between">
+                    <div className="flex flex-col md:flex-row justify-between gap-4">
+                        <div className="flex-grow">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                                {product.category?.name || 'Essential'}
+                            </p>
+                            <Link href={`/product/${product.slug || product.id}`}>
+                                <h3 className="font-bold text-base md:text-lg text-slate-900 mb-2 group-hover:text-brand transition-colors">
+                                    {product.name}
+                                </h3>
+                            </Link>
+                            <div className="flex items-center gap-1.5 mb-3">
+                                <div className="flex items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                            key={star}
+                                            className={`h-3 w-3 ${star <= Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'fill-slate-100 text-slate-100'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-bold">({rating.toFixed(1)})</span>
+                            </div>
+
+                            {product.attributes && Array.isArray(product.attributes) && product.attributes.length > 0 && (
+                                <div className="flex flex-wrap gap-3 mb-4">
+                                    {product.attributes.map((attr, idx) => (
+                                        <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md">
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase">{attr.name}:</span>
+                                            <span className="text-[10px] font-bold text-slate-700">{attr.values[0]}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col md:items-end gap-2 shrink-0">
+                            <div className="flex flex-col md:items-end">
+                                {product.sale_price && product.sale_price < product.price ? (
+                                    <>
+                                        <span className="text-2xl font-black text-slate-900 leading-none mb-1">
+                                            {formatCurrency(product.sale_price)}
+                                        </span>
+                                        <span className="text-sm text-slate-400 line-through font-medium">
+                                            {formatCurrency(product.price)}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-2xl font-black text-slate-900 leading-none">
+                                        {formatCurrency(product.price)}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className={cn(
+                                        "h-9 w-9 rounded-xl transition-all",
+                                        isInWishlist ? "bg-red-50 text-brand border-red-100" : "text-slate-400 hover:text-brand"
+                                    )}
+                                    onClick={handleWishlist}
+                                >
+                                    <Heart className={cn("h-4 w-4", isInWishlist && "fill-current")} />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-9 w-9 rounded-xl text-slate-400 hover:text-brand transition-all"
+                                    onClick={handleCompare}
+                                >
+                                    <GitCompare className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row items-center gap-4 mt-6">
+                        <div className="w-full md:max-w-[200px] space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <span>Sold</span>
+                                <span>{soldCount}/{totalStock}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-brand rounded-full transition-all duration-1000"
+                                    style={{ width: `${soldPercentage}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={handleAddToCart}
+                            disabled={isAdding || !product.stock_quantity || product.stock_quantity === 0}
+                            className={cn(
+                                "w-full md:w-auto md:min-w-[180px] h-11 rounded-xl font-bold text-xs uppercase tracking-widest transition-all",
+                                isAdding || !product.stock_quantity || product.stock_quantity === 0
+                                    ? "bg-slate-100 text-slate-400"
+                                    : "bg-brand text-white hover:bg-brand/90 shadow-lg shadow-brand/10"
+                            )}
+                        >
+                            {isAdding ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : showAddedCheck ? (
+                                <span className="flex items-center gap-2"><Check className="h-4 w-4" /> Added</span>
+                            ) : (
+                                <span className="flex items-center gap-2"><ShoppingCart className="h-4 w-4" /> Add to Cart</span>
+                            )}
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Out of Stock Overlay */}
+                {(!product.stock_quantity || product.stock_quantity === 0) && (
+                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20">
+                        <span className="bg-white border border-slate-100 text-red-600 text-xs font-black px-4 py-2 rounded-xl shadow-xl uppercase tracking-widest">
+                            Out of Stock
+                        </span>
+                    </div>
+                )}
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
@@ -194,11 +335,13 @@ export function ProductCard({
                     <Button
                         size="icon"
                         variant="ghost"
-                        className={`rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-gray-50 h-8 w-8 hover:bg-white transition-all ${isInWishlist ? 'text-brand' : 'text-gray-400'
-                            }`}
+                        className={cn(
+                            "rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-gray-50 h-8 w-8 hover:bg-white transition-all",
+                            isInWishlist ? 'text-brand' : 'text-gray-400'
+                        )}
                         onClick={handleWishlist}
                     >
-                        <Heart className={`h-4 w-4 ${isInWishlist ? 'fill-current' : ''}`} />
+                        <Heart className={cn("h-4 w-4", isInWishlist && 'fill-current')} />
                     </Button>
 
                     <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
@@ -228,7 +371,7 @@ export function ProductCard({
             <div className="p-4 flex-grow flex flex-col">
                 {/* Brand/Category */}
                 <p className="text-[11px] text-gray-400 font-medium mb-1">
-                    {product.category?.name || 'Hodo Foods'}
+                    {product.category?.name || 'Essential'}
                 </p>
 
                 {/* Product Name */}
@@ -311,18 +454,15 @@ export function ProductCard({
                 <Button
                     onClick={handleAddToCart}
                     disabled={isAdding || !product.stock_quantity || product.stock_quantity === 0}
-                    className={`w-full py-5 rounded-lg border flex items-center justify-center gap-2 font-bold text-xs transition-all duration-300 ${isAdding
-                        ? 'bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border-brand text-brand hover:bg-brand hover:text-white group/btn'
-                        }`}
+                    className={cn(
+                        "w-full py-5 rounded-lg border flex items-center justify-center gap-2 font-bold text-xs transition-all duration-300",
+                        isAdding
+                            ? 'bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white border-brand text-brand hover:bg-brand hover:text-white group/btn'
+                    )}
                 >
                     {isAdding ? (
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                            <ShoppingCart className="h-4 w-4" />
-                        </motion.div>
+                        <Loader2 className="h-4 w-4 animate-spin" />
                     ) : showAddedCheck ? (
                         <>
                             <Check className="h-4 w-4" />
