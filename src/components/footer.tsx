@@ -6,6 +6,7 @@ import { useSettingsContext } from '@/contexts/SettingsContext';
 import { getCurrencySymbol } from '@/contexts/CurrencyContext';
 import { useAdminContext } from '@/components/admin/admin-navbar-provider';
 import { usePathname } from 'next/navigation';
+import { Newsletter } from '@/components/newsletter';
 
 export function Footer() {
     const pathname = usePathname();
@@ -69,20 +70,7 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    <div>
-                        <h4 className="font-semibold mb-4">Newsletter</h4>
-                        <p className="text-sm text-muted-foreground mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
-                        <form className="flex gap-2">
-                            <input
-                                type="email"
-                                placeholder="Enter your email"
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
-                                Subscribe
-                            </button>
-                        </form>
-                    </div>
+                    <Newsletter />
                 </div>
 
                 <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
