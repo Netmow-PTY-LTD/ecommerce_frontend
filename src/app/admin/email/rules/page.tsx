@@ -11,14 +11,11 @@ import {
   Pencil,
   Trash2,
   XCircle,
-  Mail,
   Clock,
   Play,
-  Save,
   Search,
   RefreshCw,
   Zap,
-  FileText,
   CheckCircle2,
   XCircle as XCircleIcon,
 } from 'lucide-react';
@@ -72,7 +69,6 @@ export default function EmailRulesPage() {
   const [editingRule, setEditingRule] = useState<EmailAutomationRule | null>(null);
   const [saving, setSaving] = useState(false);
   const [testingRule, setTestingRule] = useState<number | null>(null);
-  const [testEmail, setTestEmail] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -164,15 +160,19 @@ export default function EmailRulesPage() {
   };
 
   const handleTest = async (ruleId: number) => {
-    if (!testEmail.trim()) {
-      toast.error('Enter an email address to test');
+    const email = prompt('Enter email address to send test email:');
+    if (!email || !email.trim()) {
+      toast.error('Email address is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error('Please enter a valid email address');
       return;
     }
     try {
       setTestingRule(ruleId);
-      await api.post(`/email/rules/${ruleId}/test`, { to: testEmail.trim() });
-      toast.success(`Test email sent to ${testEmail}`);
-      setTestEmail('');
+      await api.post(`/email/rules/${ruleId}/test`, { to: email.trim() });
+      toast.success(`Test email sent to ${email}`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to send test email');
     } finally {
@@ -530,26 +530,6 @@ export default function EmailRulesPage() {
                   {editingRule ? 'Update' : 'Create'}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Test Email Input */}
-        {testEmail && (
-          <div className="fixed bottom-4 right-4 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-50">
-            <div className="flex items-center gap-3">
-              <input
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                placeholder="Enter email to test..."
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <button
-                onClick={() => setTestEmail('')}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
-              >
-                <XCircle size={16} />
-              </button>
             </div>
           </div>
         )}
