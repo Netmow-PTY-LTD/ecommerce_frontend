@@ -387,7 +387,7 @@ export default function AdminNewsletterPage() {
               </div>
               <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="w-full sm:w-[180px] h-11 bg-slate-50 border-slate-200"
               >
                 <option value="all">All Statuses</option>
@@ -430,34 +430,34 @@ export default function AdminNewsletterPage() {
               {
                 key: 'email',
                 title: 'Email',
-                render: (email): React.ReactNode => (
+                render: (_: unknown, row: NewsletterSubscriber): React.ReactNode => (
                   <div className="flex items-center gap-3 min-w-[200px]">
                     <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
                       <Mail className="w-5 h-5 text-brand" />
                     </div>
-                    <span className="font-medium text-sm text-slate-900 truncate">{email}</span>
+                    <span className="font-medium text-sm text-slate-900 truncate">{row.email}</span>
                   </div>
                 )
               },
               {
                 key: 'is_active',
                 title: 'Status',
-                render: (isActive): React.ReactNode => (
-                  <Badge className={`${isActive
+                render: (_: unknown, row: NewsletterSubscriber): React.ReactNode => (
+                  <Badge className={`${row.is_active
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : 'bg-rose-50 text-rose-700 border-rose-200'
                     } shadow-none border px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider`} variant="outline">
-                    {isActive ? 'Active' : 'Inactive'}
+                    {row.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                 )
               },
               {
                 key: 'created_at',
                 title: 'Subscribed',
-                render: (date): React.ReactNode => (
+                render: (_: unknown, row: NewsletterSubscriber): React.ReactNode => (
                   <div className="flex items-center gap-1.5 text-sm text-slate-600">
                     <Calendar className="h-3 w-3 text-slate-400" />
-                    <span>{new Date(date).toLocaleDateString()}</span>
+                    <span>{new Date(row.created_at).toLocaleDateString()}</span>
                   </div>
                 )
               },
@@ -466,26 +466,26 @@ export default function AdminNewsletterPage() {
                 title: 'Actions',
                 className: 'text-right',
                 headerClassName: 'text-right',
-                render: (_, subscriber): React.ReactNode => (
+                render: (_: unknown, row: NewsletterSubscriber): React.ReactNode => (
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       className={`h-8 w-8 p-0 transition-colors ${
-                        subscriber.is_active
+                        row.is_active
                           ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
                           : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
                       }`}
-                      onClick={() => toggleStatus(subscriber)}
-                      title={subscriber.is_active ? 'Deactivate Subscriber' : 'Activate Subscriber'}
+                      onClick={() => toggleStatus(row)}
+                      title={row.is_active ? 'Deactivate Subscriber' : 'Activate Subscriber'}
                     >
-                      {subscriber.is_active ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                      {row.is_active ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDelete(subscriber.id)}
+                      onClick={() => handleDelete(row.id)}
                       title="Delete Subscriber"
                     >
                       <Trash2 className="h-4 w-4" />

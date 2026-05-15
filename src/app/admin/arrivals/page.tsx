@@ -120,7 +120,7 @@ export default function AdminArrivalsPage() {
                 display_order: 0,
                 expiry_date: '',
                 badge_text: '',
-                status: 'active',
+                status: 'active' as 'active' | 'inactive' | 'scheduled',
             });
             fetchArrivals(page, 10, filters);
         } catch (err: any) {
@@ -441,7 +441,7 @@ export default function AdminArrivalsPage() {
                 onClose={() => setDeleteId(null)}
                 onConfirm={handleDelete}
                 title="Delete Arrival"
-                message="Are you sure you want to delete this arrival? This action cannot be undone."
+                description="Are you sure you want to delete this arrival? This action cannot be undone."
                 confirmText="Delete"
                 cancelText="Cancel"
             />
