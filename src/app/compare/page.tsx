@@ -21,55 +21,59 @@ export default function ComparePage() {
 
     if (!mounted) {
         return (
-            <div className="container mx-auto px-4 py-16">
-                <div className="animate-pulse space-y-8">
-                    <div className="h-8 bg-secondary rounded w-48"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="space-y-4">
-                                <div className="aspect-square bg-secondary rounded-xl"></div>
-                                <div className="h-4 bg-secondary rounded w-3/4"></div>
-                                <div className="h-4 bg-secondary rounded w-1/2"></div>
-                            </div>
-                        ))}
+            <section className="py-8 md:py-16">
+                <div className="container">
+                    <div className="animate-pulse space-y-8">
+                        <div className="h-8 bg-secondary rounded w-48"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="space-y-4">
+                                    <div className="aspect-square bg-secondary rounded-xl"></div>
+                                    <div className="h-4 bg-secondary rounded w-3/4"></div>
+                                    <div className="h-4 bg-secondary rounded w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
         );
     }
 
     if (compareItems.length === 0) {
         return (
-            <div className="container mx-auto px-4 py-16">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="max-w-2xl mx-auto text-center"
-                >
-                    <div className="bg-card border border-border rounded-2xl p-12">
-                        {/* Icon */}
-                        <div className="w-24 h-24 mx-auto mb-6 bg-secondary rounded-full flex items-center justify-center">
-                            <GitCompare className="h-12 w-12 text-muted-foreground" />
-                        </div>
+            <section className="py-8 md:py-16">
+                <div className="container">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-2xl mx-auto text-center"
+                    >
+                        <div className="bg-card border border-border rounded-2xl p-12">
+                            {/* Icon */}
+                            <div className="w-24 h-24 mx-auto mb-6 bg-secondary rounded-full flex items-center justify-center">
+                                <GitCompare className="h-12 w-12 text-muted-foreground" />
+                            </div>
 
-                        {/* Heading */}
-                        <h1 className="text-3xl font-bold mb-4">Compare Products</h1>
-                        <p className="text-muted-foreground mb-8">
-                            You haven't added any products to compare yet. Browse our shop and add products to compare their features.
-                        </p>
+                            {/* Heading */}
+                            <h1 className="text-3xl font-bold mb-4">Compare Products</h1>
+                            <p className="text-muted-foreground mb-8">
+                                You haven't added any products to compare yet. Browse our shop and add products to compare their features.
+                            </p>
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/shop">
-                                <Button size="lg" className="w-full sm:w-auto">
-                                    <ShoppingBag className="h-4 w-4 mr-2" />
-                                    Browse Products
-                                </Button>
-                            </Link>
+                            {/* CTA Buttons */}
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link href="/shop">
+                                    <Button size="lg" className="w-full sm:w-auto">
+                                        <ShoppingBag className="h-4 w-4 mr-2" />
+                                        Browse Products
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
-            </div>
+                    </motion.div>
+                </div>
+            </section>
         );
     }
 
@@ -166,11 +170,10 @@ export default function ComparePage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                             <svg
                                 key={star}
-                                className={`h-4 w-4 ${
-                                    star <= Math.floor(rating)
-                                        ? 'fill-amber-400 text-amber-400'
-                                        : 'fill-slate-200 text-slate-200 dark:fill-slate-700'
-                                }`}
+                                className={`h-4 w-4 ${star <= Math.floor(rating)
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'fill-slate-200 text-slate-200 dark:fill-slate-700'
+                                    }`}
                                 viewBox="0 0 20 20"
                             >
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -306,9 +309,8 @@ export default function ComparePage() {
                             {comparisonFields.map((field, fieldIndex) => (
                                 <tr
                                     key={field.key}
-                                    className={`border-b border-border ${
-                                        fieldIndex % 2 === 0 ? 'bg-background' : 'bg-secondary/20'
-                                    }`}
+                                    className={`border-b border-border ${fieldIndex % 2 === 0 ? 'bg-background' : 'bg-secondary/20'
+                                        }`}
                                 >
                                     {/* Field Label */}
                                     <td className="p-4 font-semibold text-sm w-48 sticky left-0 bg-background border-r border-border z-10">

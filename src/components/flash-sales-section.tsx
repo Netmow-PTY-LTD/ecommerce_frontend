@@ -12,10 +12,11 @@ export function FlashSalesSection() {
 
   if (isLoading) {
     return (
-      <section className="py-16 bg-secondary/30">
+      <section className="py-8 md:py-16 bg-white border-y border-slate-100">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            <p className="mt-4 text-xs font-semibold text-slate-400 tracking-wide">Loading flash sales...</p>
           </div>
         </div>
       </section>
@@ -27,17 +28,22 @@ export function FlashSalesSection() {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-8 md:py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Clock className="h-8 w-8 text-red-600" />
-            <h2 className="text-3xl md:text-4xl font-bold">Flash Sale</h2>
+        <div className="max-w-xl mx-auto text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-red-600 mb-4">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold tracking-wide">Limited Time Offers</span>
           </div>
-          <p className="text-muted-foreground">Limited time offers - Don't miss out!</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight mb-3">
+            Flash <span className="text-red-600">Sale</span>
+          </h2>
+          <p className="text-slate-500 font-medium text-sm md:text-base">
+            Don't miss out on our biggest discounts. These deals are only available for a short time!
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {flashSales.map((sale: any) => (
             <div key={sale.id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
               <div className="relative">

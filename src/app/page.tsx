@@ -14,12 +14,12 @@ export default function Home() {
 
 
       {/* Promotional Section */}
-      <section className="bg-slate-50 overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 items-center min-h-[220px]">
+      <section className="py-8 md:py-16 bg-slate-50 overflow-hidden">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-3 items-center">
 
             {/* Left Illustration - Colorful shopping bag */}
-            <div className="hidden md:flex items-end justify-center h-full pt-4">
+            <div className="hidden md:flex items-end justify-center h-full">
               <svg viewBox="0 0 220 200" className="w-48 h-48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 {/* Shopping bag body */}
                 <rect x="40" y="80" width="140" height="110" rx="10" className="fill-brand" stroke="#333" strokeWidth="2.5" />
@@ -43,11 +43,11 @@ export default function Home() {
             </div>
 
             {/* Center Content */}
-            <div className="py-12 md:py-10 text-center space-y-5">
+            <div className="text-center space-y-4">
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight leading-snug">
                 Join the Revolution
               </h2>
-              <p className="text-sm md:text-base text-slate-500 leading-relaxed max-w-sm mx-auto">
+              <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
                 Experience the future of shopping with our exclusive membership.
                 Get early access to drops, special discounts, and more.
               </p>
@@ -58,7 +58,7 @@ export default function Home() {
             </div>
 
             {/* Right Illustration - Faded line art */}
-            <div className="hidden md:flex items-end justify-center h-full pt-4">
+            <div className="hidden md:flex items-end justify-center h-full">
               <svg viewBox="0 0 220 200" className="w-48 h-48 opacity-20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 {/* Hand holding a bag outline */}
                 <path d="M60 160 Q55 130 65 110 Q70 95 80 90 L100 85 L140 85 Q155 90 158 110 Q165 135 160 160 Z" stroke="#555" strokeWidth="3" fill="none" />

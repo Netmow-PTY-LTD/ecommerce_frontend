@@ -168,8 +168,8 @@ export function Navbar() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-20 py-4">
+            <div className="container">
+                <div className="flex items-center justify-between h-14 md:h-20 py-2.5 md:py-4">
                     {/* Logo */}
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/" className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export function Navbar() {
                                     alt={settings.company_name || 'LuxeStore'}
                                     width={100}
                                     height={100}
-                                    className="rounded-lg w-20 h-auto"
+                                    className="h-10 object-contain"
                                     priority
                                     loading="eager"
                                 />
@@ -350,7 +350,7 @@ export function Navbar() {
                         <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
                             <Search className="h-5 w-5" />
                         </Button>
-                        <Link href="/wishlist">
+                        <Link href="/wishlist" className='hidden md:block'>
                             <Button variant="ghost" size="icon" className="relative">
                                 <Heart className="h-5 w-5" />
                                 {mounted && wishlistCount > 0 && (
@@ -360,7 +360,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        <Link href="/compare">
+                        <Link href="/compare" className='hidden md:block'>
                             <Button variant="ghost" size="icon" className="relative">
                                 <GitCompare className="h-5 w-5" />
                                 {mounted && compareCount > 0 && (
