@@ -80,7 +80,7 @@ export default function CategoriesPage() {
             {/* Grid */}
 
             <section className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     <AnimatePresence mode="popLayout">
                         {allCategories.map((category) => (
                             <motion.div
@@ -119,7 +119,7 @@ export default function CategoriesPage() {
                                                     {category.name}
                                                 </h3>
                                             </div>
-                                            <div className="bg-slate-100 text-slate-600 rounded px-1.5 py-0.5 text-[10px] font-bold">
+                                            <div className="bg-black text-white rounded-md px-3 py-1 text-[10px] font-bold">
                                                 {category.total_products || 0}
                                             </div>
                                         </div>
