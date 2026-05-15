@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/admin/admin-layout';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -54,6 +55,9 @@ export default function EmailTemplatesPage() {
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -123,14 +127,23 @@ export default function EmailTemplatesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this email template?')) return;
+  const handleDelete = (id: number) => {
+    setTemplateToDelete(id);
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!templateToDelete) return;
     try {
-      await api.delete(`/email/templates/${id}`);
+      setDeleting(true);
+      await api.delete(`/email/templates/${templateToDelete}`);
       toast.success('Template deleted');
       fetchTemplates();
+      setDeleteModal(false);
+      setTemplateToDelete(null);
     } catch (err: any) {
       toast.error('Failed to delete template');
+      setDeleting(false);
     }
   };
 
@@ -666,6 +679,22 @@ export default function EmailTemplatesPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteModal}
+          onClose={() => {
+            setDeleteModal(false);
+            setTemplateToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Delete Email Template?"
+          description="Are you sure you want to delete this email template? This action cannot be undone and will affect any automation rules using this template."
+          confirmText="Delete"
+          cancelText="Cancel"
+          isLoading={deleting}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   );

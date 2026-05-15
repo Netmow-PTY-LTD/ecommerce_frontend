@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/admin/admin-layout';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -74,6 +75,9 @@ export default function EmailRulesPage() {
   const [testRuleId, setTestRuleId] = useState<number | null>(null);
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [testEmailError, setTestEmailError] = useState('');
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [ruleToDelete, setRuleToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -153,14 +157,23 @@ export default function EmailRulesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this automation rule?')) return;
+  const handleDelete = (id: number) => {
+    setRuleToDelete(id);
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!ruleToDelete) return;
     try {
-      await api.delete(`/email/rules/${id}`);
+      setDeleting(true);
+      await api.delete(`/email/rules/${ruleToDelete}`);
       toast.success('Rule deleted');
       fetchRules();
+      setDeleteModal(false);
+      setRuleToDelete(null);
     } catch (err: any) {
       toast.error('Failed to delete rule');
+      setDeleting(false);
     }
   };
 
@@ -628,6 +641,22 @@ export default function EmailRulesPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteModal}
+          onClose={() => {
+            setDeleteModal(false);
+            setRuleToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          title="Delete Automation Rule?"
+          description="Are you sure you want to delete this automation rule? This action cannot be undone and will stop automatic emails for this trigger event."
+          confirmText="Delete"
+          cancelText="Cancel"
+          isLoading={deleting}
+          variant="danger"
+        />
       </div>
     </AdminLayout>
   );
