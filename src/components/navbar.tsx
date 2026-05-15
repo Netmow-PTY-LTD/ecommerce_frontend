@@ -318,7 +318,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        {isAuthenticated && <NotificationBell userType="customer" />}
+                        {isCustomerAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
@@ -380,7 +380,7 @@ export function Navbar() {
                                 )}
                             </Button>
                         </Link>
-                        {isAuthenticated && <NotificationBell userType="customer" />}
+                        {isCustomerAuthenticated && <NotificationBell userType="customer" />}
                         <div onClick={() => !isAuthenticated && setIsLoginModalOpen(true)} className="cursor-pointer">
                             <Link href={isAuthenticated ? getDashboardLink() : "#"} onClick={(e) => !isAuthenticated && e.preventDefault()}>
                                 <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border border-transparent hover:border-slate-200 transition-all overflow-hidden p-0">
