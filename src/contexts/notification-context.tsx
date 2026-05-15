@@ -55,9 +55,9 @@ export function NotificationProvider({ children, token }: { children: ReactNode;
   const unreadCountEndpoint = userType === 'customer' ? '/notifications/customer/unread-count' : '/notifications/unread-count';
 
   // Use SWR conditionally - only fetch when token exists
-  // Request ONLY unread notifications from the backend for performance
+  // Fetch all notifications - filtering is handled client-side by the notification page
   const { data: notificationsData, mutate } = useSWR(
-    token ? `${notificationsEndpoint}?page=1&limit=50&is_read=false` : null,
+    token ? `${notificationsEndpoint}?page=1&limit=50` : null,
     async (url: string) => {
       const response = await api.get(url);
       return response.data;
