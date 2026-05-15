@@ -46,7 +46,7 @@ export function HomeCategories() {
   if (homeCategories.length === 0) return null;
 
   return (
-    <div className="space-y-20">
+    <div>
       {homeCategories.map((category) => {
         const categoryProducts = allProducts.filter(
           (p: any) => p.category_id === category.id
@@ -55,15 +55,15 @@ export function HomeCategories() {
         if (categoryProducts.length === 0) return null;
 
         return (
-          <section key={category.id} className="py-8">
-            <div className="container px-4 mx-auto">
+          <section key={category.id} className="py-8 md:py-16">
+            <div className="container">
               <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                     {category.name}
                   </h2>
                   {category.description && (
-                    <p className="text-muted-foreground text-lg mt-2">
+                    <p className="text-muted-foreground text-sm mt-2">
                       {category.description}
                     </p>
                   )}

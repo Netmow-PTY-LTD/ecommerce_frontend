@@ -96,7 +96,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
                   const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
-                className="flex flex-col items-start justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex flex-col items-center justify-center py-12 px-4 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <Bell size={32} className="mb-2 opacity-50" />
                 <p className="text-sm">No unread notifications</p>
