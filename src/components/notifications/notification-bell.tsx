@@ -50,7 +50,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
     }
     // Navigate based on notification type
     if (notification.data?.orderId) {
-      window.location.href = userType === 'admin' ? `/admin/orders/${notification.data.orderId}` : `/account/orders/${notification.data.orderId}`;
+      window.location.href = userType === 'admin' ? `/admin/orders/${notification.data.orderId}` : `/customer/orders/${notification.data.orderId}`;
     }
     setIsOpen(false);
   };
@@ -91,7 +91,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
             {notifications.length === 0 ? (
               <div
                 onClick={() => {
-                  const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/account/notifications';
+                  const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
                 className="flex flex-col items-center justify-center py-12 text-gray-400 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -136,7 +136,7 @@ export function NotificationBell({ userType = 'admin' }: NotificationBellProps) 
             <div className="px-4 py-2 border-t bg-gray-50">
               <button
                 onClick={() => {
-                  const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/account/notifications';
+                  const notificationsPath = userType === 'admin' ? '/admin/notifications' : '/customer/notifications';
                   router.push(notificationsPath);
                 }}
                 className="text-xs text-gray-600 hover:text-gray-900 w-full text-center font-medium hover:underline"

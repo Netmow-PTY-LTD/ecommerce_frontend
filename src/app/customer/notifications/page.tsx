@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import CustomerLayout from '@/components/customer/customer-layout';
 
 interface Notification {
   id: number;
@@ -117,7 +118,6 @@ export default function CustomerNotificationsPage() {
       await handleMarkAsRead(notification.id);
     }
 
-    // Navigate based on notification data
     if (notification.data?.orderId) {
       router.push(`/customer/orders?order=${notification.data.orderId}`);
     } else if (notification.data?.productId && notification.data?.slug) {
@@ -143,9 +143,11 @@ export default function CustomerNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
-      </div>
+      <CustomerLayout title="Notifications">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </CustomerLayout>
     );
   }
 
@@ -154,82 +156,66 @@ export default function CustomerNotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                You have {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium',
-                isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              )}>
-                <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-red-500')} />
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </div>
-            </div>
+   
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium',
+            isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          )}>
+            <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-red-500')} />
+            {isConnected ? 'Connected' : 'Disconnected'}
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <MessageSquare className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                <p className="text-xs text-gray-500">Total</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                <p className="text-xs text-slate-500">Total</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Package className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.orders}</p>
-                <p className="text-xs text-gray-500">Orders</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.orders}</p>
+                <p className="text-xs text-slate-500">Orders</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Tag className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.promos}</p>
-                <p className="text-xs text-gray-500">Promos</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.promos}</p>
+                <p className="text-xs text-slate-500">Promos</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <RefreshCw className={cn('h-5 w-5 text-gray-600', refreshing && 'animate-spin')} />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <RefreshCw className={cn('h-5 w-5 text-slate-600', refreshing && 'animate-spin')} />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Refresh</p>
-                <p className="text-xs text-gray-500">Updates</p>
+                <p className="text-sm font-medium text-slate-900">Refresh</p>
+                <p className="text-xs text-slate-500">Updates</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex flex-wrap items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -276,16 +262,15 @@ export default function CustomerNotificationsPage() {
           </div>
         </div>
 
-        {/* Notifications List */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           {filteredNotifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-16 text-slate-400">
               <ShoppingBag className="h-12 w-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No notifications yet</p>
               <p className="text-sm mt-1">We'll notify you about important updates</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-slate-100">
               {filteredNotifications.map((notification: Notification) => {
                 const Icon = getNotificationIcon(notification.type);
                 return (
@@ -293,15 +278,15 @@ export default function CustomerNotificationsPage() {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={cn(
-                      'p-4 cursor-pointer transition-all hover:bg-gray-50',
+                      'p-4 cursor-pointer transition-all hover:bg-slate-50',
                       getPriorityColor(notification.priority, notification.is_read),
-                      !notification.is_read && 'border-l-4 border-l-blue-500'
+                      !notification.is_read && 'border-l-4 border-l-indigo-500'
                     )}
                   >
                     <div className="flex gap-4">
                       <div className={cn(
                         'p-2.5 rounded-full flex-shrink-0',
-                        notification.is_read ? 'bg-gray-200 text-gray-500' : getPriorityBadge(notification.priority)
+                        notification.is_read ? 'bg-slate-200 text-slate-500' : getPriorityBadge(notification.priority)
                       )}>
                         <Icon className="h-4 w-4" />
                       </div>
@@ -310,19 +295,19 @@ export default function CustomerNotificationsPage() {
                           <div className="flex-1 min-w-0">
                             <p className={cn(
                               'text-sm font-semibold truncate',
-                              notification.is_read ? 'text-gray-600' : 'text-gray-900'
+                              notification.is_read ? 'text-slate-600' : 'text-slate-900'
                             )}>
                               {notification.title}
                             </p>
-                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                            <p className="text-sm text-slate-600 mt-0.5 line-clamp-2">
                               {notification.message}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-[10px] uppercase font-semibold text-gray-500">
+                              <span className="text-[10px] uppercase font-semibold text-slate-500">
                                 {typeLabels[notification.type] || notification.type}
                               </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-[10px] text-gray-400">
+                              <span className="text-slate-300">•</span>
+                              <span className="text-[10px] text-slate-400">
                                 {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                               </span>
                             </div>
@@ -337,7 +322,7 @@ export default function CustomerNotificationsPage() {
                                 className="p-1.5 rounded-lg hover:bg-white transition-colors"
                                 title="Mark as read"
                               >
-                                <Check className="h-4 w-4 text-gray-400 hover:text-green-600" />
+                                <Check className="h-4 w-4 text-slate-400 hover:text-green-600" />
                               </button>
                             )}
                           </div>
@@ -351,40 +336,39 @@ export default function CustomerNotificationsPage() {
           )}
         </div>
 
-        {/* Quick Links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
             onClick={() => router.push('/customer/orders')}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-brand hover:shadow-md transition-all"
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all"
           >
-            <Package className="h-5 w-5 text-brand" />
+            <Package className="h-5 w-5 text-indigo-600" />
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900">My Orders</p>
-              <p className="text-xs text-gray-500">Track your orders</p>
+              <p className="text-sm font-semibold text-slate-900">My Orders</p>
+              <p className="text-xs text-slate-500">Track your orders</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/cart')}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-brand hover:shadow-md transition-all"
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all"
           >
-            <ShoppingCart className="h-5 w-5 text-brand" />
+            <ShoppingCart className="h-5 w-5 text-indigo-600" />
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900">Cart</p>
-              <p className="text-xs text-gray-500">Continue shopping</p>
+              <p className="text-sm font-semibold text-slate-900">Cart</p>
+              <p className="text-xs text-slate-500">Continue shopping</p>
             </div>
           </button>
           <button
             onClick={() => router.push('/customer/profile')}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-brand hover:shadow-md transition-all"
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all"
           >
-            <MessageSquare className="h-5 w-5 text-brand" />
+            <MessageSquare className="h-5 w-5 text-indigo-600" />
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900">Profile</p>
-              <p className="text-xs text-gray-500">Update settings</p>
+              <p className="text-sm font-semibold text-slate-900">Profile</p>
+              <p className="text-xs text-slate-500">Update settings</p>
             </div>
           </button>
         </div>
       </div>
-    </div>
+    
   );
 }
