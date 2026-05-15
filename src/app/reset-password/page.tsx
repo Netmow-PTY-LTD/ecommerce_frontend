@@ -118,7 +118,7 @@ function ResetPasswordForm() {
                 className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                 placeholder="••••••••"
                 required
-                minLength={8}
+                minLength={6}
               />
               <button
                 type="button"
@@ -141,7 +141,7 @@ function ResetPasswordForm() {
                 className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                 placeholder="••••••••"
                 required
-                minLength={8}
+                minLength={6}
               />
             </div>
           </div>
