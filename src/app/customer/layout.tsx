@@ -15,6 +15,7 @@ export default function CustomerDashboardLayout({
     if (path.includes('/dashboard')) return 'Dashboard';
     if (path.includes('/orders')) return 'My Orders';
     if (path.includes('/wishlist')) return 'Wishlist';
+    if (path.includes('/notifications')) return 'Notifications';
     if (path.includes('/profile')) return 'Profile Settings';
     return 'Account';
   };
@@ -23,6 +24,7 @@ export default function CustomerDashboardLayout({
     if (path.includes('/dashboard')) return 'Welcome back! Here is your account overview.';
     if (path.includes('/orders')) return 'View and track your previous orders.';
     if (path.includes('/wishlist')) return 'Your saved items for later.';
+    if (path.includes('/notifications')) return 'Stay updated with your notifications.';
     if (path.includes('/profile')) return 'Update your personal information.';
     return '';
   };

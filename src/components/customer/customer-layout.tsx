@@ -16,7 +16,8 @@ import {
   Search,
   Menu,
   User,
-  ShoppingBag
+  ShoppingBag,
+  Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ const navigation = [
   { name: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
   { name: 'My Orders', href: '/customer/orders', icon: Package },
   { name: 'Wishlist', href: '/wishlist', icon: Heart },
+  { name: 'Notifications', href: '/customer/notifications', icon: Bell },
   { name: 'Profile Settings', href: '/customer/profile', icon: User },
 ];
 
