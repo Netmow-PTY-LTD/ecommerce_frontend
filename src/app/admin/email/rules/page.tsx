@@ -37,6 +37,7 @@ interface EmailTemplate {
   slug: string;
   subject: string;
   status: 'active' | 'inactive';
+  variables?: string[];
 }
 
 interface EmailAutomationRule {
