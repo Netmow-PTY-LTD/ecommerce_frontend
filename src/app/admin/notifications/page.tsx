@@ -237,8 +237,15 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <AdminLayout title="Notifications" subtitle={`You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`}>
+    <AdminLayout>
       <div className="w-full space-y-6">
+
+        {/* Page Title */}
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Notifications</h1>
+          <p className="text-slate-600 text-sm">You have {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -366,7 +373,7 @@ export default function AdminNotificationsPage() {
                         getPriorityColor(notification.priority, notification.is_read)
                       )}
                     >
-                      <div className="flex gap-4">
+                      <div className="flex items-start gap-4">
                         <div className={cn(
                           'p-2.5 rounded-full flex-shrink-0',
                           notification.is_read ? 'bg-gray-200 text-gray-500' : getPriorityBadge(notification.priority)
