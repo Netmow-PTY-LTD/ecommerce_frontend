@@ -32,6 +32,7 @@ import {
   MessageSquare,
   BookOpen,
   Sparkles,
+  Sliders,
   Mail,
   Send,
   BarChart3,
@@ -40,7 +41,8 @@ import {
   DollarSign,
   Layers,
   Box,
-  ExternalLink
+  ExternalLink,
+  Truck
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -106,6 +108,7 @@ const navigation: NavItem[] = [
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
   { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
+  { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
   { name: 'Stock Management', href: '/admin/stock', icon: Box },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
@@ -145,6 +148,7 @@ const navigation: NavItem[] = [
       { name: 'Orders', href: '/admin/analytics/orders', icon: ShoppingCart },
       { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
       { name: 'Profit & Loss', href: '/admin/analytics/profit-loss', icon: DollarSign },
+      { name: 'Shipping', href: '/admin/analytics/shipping', icon: Truck },
     ],
   },
 

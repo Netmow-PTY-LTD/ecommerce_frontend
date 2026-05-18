@@ -50,7 +50,7 @@ interface Order {
 
 export default function AdminPaidOrderInvoicePage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { settings } = useSettingsContext();
+  const { settings, isLoading: settingsLoading } = useSettingsContext();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -94,7 +94,7 @@ export default function AdminPaidOrderInvoicePage() {
 
   const handlePrint = () => window.print();
 
-  if (authLoading || loading) {
+  if (authLoading || loading || settingsLoading) {
     return (
       <AdminLayout title="Invoice" subtitle="Loading...">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -170,7 +170,9 @@ export default function AdminPaidOrderInvoicePage() {
                 <p>{settings.address || ''}</p>
                 <p>{settings.city}{settings.state ? `, ${settings.state}` : ''}{settings.postal_code ? ` ${settings.postal_code}` : ''}</p>
                 <p>{settings.country || ''}</p>
-                {settings.email && <p className="pt-2 text-slate-400">{settings.email}</p>}
+                {settings.phone && <p>Phone: {settings.phone}</p>}
+                {settings.email && <p>Email: {settings.email}</p>}
+
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -111,6 +111,20 @@ export default function SettingsPage() {
 
     const [showGalleryModal, setShowGalleryModal] = useState(false);
 
+    // Courier states
+    const [settingsCourierPartners, setSettingsCourierPartners] = useState<any[]>([]);
+    const [loadingCouriers, setLoadingCouriers] = useState(false);
+    const [showCourierModal, setShowCourierModal] = useState(false);
+    const [editingCourier, setEditingCourier] = useState<any | null>(null);
+    const [courierForm, setCourierForm] = useState({
+        name: '',
+        phone: '',
+        email: '',
+        tracking_url_template: '',
+        status: 'active' as 'active' | 'inactive',
+        is_default: false
+    });
+
     useEffect(() => {
         if (!loading && !isAuthenticated) {
             router.push('/admin/login');
@@ -124,6 +138,79 @@ export default function SettingsPage() {
             fetchContactDetails();
         }
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'couriers') {
+            fetchSettingsCourierPartners();
+        }
+    }, [isAuthenticated, activeTab]);
+
+    const fetchSettingsCourierPartners = async () => {
+        try {
+            setLoadingCouriers(true);
+            const response = await api.get('/sales/courier-partners');
+            setSettingsCourierPartners(response.data.data || []);
+        } catch (error) {
+            console.error('Failed to load courier partners:', error);
+            toast.error('Failed to load courier partners');
+        } finally {
+            setLoadingCouriers(false);
+        }
+    };
+
+    const handleCourierSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setSaving(true);
+            if (editingCourier) {
+                await api.put(`/sales/courier-partners/${editingCourier.id}`, courierForm);
+                toast.success('Courier partner updated successfully');
+            } else {
+                await api.post('/sales/courier-partners', courierForm);
+                toast.success('Courier partner added successfully');
+            }
+            setShowCourierModal(false);
+            setEditingCourier(null);
+            setCourierForm({
+                name: '',
+                phone: '',
+                email: '',
+                tracking_url_template: '',
+                status: 'active',
+                is_default: false
+            });
+            fetchSettingsCourierPartners();
+        } catch (error: any) {
+            console.error('Failed to save courier partner:', error);
+            toast.error(error.response?.data?.message || 'Failed to save courier partner');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDeleteCourier = async (id: number) => {
+        if (!window.confirm('Are you sure you want to delete this courier partner?')) return;
+        try {
+            await api.delete(`/sales/courier-partners/${id}`);
+            toast.success('Courier partner deleted successfully');
+            fetchSettingsCourierPartners();
+        } catch (error: any) {
+            console.error('Failed to delete courier partner:', error);
+            toast.error(error.response?.data?.message || 'Failed to delete courier partner');
+        }
+    };
+
+    const handleToggleCourierStatus = async (courier: any) => {
+        try {
+            const newStatus = courier.status === 'active' ? 'inactive' : 'active';
+            await api.put(`/sales/courier-partners/${courier.id}`, { status: newStatus });
+            toast.success(`Courier partner status set to ${newStatus}`);
+            fetchSettingsCourierPartners();
+        } catch (error: any) {
+            console.error('Failed to update status:', error);
+            toast.error('Failed to update status');
+        }
+    };
 
 
     const fetchCompanyProfile = async () => {
@@ -341,6 +428,17 @@ export default function SettingsPage() {
                             >
                                 <Truck className="w-4 h-4 mr-2" />
                                 Shipping
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('couriers')}
+                                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center cursor-pointer ${activeTab === 'couriers'
+                                    ? 'border-brand text-brand'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                    }`}
+                            >
+                                <Building className="w-4 h-4 mr-2" />
+                                Courier Partners
                             </button>
                             {/* <button
                                 type="button"
@@ -940,37 +1038,293 @@ export default function SettingsPage() {
                         </>
                     )}
 
+                    {/* Courier Partners Tab */}
+                    {activeTab === 'couriers' && (
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-2xl border overflow-hidden shadow-none">
+                                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold text-slate-900 flex items-center">
+                                        <Building className="w-5 h-5 mr-2 text-indigo-600" />
+                                        Courier Partners
+                                    </h2>
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingCourier(null);
+                                            setCourierForm({
+                                                name: '',
+                                                phone: '',
+                                                email: '',
+                                                tracking_url_template: '',
+                                                status: 'active',
+                                                is_default: false
+                                            });
+                                            setShowCourierModal(true);
+                                        }}
+                                        className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold px-4 py-2 rounded-xl text-sm transition-all shadow-sm"
+                                    >
+                                        Add Courier Partner
+                                    </Button>
+                                </div>
+
+                                <div className="p-6">
+                                    {loadingCouriers ? (
+                                        <div className="flex justify-center items-center py-12">
+                                            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                                        </div>
+                                    ) : settingsCourierPartners.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <p className="text-slate-500 text-sm animate-pulse">No courier partners registered yet.</p>
+                                            <p className="text-xs text-slate-400 mt-1">Add a courier partner to assign tracking details to shipments.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-slate-200">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Courier Name</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact Phone</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email Address</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tracking URL Template</th>
+                                                        <th className="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 bg-white">
+                                                    {settingsCourierPartners.map((courier) => (
+                                                        <tr key={courier.id} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 flex items-center space-x-2">
+                                                                <span>{courier.name}</span>
+                                                                {courier.is_default && (
+                                                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+                                                                        Default
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{courier.phone || 'N/A'}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{courier.email || 'N/A'}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono text-xs max-w-xs truncate" title={courier.tracking_url_template}>
+                                                                {courier.tracking_url_template || 'N/A'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleToggleCourierStatus(courier)}
+                                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-all border ${courier.status === 'active'
+                                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                                                                        }`}
+                                                                >
+                                                                    {courier.status === 'active' ? 'Active' : 'Inactive'}
+                                                                </button>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setEditingCourier(courier);
+                                                                        setCourierForm({
+                                                                            name: courier.name,
+                                                                            phone: courier.phone || '',
+                                                                            email: courier.email || '',
+                                                                            tracking_url_template: courier.tracking_url_template || '',
+                                                                            status: courier.status,
+                                                                            is_default: courier.is_default || false
+                                                                        });
+                                                                        setShowCourierModal(true);
+                                                                    }}
+                                                                    className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-all"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteCourier(courier.id)}
+                                                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-all"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Form Actions */}
-                    <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border shadow-none">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => window.history.back()}
-                            className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={saving}
-                            size="lg"
-                            className="px-8 py-3 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-                        >
-                            {saving ? (
-                                <span className="flex items-center">
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Saving...
-                                </span>
-                            ) : (
-                                <span className="flex items-center">
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save Settings
-                                </span>
-                            )}
-                        </Button>
-                    </div>
+                    {activeTab !== 'couriers' && (
+                        <div className="flex justify-between items-center bg-white px-6 py-4 rounded-2xl border shadow-none">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => window.history.back()}
+                                className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={saving}
+                                size="lg"
+                                className="px-8 py-3 bg-brand text-white rounded-xl text-sm font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                            >
+                                {saving ? (
+                                    <span className="flex items-center">
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Saving...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center">
+                                        <Save className="w-4 h-4 mr-2" />
+                                        Save Settings
+                                    </span>
+                                )}
+                            </Button>
+                        </div>
+                    )}
                 </form>
             </div>
+
+            {/* Courier Add/Edit Modal */}
+            {showCourierModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border">
+                        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b flex items-center justify-between">
+                            <h3 className="text-base font-bold text-slate-900">
+                                {editingCourier ? 'Edit Courier Partner' : 'Add Courier Partner'}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowCourierModal(false);
+                                    setEditingCourier(null);
+                                }}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCourierSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                    Courier Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={courierForm.name}
+                                    onChange={(e) => setCourierForm(prev => ({ ...prev, name: e.target.value }))}
+                                    placeholder="e.g. FedEx, RedEx, Pathao"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium animate-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={courierForm.phone}
+                                        onChange={(e) => setCourierForm(prev => ({ ...prev, phone: e.target.value }))}
+                                        placeholder="+12345678"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium animate-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                        Email Address
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={courierForm.email}
+                                        onChange={(e) => setCourierForm(prev => ({ ...prev, email: e.target.value }))}
+                                        placeholder="support@courier.com"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium animate-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                    Tracking URL Template
+                                </label>
+                                <input
+                                    type="url"
+                                    value={courierForm.tracking_url_template}
+                                    onChange={(e) => setCourierForm(prev => ({ ...prev, tracking_url_template: e.target.value }))}
+                                    placeholder="e.g. https://fedex.com/track?num={tracking_number}"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-mono text-xs animate-none"
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1">Use <code className="bg-slate-100 px-1 py-0.5 rounded font-mono font-bold text-slate-600">{`{tracking_number}`}</code> as a placeholder for the user's shipment code.</p>
+                            </div>
+
+                            <div className="flex items-center space-x-2 py-2">
+                                <input
+                                    id="is_default"
+                                    type="checkbox"
+                                    checked={courierForm.is_default}
+                                    onChange={(e) => setCourierForm(prev => ({ ...prev, is_default: e.target.checked }))}
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer"
+                                />
+                                <label htmlFor="is_default" className="text-sm font-medium text-slate-700 cursor-pointer">
+                                    Set as Default Courier Partner
+                                </label>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                    Status
+                                </label>
+                                <select
+                                    value={courierForm.status}
+                                    onChange={(e) => setCourierForm(prev => ({ ...prev, status: e.target.value as any }))}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 bg-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-medium animate-none"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                            <div className="pt-4 border-t flex space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowCourierModal(false);
+                                        setEditingCourier(null);
+                                    }}
+                                    className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Save Courier'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <ImageGalleryModal
                 isOpen={showGalleryModal}

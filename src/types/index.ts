@@ -134,3 +134,17 @@ export interface GalleryImage {
     created_at?: string;
     updated_at?: string;
 }
+
+export interface HeroSlide {
+    id: number;
+    subtitle: string;
+    title: string;
+    deal?: string | null;
+    discount?: string | null;
+    image: string;
+    accent?: string | null;
+    status: 'active' | 'inactive';
+    display_order: number;
+    created_at?: string;
+    updated_at?: string;
+}
