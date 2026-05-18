@@ -86,6 +86,8 @@ export default function OrderDetailPage() {
   const [statusDate, setStatusDate] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [courierCost, setCourierCost] = useState('');
+  const [courierPartners, setCourierPartners] = useState<any[]>([]);
+  const [selectedCourierPartnerId, setSelectedCourierPartnerId] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Refund modal state
@@ -102,8 +104,18 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchOrder();
+      fetchCourierPartners();
     }
   }, [isAuthenticated, orderId]);
+
+  const fetchCourierPartners = async () => {
+    try {
+      const response = await api.get('/sales/courier-partners?status=active');
+      setCourierPartners(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch courier partners:', err);
+    }
+  };
 
   const fetchOrder = async () => {
     try {
@@ -181,7 +193,8 @@ export default function OrderDetailPage() {
         status: selectedStatus,
         status_date: statusDate,
         status_note: statusNote,
-        courier_cost: courierCost ? parseFloat(courierCost) : undefined
+        courier_cost: courierCost ? parseFloat(courierCost) : undefined,
+        courier_partner_id: selectedCourierPartnerId ? parseInt(selectedCourierPartnerId) : undefined
       });
 
       // If status is being changed to "returned", restore stock
@@ -221,6 +234,7 @@ export default function OrderDetailPage() {
     setStatusDate('');
     setStatusNote('');
     setCourierCost('');
+    setSelectedCourierPartnerId('');
   };
 
   const handleRefundSubmit = async () => {
@@ -703,20 +717,41 @@ export default function OrderDetailPage() {
               </div>
 
               {(selectedStatus === 'shipped' || selectedStatus === 'delivered') && (
-                <div>
-                  <label htmlFor="courierCost" className="block text-sm font-semibold text-slate-700 mb-2">
-                    Courier Shipping Cost Paid <span className="text-xs font-normal text-slate-500">(optional)</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="courierCost"
-                    value={courierCost}
-                    onChange={(e) => setCourierCost(e.target.value)}
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g. 140.00"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
-                  />
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label htmlFor="courierPartner" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Courier Partner <span className="text-xs font-normal text-slate-500">(optional)</span>
+                    </label>
+                    <select
+                      id="courierPartner"
+                      value={selectedCourierPartnerId}
+                      onChange={(e) => setSelectedCourierPartnerId(e.target.value)}
+                      className="w-full px-4 py-3 border border-slate-200 bg-white rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                    >
+                      <option value="">Select Courier Partner</option>
+                      {courierPartners.map((partner) => (
+                        <option key={partner.id} value={partner.id}>
+                          {partner.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="courierCost" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Courier Shipping Cost Paid <span className="text-xs font-normal text-slate-500">(optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      id="courierCost"
+                      value={courierCost}
+                      onChange={(e) => setCourierCost(e.target.value)}
+                      step="0.01"
+                      min="0"
+                      placeholder="e.g. 140.00"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                    />
+                  </div>
                 </div>
               )}
 
