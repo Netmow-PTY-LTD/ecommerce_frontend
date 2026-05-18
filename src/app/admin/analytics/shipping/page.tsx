@@ -27,6 +27,7 @@ interface ShippingSummary {
   paid_shipments: number;
   free_shipping_rate: number;
   shipping_collected: number;
+  actual_courier_cost: number;
   estimated_courier_cost: number;
   net_shipping_cost: number;
 }
@@ -37,6 +38,7 @@ interface CarrierData {
   free_shipments: number;
   paid_shipments: number;
   shipping_collected: number;
+  actual_courier_cost: number;
   estimated_courier_cost: number;
   net_shipping_cost: number;
 }
@@ -328,38 +330,38 @@ export default function ShippingAnalyticsPage() {
                 {/* Courier / Shipping Cost Paid */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-slate-500">Estimated Courier Expenses</p>
+                    <p className="text-sm font-semibold text-slate-500">Courier Shipping Cost Paid</p>
                     <div className="bg-violet-100 p-2.5 rounded-xl text-violet-600 shrink-0">
                       <Truck size={18} />
                     </div>
                   </div>
                   <p className="text-2xl font-bold text-slate-900">
-                    {formatCurrency(summary?.estimated_courier_cost || 0)}
+                    {formatCurrency(summary?.actual_courier_cost || 0)}
                   </p>
                   <p className="text-xs text-slate-400 mt-2">
-                    Paid to courier services (flat estimation)
+                    Actual delivery fees paid to courier services
                   </p>
                 </div>
 
                 {/* Net balance */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-slate-500">Net Shipping Balance</p>
+                    <p className="text-sm font-semibold text-slate-500">Net Shipping Profit / Loss</p>
                     <div className={`p-2.5 rounded-xl shrink-0 ${
                       (summary?.net_shipping_cost || 0) >= 0
-                        ? 'bg-blue-100 text-blue-600'
+                        ? 'bg-emerald-100 text-emerald-600'
                         : 'bg-rose-100 text-rose-600'
                     }`}>
                       <TrendingUp size={18} />
                     </div>
                   </div>
                   <p className={`text-2xl font-bold ${
-                    (summary?.net_shipping_cost || 0) >= 0 ? 'text-blue-600' : 'text-rose-600'
+                    (summary?.net_shipping_cost || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
                     {formatCurrency(summary?.net_shipping_cost || 0)}
                   </p>
                   <p className="text-xs text-slate-400 mt-2">
-                    {(summary?.net_shipping_cost || 0) >= 0 ? 'Shipping costs fully covered' : 'Absorbed shipping deficits'}
+                    {(summary?.net_shipping_cost || 0) >= 0 ? 'Shipping profits earned' : 'Absorbed shipping deficits'}
                   </p>
                 </div>
 
@@ -406,8 +408,8 @@ export default function ShippingAnalyticsPage() {
                             <th className="pb-3 px-2 text-center">Shipments</th>
                             <th className="pb-3 px-2 text-center">Free Shipped</th>
                             <th className="pb-3 px-2 text-right">Shipping Collected</th>
-                            <th className="pb-3 px-2 text-right">Courier Expense</th>
-                            <th className="pb-3 pl-2 text-right">Net Balance</th>
+                            <th className="pb-3 px-2 text-right">Courier Cost Paid</th>
+                            <th className="pb-3 pl-2 text-right">Net Profit / Loss</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -424,7 +426,7 @@ export default function ShippingAnalyticsPage() {
                                 </span>
                               </td>
                               <td className="py-4 px-2 text-right font-medium text-slate-700">{formatCurrency(c.shipping_collected)}</td>
-                              <td className="py-4 px-2 text-right font-medium text-rose-600">-{formatCurrency(c.estimated_courier_cost)}</td>
+                              <td className="py-4 px-2 text-right font-medium text-rose-600">-{formatCurrency(c.actual_courier_cost || 0)}</td>
                               <td className={`py-4 pl-2 text-right font-bold ${
                                 c.net_shipping_cost >= 0 ? 'text-emerald-600' : 'text-rose-600'
                               }`}>

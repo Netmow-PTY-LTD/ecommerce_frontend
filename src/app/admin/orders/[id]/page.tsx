@@ -85,6 +85,7 @@ export default function OrderDetailPage() {
   const [selectedStatus, setSelectedStatus] = useState<Order['status'] | null>(null);
   const [statusDate, setStatusDate] = useState('');
   const [statusNote, setStatusNote] = useState('');
+  const [courierCost, setCourierCost] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Refund modal state
@@ -166,6 +167,7 @@ export default function OrderDetailPage() {
     const today = new Date().toISOString().split('T')[0];
     setStatusDate(today);
     setStatusNote('');
+    setCourierCost('');
     setShowStatusModal(true);
   };
 
@@ -178,7 +180,8 @@ export default function OrderDetailPage() {
       await api.put(`/sales/orders/${order.id}/status`, {
         status: selectedStatus,
         status_date: statusDate,
-        status_note: statusNote
+        status_note: statusNote,
+        courier_cost: courierCost ? parseFloat(courierCost) : undefined
       });
 
       // If status is being changed to "returned", restore stock
@@ -194,6 +197,7 @@ export default function OrderDetailPage() {
       setSelectedStatus(null);
       setStatusNote('');
       setStatusDate('');
+      setCourierCost('');
 
       // Refetch order data to get updated timeline
       await fetchOrder();
@@ -216,6 +220,7 @@ export default function OrderDetailPage() {
     setSelectedStatus(null);
     setStatusDate('');
     setStatusNote('');
+    setCourierCost('');
   };
 
   const handleRefundSubmit = async () => {
@@ -696,6 +701,24 @@ export default function OrderDetailPage() {
                   required
                 />
               </div>
+
+              {(selectedStatus === 'shipped' || selectedStatus === 'delivered') && (
+                <div>
+                  <label htmlFor="courierCost" className="block text-sm font-semibold text-slate-700 mb-2">
+                    Courier Shipping Cost Paid <span className="text-xs font-normal text-slate-500">(optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="courierCost"
+                    value={courierCost}
+                    onChange={(e) => setCourierCost(e.target.value)}
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 140.00"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                  />
+                </div>
+              )}
 
               <div>
                 <label htmlFor="statusNote" className="block text-sm font-semibold text-slate-700 mb-2">
