@@ -32,6 +32,7 @@ import {
   MessageSquare,
   BookOpen,
   Sparkles,
+  Sliders,
   Mail,
   Send,
   BarChart3,
@@ -106,6 +107,7 @@ const navigation: NavItem[] = [
   { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
   { name: 'Units', href: '/admin/products/units', icon: Ruler },
   { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
+  { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
   { name: 'Stock Management', href: '/admin/stock', icon: Box },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
