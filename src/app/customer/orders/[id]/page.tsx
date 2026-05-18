@@ -16,6 +16,7 @@ import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
+import CustomerOrderTimeline from '@/components/customer/order-timeline';
 
 interface OrderItem {
   id: number;
@@ -355,6 +356,9 @@ export default function OrderDetailsPage() {
               </div>
             </div>
           </div>
+
+          {/* Order Timeline */}
+          <CustomerOrderTimeline orderId={id as string} />
 
           {/* Help Card */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-4">
