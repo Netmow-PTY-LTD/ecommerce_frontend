@@ -58,13 +58,27 @@ export default function ChatsPage() {
   const replyInputRef = useRef<HTMLInputElement>(null);
   const [showDetail, setShowDetail] = useState(false);
 
+  const [aiStatus, setAiStatus] = useState<any>(null);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push('/admin/login');
   }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
-    if (isAuthenticated) fetchSessions();
+    if (isAuthenticated) {
+      fetchSessions();
+      fetchAIStatus();
+    }
   }, [isAuthenticated, statusFilter]);
+
+  const fetchAIStatus = async () => {
+    try {
+      const res = await api.get('/chat/admin/ai/status');
+      setAiStatus(res.data.data);
+    } catch (err) {
+      console.error('Failed to fetch AI status:', err);
+    }
+  };
 
   const fetchSessions = async () => {
     try {
@@ -208,7 +222,7 @@ export default function ChatsPage() {
     { label: 'Active Chats', value: activeCount, color: 'bg-green-600', icon: <MessageCircle size={20} /> },
     { label: 'Escalated', value: escalatedCount, color: 'bg-amber-600', icon: <AlertCircle size={20} /> },
     { label: 'Total Sessions', value: sessions.length, color: 'bg-blue-600', icon: <MessageCircle size={20} /> },
-    { label: 'AI Powered', value: '', color: 'bg-purple-600', icon: <Sparkles size={20} />, badge: true },
+    { label: 'AI Powered', value: aiStatus?.configured ? 'Active' : 'Setup Required', color: 'bg-purple-600', icon: <Sparkles size={20} />, badge: false },
   ];
 
   return (
@@ -221,7 +235,11 @@ export default function ChatsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                  {stat.badge ? (
+                  {stat.label === 'AI Powered' ? (
+                    <p className={`text-lg font-bold ${aiStatus?.configured ? 'text-green-600' : 'text-amber-600'}`}>
+                      {stat.value}
+                    </p>
+                  ) : stat.badge ? (
                     <p className="text-lg font-bold text-purple-600">Enabled</p>
                   ) : (
                     <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
