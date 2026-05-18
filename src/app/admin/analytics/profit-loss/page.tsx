@@ -36,6 +36,7 @@ interface ProfitLossData {
   profit: {
     gross_profit: number;
     gross_profit_margin: number;
+    shipping_profit_loss: number;
     operating_profit: number;
     net_profit: number;
     net_profit_margin: number;
@@ -154,7 +155,7 @@ export default function ProfitLossPage() {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium text-slate-600">Net Sales</p>
@@ -178,6 +179,19 @@ export default function ProfitLossPage() {
             </p>
             <p className={`text-sm font-medium mt-1 ${(profitLoss?.profit.gross_profit_margin || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {profitLoss?.profit.gross_profit_margin.toFixed(1) || 0}% margin
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-600">Shipping P&L</p>
+              <TrendingUp size={18} className={(profitLoss?.profit.shipping_profit_loss || 0) >= 0 ? 'text-emerald-600' : 'text-amber-600'} />
+            </div>
+            <p className={`text-2xl font-bold ${(profitLoss?.profit.shipping_profit_loss || 0) >= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {formatCurrency(profitLoss?.profit.shipping_profit_loss || 0)}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Collected: {formatCurrency(profitLoss?.revenue.shipping_collected || 0)}
             </p>
           </div>
 
@@ -274,11 +288,16 @@ export default function ProfitLossPage() {
         {/* Profit Summary */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
           <h3 className="text-lg font-semibold mb-4">Profit Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <p className="text-sm opacity-80">Gross Profit</p>
               <p className="text-2xl font-bold">{formatCurrency(profitLoss?.profit.gross_profit || 0)}</p>
               <p className="text-sm opacity-80">{profitLoss?.profit.gross_profit_margin.toFixed(1) || 0}% margin</p>
+            </div>
+            <div>
+              <p className="text-sm opacity-80">Shipping P&L</p>
+              <p className="text-2xl font-bold">{formatCurrency(profitLoss?.profit.shipping_profit_loss || 0)}</p>
+              <p className="text-sm opacity-80">Courier Cost: {formatCurrency(profitLoss?.costs.shipping || 0)}</p>
             </div>
             <div>
               <p className="text-sm opacity-80">Operating Profit</p>
@@ -330,7 +349,7 @@ export default function ProfitLossPage() {
                       <td className="px-4 py-3 text-sm text-slate-500 font-mono">{p.sku}</td>
                       <td className="px-4 py-3 text-sm text-slate-700 text-right">{p.units_sold}</td>
                       <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">{formatCurrency(Number(p.revenue))}</td>
-                      <td className="px-4 py-3 text-sm text-red-600 font-medium text-right">{formatCurrency(Number(p.cost))}</td>
+                      <td className="px-4 py-3 text-sm text-red-600 font-medium text-right">{formatCurrency(Number(p.cogs))}</td>
                       <td className={`px-4 py-3 text-sm font-medium text-right ${p.gross_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatCurrency(Number(p.gross_profit))}
                       </td>
