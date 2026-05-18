@@ -10,6 +10,12 @@ interface User {
   email: string;
   role_id: number;
   status: 'active' | 'inactive';
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
   role?: {
     id: number;
     name: string;
@@ -23,6 +29,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUserContext: (updates: Partial<User>) => void;
   loading: boolean;
   isAuthenticated: boolean;
 }
@@ -95,11 +102,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     router.push('/admin/login');
   };
 
+  const updateUserContext = (updates: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('admin_user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     token,
     login,
     logout,
+    updateUserContext,
     loading,
     isAuthenticated: !!user && !!token,
   };

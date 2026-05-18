@@ -433,7 +433,7 @@ function OrderStatusContent() {
                       const addr = parseAddress(order.shipping_address);
                       if (!addr) return 'No shipping address provided';
                       if (typeof addr === 'string') return addr;
-                      
+
                       return (
                         <div className="space-y-0.5">
                           <p className="font-bold text-slate-900">{addr.firstName} {addr.lastName}</p>
@@ -494,7 +494,7 @@ function OrderStatusContent() {
               <p>{settings?.country}</p>
               {settings?.phone && <p>Phone: {settings?.phone}</p>}
               {settings?.email && <p>Email: {settings?.email}</p>}
-              {settings?.tax_id && <p>Tax ID: {settings?.tax_id}</p>}
+
             </div>
           </div>
           <div className="text-right">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -261,6 +261,7 @@ export default function AdminGalleryPage() {
                     <option value="blog">📝 Blog</option>
                     <option value="banner">🎨 Banner</option>
                     <option value="profile">👤 Profile</option>
+                    <option value="hero-slider">🖼️ Hero Slider</option>
                   </select>
                 </div>
 
@@ -399,6 +400,7 @@ export default function AdminGalleryPage() {
                     <option value="blog">📝 Blog</option>
                     <option value="banner">🎨 Banner</option>
                     <option value="profile">👤 Profile</option>
+                    <option value="hero-slider">🖼️ Hero Slider</option>
                   </select>
                 </div>
               </div>
