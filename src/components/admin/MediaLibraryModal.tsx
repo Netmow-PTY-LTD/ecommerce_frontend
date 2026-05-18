@@ -31,9 +31,10 @@ interface MediaLibraryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (url: string) => void;
+  category?: string;
 }
 
-export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibraryModalProps) {
+export function MediaLibraryModal({ open, onOpenChange, onSelect, category }: MediaLibraryModalProps) {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +62,7 @@ export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibrary
         limit: '24',
       });
       if (searchTerm) params.append('search', searchTerm); // Assuming backend supports search param
+      if (category) params.append('category', category);
 
       const response = await api.get(`/gallery?${params}`);
       setImages(response.data.data);
@@ -87,7 +89,7 @@ export function MediaLibraryModal({ open, onOpenChange, onSelect }: MediaLibrary
       for (let i = 0; i < files.length; i++) {
         formData.append('images', files[i]);
       }
-      formData.append('category', 'general');
+      formData.append('category', category || 'general');
 
       await api.post('/gallery/multiple', formData, {
         headers: {

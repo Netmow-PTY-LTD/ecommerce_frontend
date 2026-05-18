@@ -154,11 +154,13 @@ const navigation: NavItem[] = [
   { name: 'Newsletter', href: '/admin/newsletter', icon: Send },
 
   // Content & Media
-  { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
   {
-    name: 'Media Library',
-    href: '/admin/gallery',
+    name: 'Content & Media',
     icon: Image,
+    subitems: [
+      { name: 'Media Library', href: '/admin/gallery', icon: Image },
+      { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
+    ],
   },
 
   // Configuration
