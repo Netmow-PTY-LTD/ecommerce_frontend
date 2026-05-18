@@ -111,7 +111,14 @@ export default function OrderDetailPage() {
   const fetchCourierPartners = async () => {
     try {
       const response = await api.get('/sales/courier-partners?status=active');
-      setCourierPartners(response.data.data || []);
+      const partners = response.data.data || [];
+      setCourierPartners(partners);
+
+      // Pre-select default courier partner if one exists
+      const defaultPartner = partners.find((p: any) => p.is_default);
+      if (defaultPartner) {
+        setSelectedCourierPartnerId(defaultPartner.id.toString());
+      }
     } catch (err) {
       console.error('Failed to fetch courier partners:', err);
     }

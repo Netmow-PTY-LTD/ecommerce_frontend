@@ -121,7 +121,8 @@ export default function SettingsPage() {
         phone: '',
         email: '',
         tracking_url_template: '',
-        status: 'active' as 'active' | 'inactive'
+        status: 'active' as 'active' | 'inactive',
+        is_default: false
     });
 
     useEffect(() => {
@@ -175,7 +176,8 @@ export default function SettingsPage() {
                 phone: '',
                 email: '',
                 tracking_url_template: '',
-                status: 'active'
+                status: 'active',
+                is_default: false
             });
             fetchSettingsCourierPartners();
         } catch (error: any) {
@@ -1054,7 +1056,8 @@ export default function SettingsPage() {
                                                 phone: '',
                                                 email: '',
                                                 tracking_url_template: '',
-                                                status: 'active'
+                                                status: 'active',
+                                                is_default: false
                                             });
                                             setShowCourierModal(true);
                                         }}
@@ -1090,7 +1093,14 @@ export default function SettingsPage() {
                                                 <tbody className="divide-y divide-slate-100 bg-white">
                                                     {settingsCourierPartners.map((courier) => (
                                                         <tr key={courier.id} className="hover:bg-slate-50/50 transition-colors">
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">{courier.name}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 flex items-center space-x-2">
+                                                                <span>{courier.name}</span>
+                                                                {courier.is_default && (
+                                                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+                                                                        Default
+                                                                    </span>
+                                                                )}
+                                                            </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{courier.phone || 'N/A'}</td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{courier.email || 'N/A'}</td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono text-xs max-w-xs truncate" title={courier.tracking_url_template}>
@@ -1118,7 +1128,8 @@ export default function SettingsPage() {
                                                                             phone: courier.phone || '',
                                                                             email: courier.email || '',
                                                                             tracking_url_template: courier.tracking_url_template || '',
-                                                                            status: courier.status
+                                                                            status: courier.status,
+                                                                            is_default: courier.is_default || false
                                                                         });
                                                                         setShowCourierModal(true);
                                                                     }}
@@ -1255,6 +1266,19 @@ export default function SettingsPage() {
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm font-mono text-xs animate-none"
                                 />
                                 <p className="text-[10px] text-slate-400 mt-1">Use <code className="bg-slate-100 px-1 py-0.5 rounded font-mono font-bold text-slate-600">{`{tracking_number}`}</code> as a placeholder for the user's shipment code.</p>
+                            </div>
+
+                            <div className="flex items-center space-x-2 py-2">
+                                <input
+                                    id="is_default"
+                                    type="checkbox"
+                                    checked={courierForm.is_default}
+                                    onChange={(e) => setCourierForm(prev => ({ ...prev, is_default: e.target.checked }))}
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded cursor-pointer"
+                                />
+                                <label htmlFor="is_default" className="text-sm font-medium text-slate-700 cursor-pointer">
+                                    Set as Default Courier Partner
+                                </label>
                             </div>
 
                             <div>
