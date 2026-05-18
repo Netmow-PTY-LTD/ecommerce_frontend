@@ -472,6 +472,7 @@ export default function AdminHeroPage() {
                 open={isMediaOpen}
                 onOpenChange={setIsMediaOpen}
                 onSelect={(url) => setFormData({ ...formData, image: url })}
+                category="hero-slider"
             />
 
             {/* Delete Confirmation */}

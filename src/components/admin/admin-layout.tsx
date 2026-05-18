@@ -81,18 +81,29 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
+  // Overview & Analytics
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  {
+    name: 'Analytics',
+    icon: BarChart3,
+    subitems: [
+      { name: 'Sales & Revenue', href: '/admin/analytics/sales', icon: TrendingUp },
+      { name: 'Products', href: '/admin/analytics/products', icon: Package },
+      { name: 'Customers', href: '/admin/analytics/customers', icon: Users },
+      { name: 'Orders', href: '/admin/analytics/orders', icon: ShoppingCart },
+      { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
+      { name: 'Profit & Loss', href: '/admin/analytics/profit-loss', icon: DollarSign },
+      { name: 'Shipping', href: '/admin/analytics/shipping', icon: Truck },
+    ],
+  },
   {
     name: 'Visit Store',
     href: '/shop',
     icon: Globe,
     isExternal: true
   },
-  {
-    name: 'Media Library',
-    href: '/admin/gallery',
-    icon: Image,
-  },
+
+  // Sales & Orders
   {
     name: 'Orders',
     icon: ShoppingCart,
@@ -103,14 +114,6 @@ const navigation: NavItem[] = [
       { name: 'Pending Orders', href: '/admin/orders/pending', icon: Clock },
     ],
   },
-  { name: 'Customers', href: '/admin/customers', icon: Users },
-  { name: 'Products', href: '/admin/products', icon: Package },
-  { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
-  { name: 'Units', href: '/admin/products/units', icon: Ruler },
-  { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
-  { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
-  { name: 'Stock Management', href: '/admin/stock', icon: Box },
-  { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
     name: 'Pricing',
     icon: Tag,
@@ -119,6 +122,17 @@ const navigation: NavItem[] = [
       { name: 'Flash Sales', href: '/admin/flash-sales', icon: Zap },
     ],
   },
+
+  // Catalog & Inventory
+  { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/products/categories', icon: FolderTree },
+  { name: 'Units', href: '/admin/products/units', icon: Ruler },
+  { name: 'Arrivals', href: '/admin/arrivals', icon: Sparkles },
+  { name: 'Stock Management', href: '/admin/stock', icon: Box },
+
+  // Customers & Communication
+  { name: 'Customers', href: '/admin/customers', icon: Users },
+  { name: 'Reviews', href: '/admin/reviews', icon: Star },
   {
     name: 'Chat Support',
     icon: MessageCircle,
@@ -138,21 +152,18 @@ const navigation: NavItem[] = [
     ],
   },
   { name: 'Newsletter', href: '/admin/newsletter', icon: Send },
+
+  // Content & Media
   {
-    name: 'Analytics',
-    icon: BarChart3,
+    name: 'Content & Media',
+    icon: Image,
     subitems: [
-      { name: 'Sales & Revenue', href: '/admin/analytics/sales', icon: TrendingUp },
-      { name: 'Products', href: '/admin/analytics/products', icon: Package },
-      { name: 'Customers', href: '/admin/analytics/customers', icon: Users },
-      { name: 'Orders', href: '/admin/analytics/orders', icon: ShoppingCart },
-      { name: 'Payments', href: '/admin/analytics/payments', icon: CreditCard },
-      { name: 'Profit & Loss', href: '/admin/analytics/profit-loss', icon: DollarSign },
-      { name: 'Shipping', href: '/admin/analytics/shipping', icon: Truck },
+      { name: 'Media Library', href: '/admin/gallery', icon: Image },
+      { name: 'Hero Slides', href: '/admin/hero', icon: Sliders },
     ],
   },
 
-
+  // Configuration
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
