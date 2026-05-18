@@ -42,7 +42,10 @@ function ShopPage() {
     // ── UI States ─────────────────────────────────────────────────────────────
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [bogoIds, setBogoIds] = useState<Set<number>>(new Set());
-    const [maxProductPrice, setMaxProductPrice] = useState(1000);
+    const [maxProductPrice, setMaxProductPrice] = useState(() => {
+        const fromUrl = searchParams.get('max_price');
+        return fromUrl ? parseInt(fromUrl) : 1000;
+    });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
@@ -66,8 +69,8 @@ function ShopPage() {
         category_id: categoryId,
         sort: sortBy,
         in_stock: inStock,
-        min_price: minPriceUrl,
-        max_price: maxPriceUrl,
+        min_price: searchParams.get('min_price') ? minPriceUrl : undefined,
+        max_price: searchParams.get('max_price') ? maxPriceUrl : undefined,
     });
 
     const { categories } = useCategories(1, 50);
@@ -257,7 +260,10 @@ function ShopPage() {
                                             onChange={e =>
                                                 setPriceMin(Math.min(Number(e.target.value), priceMax - 10))
                                             }
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-[4]"
+                                            className={cn(
+                                                "absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                                                priceMin > maxProductPrice / 2 ? "z-[5]" : "z-[4]"
+                                            )}
                                         />
                                         <input
                                             type="range"
@@ -269,7 +275,10 @@ function ShopPage() {
                                             onChange={e =>
                                                 setPriceMax(Math.max(Number(e.target.value), priceMin + 10))
                                             }
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-[4]"
+                                            className={cn(
+                                                "absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                                                priceMax <= maxProductPrice / 2 ? "z-[5]" : "z-[4]"
+                                            )}
                                         />
                                         <div
                                             className="absolute w-5 h-5 bg-brand rounded-full border-2 border-white shadow-lg top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none z-[5]"
@@ -436,6 +445,7 @@ function ShopPage() {
                                                 key={product.id}
                                                 product={product}
                                                 showNewBadge={true}
+                                                viewMode={viewMode}
                                                 discountPercentage={
                                                     product.sale_price && product.price > 0
                                                         ? Math.round((1 - product.sale_price / product.price) * 100)

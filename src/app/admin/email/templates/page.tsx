@@ -231,7 +231,6 @@ export default function EmailTemplatesPage() {
         currency: 'USD',
         order_date: new Date().toLocaleDateString(),
         order_status: 'Confirmed',
-        product_name: 'Sample Product',
         tracking_number: '1Z999AA10123456784',
         estimated_delivery: '2026-05-20',
         carrier: 'FedEx',
