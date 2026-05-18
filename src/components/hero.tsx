@@ -6,8 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 
-const slides = [
+const defaultSlides = [
     {
         id: 1,
         subtitle: "Super Delicious",
@@ -29,16 +30,32 @@ const slides = [
 ];
 
 export function Hero() {
+    const [slides, setSlides] = useState<any[]>(defaultSlides);
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
+        const fetchSlides = async () => {
+            try {
+                const response = await api.get('/ecommerce/hero');
+                if (response.data.data && response.data.data.length > 0) {
+                    setSlides(response.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch active hero slides:', err);
+            }
+        };
+        fetchSlides();
+    }, []);
+
+    useEffect(() => {
+        if (slides.length <= 1) return;
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);
         }, 8000);
         return () => clearInterval(timer);
-    }, []);
+    }, [slides]);
 
-    const slide = slides[currentSlide];
+    const slide = slides[currentSlide] || defaultSlides[0];
 
     return (
         <section className="relative min-h-[500px] w-full overflow-hidden bg-[#f3f4f6] py-8 md:py-12 flex items-center z-10">
@@ -81,7 +98,7 @@ export function Hero() {
                                 transition={{ delay: 0.3 }}
                                 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-[1.2] tracking-tight"
                             >
-                                {slide.title.split(' ').map((word, i) => (
+                                {(slide.title || '').split(' ').map((word: string, i: number) => (
                                     <span key={i} className="inline-block mr-3">
                                         {word === "Buy" ? (
                                             <span className="text-slate-400 font-light flex items-center gap-2">
@@ -133,9 +150,24 @@ export function Hero() {
                                             strokeOpacity="0.2"
                                         />
                                     </svg>
-                                    <div className="text-center z-10">
-                                        <span className="block text-3xl md:text-4xl font-black text-brand leading-none">50%</span>
-                                        <span className="block text-lg md:text-xl font-bold text-slate-800 leading-none mt-1">OFF</span>
+                                    <div className="text-center z-10 px-2 max-w-full">
+                                        {slide.discount ? (
+                                            <>
+                                                <span className="block text-2xl md:text-3xl font-black text-brand leading-none truncate">
+                                                    {slide.discount.split(' ')[0]}
+                                                </span>
+                                                {slide.discount.split(' ')[1] && (
+                                                    <span className="block text-xs md:text-sm font-bold text-slate-800 leading-none mt-1 truncate uppercase">
+                                                        {slide.discount.split(' ').slice(1).join(' ')}
+                                                    </span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="block text-3xl md:text-4xl font-black text-brand leading-none">50%</span>
+                                                <span className="block text-lg md:text-xl font-bold text-slate-800 leading-none mt-1">OFF</span>
+                                            </>
+                                        )}
                                     </div>
                                 </motion.div>
                             </motion.div>
