@@ -97,7 +97,7 @@ export default function OrderInvoicePage() {
     window.print();
   };
 
-  if (authLoading || loading) {
+  if (authLoading || loading || settingsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
@@ -163,10 +163,12 @@ export default function OrderInvoicePage() {
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Billed / Shipped By</h3>
             <div className="text-sm text-slate-600 space-y-1">
               <p className="font-bold text-slate-900 uppercase">{settings.company_name || 'N/A'}</p>
-              <p>{settings.address || 'N/A'}</p>
+              <p>{settings.address || ''}</p>
               <p>{settings.city}{settings.state ? `, ${settings.state}` : ''}{settings.postal_code ? ` ${settings.postal_code}` : ''}</p>
-              <p>{settings.country || 'N/A'}</p>
-              <p className="pt-2 text-slate-400">{settings.email}</p>
+              <p>{settings.country || ''}</p>
+              {settings.phone && <p>Phone: {settings.phone}</p>}
+              {settings.email && <p>Email: {settings.email}</p>}
+
             </div>
           </div>
           <div>

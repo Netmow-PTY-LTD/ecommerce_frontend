@@ -490,9 +490,11 @@ function OrderStatusContent() {
             <div className="text-xs text-slate-500 space-y-1">
               <p className="font-bold text-slate-900">{settings?.company_name}</p>
               <p>{settings?.address}</p>
-              <p>{settings?.city}, {settings?.state} {settings?.postal_code}</p>
+              <p>{settings?.city}{settings?.state ? `, ${settings?.state}` : ''}{settings?.postal_code ? ` ${settings?.postal_code}` : ''}</p>
               <p>{settings?.country}</p>
-              <p>{settings?.email}</p>
+              {settings?.phone && <p>Phone: {settings?.phone}</p>}
+              {settings?.email && <p>Email: {settings?.email}</p>}
+              {settings?.tax_id && <p>Tax ID: {settings?.tax_id}</p>}
             </div>
           </div>
           <div className="text-right">
